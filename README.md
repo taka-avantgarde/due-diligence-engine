@@ -102,20 +102,32 @@ export ANTHROPIC_API_KEY="your-api-key"
 ### Usage
 
 ```bash
-# Analyze a startup's source code
-dde analyze --source /path/to/startup-code --docs /path/to/tech-docs
+# Analyze from GitHub URL (just paste the URL!)
+dde analyze https://github.com/some-startup/their-repo
 
-# Analyze with specific output format
-dde analyze --source /path/to/repo --output report --format html
+# Short form (owner/repo)
+dde analyze some-startup/their-repo
 
-# View the generated scorecard
-dde report --latest
+# Specific branch
+dde analyze https://github.com/some-startup/their-repo/tree/develop
 
-# Verify data purge
-dde purge --verify
+# Local directory
+dde analyze /path/to/startup-code
+
+# Zip archive
+dde analyze /path/to/startup-code.zip
+
+# With options
+dde analyze some-startup/repo --name "Startup X" --format html --format md
+
+# Skip AI (local analysis only, free)
+dde analyze some-startup/repo --skip-ai
 
 # View leaderboard (80+ scores only)
 dde leaderboard
+
+# Start SaaS server
+dde serve
 ```
 
 ---

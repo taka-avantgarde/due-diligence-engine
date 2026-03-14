@@ -102,20 +102,32 @@ export ANTHROPIC_API_KEY="your-api-key"
 ### 使い方
 
 ```bash
-# スタートアップのソースコードを分析
-dde analyze --source /path/to/startup-code --docs /path/to/tech-docs
+# GitHub URLを貼るだけで分析開始！
+dde analyze https://github.com/some-startup/their-repo
 
-# 出力形式を指定して分析
-dde analyze --source /path/to/repo --output report --format html
+# 短縮形（owner/repo）
+dde analyze some-startup/their-repo
 
-# 生成されたスコアカードを表示
-dde report --latest
+# 特定ブランチを指定
+dde analyze https://github.com/some-startup/their-repo/tree/develop
 
-# データ破棄を検証
-dde purge --verify
+# ローカルディレクトリ
+dde analyze /path/to/startup-code
+
+# Zipアーカイブ
+dde analyze /path/to/startup-code.zip
+
+# オプション付き
+dde analyze some-startup/repo --name "Startup X" --format html --format md
+
+# AIなし（ローカル解析のみ、無料）
+dde analyze some-startup/repo --skip-ai
 
 # リーダーボードを表示（80点以上のみ）
 dde leaderboard
+
+# SaaSサーバー起動
+dde serve
 ```
 
 ---

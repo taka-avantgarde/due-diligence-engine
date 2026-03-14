@@ -2,22 +2,33 @@
 
 All ingested data is stored in a temporary directory with restricted permissions.
 On completion or error, the data can be cryptographically purged.
+
+Supports:
+  - Local directory
+  - Zip archive
+  - GitHub URL (auto-clone + cleanup)
 """
 
 from __future__ import annotations
 
 import hashlib
+import logging
 import os
+import re
 import shutil
 import stat
+import subprocess
 import tempfile
 import zipfile
 from pathlib import Path
 from typing import Iterator
+from urllib.parse import urlparse
 
 from cryptography.fernet import Fernet
 
 from src.config import Config
+
+logger = logging.getLogger(__name__)
 
 # File extensions to analyze
 CODE_EXTENSIONS = {
@@ -68,6 +79,111 @@ class SecureLoader:
         # Restrict to owner only
         tmp.chmod(stat.S_IRWXU)
         return tmp
+
+    def load_from_url(self, url: str) -> Path:
+        """Load a project from a GitHub URL (or any Git-compatible URL).
+
+        Clones the repo into a secure temp directory, loads files, then
+        removes the clone. Only code/doc files are retained (encrypted).
+
+        Args:
+            url: GitHub URL. Accepts formats like:
+                 - https://github.com/owner/repo
+                 - https://github.com/owner/repo.git
+                 - https://github.com/owner/repo/tree/branch
+                 - github.com/owner/repo
+                 - owner/repo (assumes GitHub)
+
+        Returns:
+            Path to the secure working directory.
+
+        Raises:
+            ValueError: If the URL is invalid.
+            RuntimeError: If git clone fails.
+        """
+        normalized = self._normalize_github_url(url)
+        branch = self._extract_branch(url)
+
+        clone_dir = Path(tempfile.mkdtemp(prefix="dde_clone_", dir=str(self._config.temp_dir)))
+
+        try:
+            logger.info(f"Cloning {normalized} ...")
+            cmd = ["git", "clone", "--depth", "1"]
+            if branch:
+                cmd.extend(["--branch", branch])
+            cmd.extend([normalized, str(clone_dir / "repo")])
+
+            proc = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=300,  # 5 min timeout
+            )
+            if proc.returncode != 0:
+                raise RuntimeError(
+                    f"git clone failed (exit {proc.returncode}): {proc.stderr.strip()}"
+                )
+
+            repo_dir = clone_dir / "repo"
+            self._git_repo_path = repo_dir
+
+            # Load into encrypted workspace
+            return self.load_directory(repo_dir)
+
+        except subprocess.TimeoutExpired:
+            raise RuntimeError(f"git clone timed out after 5 minutes: {normalized}")
+        finally:
+            # Remove .git directory immediately (large, not needed for analysis)
+            git_dir = clone_dir / "repo" / ".git"
+            if git_dir.exists():
+                shutil.rmtree(str(git_dir), ignore_errors=True)
+
+    @property
+    def cloned_repo_path(self) -> Path | None:
+        """Return the path to the cloned repo, if loaded via URL."""
+        return getattr(self, "_git_repo_path", None)
+
+    @staticmethod
+    def _normalize_github_url(url: str) -> str:
+        """Normalize various GitHub URL formats to a clone-able HTTPS URL.
+
+        Accepts:
+            owner/repo              → https://github.com/owner/repo.git
+            github.com/owner/repo   → https://github.com/owner/repo.git
+            https://github.com/...  → https://github.com/owner/repo.git
+        """
+        url = url.strip().rstrip("/")
+
+        # Remove tree/branch suffix: .../tree/main → ...
+        url = re.sub(r"/tree/[^/]+/?$", "", url)
+
+        # Short form: owner/repo
+        if re.match(r"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$", url):
+            return f"https://github.com/{url}.git"
+
+        # Missing scheme: github.com/owner/repo
+        if url.startswith("github.com/"):
+            url = "https://" + url
+
+        parsed = urlparse(url)
+        if not parsed.scheme:
+            raise ValueError(f"Invalid URL format: {url}")
+
+        # Ensure .git suffix for clone
+        path = parsed.path.rstrip("/")
+        if not path.endswith(".git"):
+            path += ".git"
+
+        return f"{parsed.scheme}://{parsed.netloc}{path}"
+
+    @staticmethod
+    def _extract_branch(url: str) -> str | None:
+        """Extract branch name from GitHub URL if present.
+
+        e.g., https://github.com/owner/repo/tree/develop → 'develop'
+        """
+        match = re.search(r"/tree/([^/]+)/?$", url.strip().rstrip("/"))
+        return match.group(1) if match else None
 
     def load_directory(self, source: Path) -> Path:
         """Load a project directory into the secure workspace.

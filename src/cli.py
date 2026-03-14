@@ -33,16 +33,16 @@ def cli() -> None:
 
 
 @cli.command()
-@click.argument("path", type=click.Path(exists=True))
-@click.option("--name", "-n", required=True, help="Project name")
+@click.argument("target")
+@click.option("--name", "-n", default=None, help="Project name (auto-detected from URL/path if omitted)")
 @click.option("--output", "-o", type=click.Path(), default=None, help="Output directory")
 @click.option("--skip-git", is_flag=True, help="Skip git forensics analysis")
 @click.option("--skip-ai", is_flag=True, help="Skip AI-enhanced analysis (local only)")
 @click.option("--format", "-f", "formats", multiple=True, default=["md", "html"],
               type=click.Choice(["md", "html"]), help="Output formats")
 def analyze(
-    path: str,
-    name: str,
+    target: str,
+    name: str | None,
     output: str | None,
     skip_git: bool,
     skip_ai: bool,
@@ -50,7 +50,20 @@ def analyze(
 ) -> None:
     """Run technical due diligence on a project.
 
-    PATH can be a directory or a .zip archive.
+    TARGET can be:
+
+    \b
+      GitHub URL:  https://github.com/owner/repo
+      Short form:  owner/repo
+      Local path:  /path/to/project
+      Zip archive: /path/to/project.zip
+
+    \b
+    Examples:
+      dde analyze https://github.com/langchain-ai/langchain
+      dde analyze openai/whisper
+      dde analyze ./my-startup-code
+      dde analyze startup.zip
     """
     from src.analyze.engine import AnalysisEngine
     from src.ingest.secure_loader import SecureLoader
@@ -78,7 +91,14 @@ def analyze(
 
     output_dir = Path(output) if output else config.output_dir
 
-    source = Path(path)
+    # Detect target type: URL or local path
+    is_url = _is_github_url(target)
+
+    # Auto-detect project name
+    if name is None:
+        name = _extract_project_name(target)
+
+    loader = SecureLoader(config)
 
     with Progress(
         SpinnerColumn(),
@@ -87,21 +107,33 @@ def analyze(
     ) as progress:
         # Ingest
         task = progress.add_task("Ingesting project data...", total=None)
-        loader = SecureLoader(config)
+
         try:
-            if source.suffix == ".zip":
-                loader.load_archive(source)
+            if is_url:
+                progress.update(task, description=f"Cloning {target} ...")
+                loader.load_from_url(target)
+                repo_path = loader.cloned_repo_path
             else:
-                loader.load_directory(source)
-        except (FileNotFoundError, ValueError) as e:
+                source = Path(target)
+                if not source.exists():
+                    console.print(f"[red]Path not found: {target}[/red]")
+                    console.print("[yellow]Tip: Did you mean a GitHub URL? Try: dde analyze owner/repo[/yellow]")
+                    sys.exit(1)
+                if source.suffix == ".zip":
+                    loader.load_archive(source)
+                    repo_path = None
+                else:
+                    loader.load_directory(source)
+                    repo_path = source if source.is_dir() else None
+        except (FileNotFoundError, ValueError, RuntimeError) as e:
             console.print(f"[red]Ingestion error: {e}[/red]")
             sys.exit(1)
+
         progress.update(task, description=f"Ingested {len(loader.manifest)} files")
 
         # Analyze
         progress.update(task, description="Running analysis...")
         engine = AnalysisEngine(config, loader)
-        repo_path = source if source.is_dir() else None
         result = engine.run(
             project_name=name,
             repo_path=repo_path,
@@ -122,7 +154,7 @@ def analyze(
 
         progress.update(task, description="Done!")
 
-    # Cleanup workspace
+    # Cleanup workspace (cryptographic purge)
     loader.destroy()
 
     # Display results
@@ -363,6 +395,36 @@ def _display_score_summary(result, score) -> None:
             console.print("[bold yellow]HIGH SEVERITY FLAGS:[/bold yellow]")
             for flag in high:
                 console.print(f"  [yellow]! {flag.title}[/yellow]: {flag.description[:100]}")
+
+
+def _is_github_url(target: str) -> bool:
+    """Determine if the target looks like a GitHub URL or owner/repo shorthand."""
+    target = target.strip()
+    # Explicit URLs
+    if target.startswith(("https://", "http://", "git@", "github.com/")):
+        return True
+    # Short form: owner/repo (no dots, no path separators beyond one slash)
+    import re
+    if re.match(r"^[a-zA-Z0-9._-]+/[a-zA-Z0-9._-]+$", target):
+        # Exclude local paths like ./foo or ../bar
+        if not target.startswith((".", "/")):
+            return True
+    return False
+
+
+def _extract_project_name(target: str) -> str:
+    """Extract a human-readable project name from URL or path."""
+    import re
+    target = target.strip().rstrip("/")
+    # Remove .git suffix
+    target = re.sub(r"\.git$", "", target)
+    # Remove /tree/branch suffix
+    target = re.sub(r"/tree/[^/]+/?$", "", target)
+    # Get last path component
+    name = target.rstrip("/").split("/")[-1]
+    # Remove .zip suffix
+    name = re.sub(r"\.zip$", "", name)
+    return name or "unknown"
 
 
 if __name__ == "__main__":

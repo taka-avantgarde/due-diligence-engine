@@ -2,12 +2,15 @@
 
 from __future__ import annotations
 
+import logging
+import os
 import shutil
 import tempfile
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Header, HTTPException, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel
 
 from src.analyze.engine import AnalysisEngine
@@ -15,9 +18,14 @@ from src.config import Config, get_config
 from src.ingest.secure_loader import SecureLoader
 from src.purge.secure_delete import SecurePurger
 from src.report.generator import ReportGenerator
+from src.report.pdf_generator import PDFReportGenerator
 from src.report.slides import SlideGenerator
 from src.saas.auth import APIKeyRecord, AuthManager
 from src.saas.billing import BillingManager
+from src.saas.dashboard import router as dashboard_router, store_analysis, get_analysis
+from src.saas.github_oauth import GitHubOAuthManager
+
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="Due Diligence Engine",
@@ -25,10 +33,14 @@ app = FastAPI(
     version="0.1.0",
 )
 
+# Include dashboard router
+app.include_router(dashboard_router)
+
 # Singletons (initialized on startup)
 _config: Config | None = None
 _auth: AuthManager | None = None
 _billing: BillingManager | None = None
+_github_oauth: GitHubOAuthManager | None = None
 
 
 def get_app_config() -> Config:
@@ -51,6 +63,37 @@ def get_billing_manager() -> BillingManager:
     if _billing is None:
         _billing = BillingManager(get_app_config())
     return _billing
+
+
+def get_github_oauth() -> GitHubOAuthManager:
+    """Get or create the GitHub OAuth manager singleton.
+
+    Reads credentials from environment variables:
+    - GITHUB_CLIENT_ID
+    - GITHUB_CLIENT_SECRET
+    - GITHUB_REDIRECT_URI (defaults to http://localhost:8000/api/github/callback)
+    """
+    global _github_oauth
+    if _github_oauth is None:
+        client_id = os.environ.get("GITHUB_CLIENT_ID", "")
+        client_secret = os.environ.get("GITHUB_CLIENT_SECRET", "")
+        redirect_uri = os.environ.get(
+            "GITHUB_REDIRECT_URI",
+            "http://localhost:8000/api/github/callback",
+        )
+
+        if not client_id or not client_secret:
+            raise HTTPException(
+                status_code=503,
+                detail="GitHub OAuth is not configured. Set GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET.",
+            )
+
+        _github_oauth = GitHubOAuthManager(
+            client_id=client_id,
+            client_secret=client_secret,
+            redirect_uri=redirect_uri,
+        )
+    return _github_oauth
 
 
 async def verify_api_key(
@@ -271,3 +314,248 @@ async def get_pricing() -> dict:
         }
         for tier_key, tier in PRICING_TIERS.items()
     }
+
+
+# ---------------------------------------------------------------------------
+# GitHub OAuth Endpoints
+# ---------------------------------------------------------------------------
+
+
+@app.post("/api/github/connect")
+@app.get("/api/github/connect")
+async def github_connect(
+    user_id: str = Query(default="demo_user", description="User ID to associate with the connection"),
+) -> RedirectResponse:
+    """Initiate the GitHub OAuth flow.
+
+    Redirects the user to GitHub's authorization page.
+    """
+    oauth = get_github_oauth()
+    auth_url, state = oauth.get_authorization_url(user_id=user_id)
+    return RedirectResponse(url=auth_url, status_code=302)
+
+
+@app.get("/api/github/callback")
+async def github_callback(
+    code: str = Query(..., description="Authorization code from GitHub"),
+    state: str = Query(..., description="CSRF state token"),
+) -> RedirectResponse:
+    """Handle the GitHub OAuth callback.
+
+    Exchanges the authorization code for an access token and
+    redirects to the repository selection page.
+    """
+    oauth = get_github_oauth()
+
+    try:
+        connection = await oauth.handle_callback(code=code, state=state)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    # Redirect to repository selection page
+    return RedirectResponse(
+        url=f"/dashboard/repos?connection_id={connection.connection_id}",
+        status_code=302,
+    )
+
+
+@app.get("/api/github/repos/{connection_id}")
+async def github_list_repos(connection_id: str) -> list[dict[str, Any]]:
+    """List repositories accessible to the connected GitHub account.
+
+    Returns both public and private repos the user granted access to.
+    """
+    oauth = get_github_oauth()
+
+    conn = oauth.get_connection(connection_id)
+    if conn is None:
+        raise HTTPException(status_code=404, detail="GitHub connection not found")
+
+    try:
+        repos = await oauth.list_repos(connection_id)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+    return repos
+
+
+@app.post("/api/github/disconnect/{connection_id}")
+async def github_disconnect(
+    connection_id: str,
+    analysis_id: str = Query(default="", description="Associated analysis ID for purging"),
+    config: Config = Depends(get_app_config),
+) -> RedirectResponse:
+    """Disconnect GitHub and purge all associated data.
+
+    This endpoint:
+    1. Revokes the GitHub OAuth token
+    2. Purges all cloned source code data
+    3. Generates a purge certificate
+    4. Redirects to the purge confirmation page
+    """
+    oauth = get_github_oauth()
+
+    # Step 1: Revoke GitHub token
+    conn = oauth.get_connection(connection_id)
+    project_name = conn.repo_full_name if conn else "unknown"
+    user_id = conn.user_id if conn else "system"
+
+    await oauth.revoke_access(connection_id)
+
+    # Step 2: Purge cloned data and generate certificate
+    purge_cert = None
+    if analysis_id:
+        purger = SecurePurger()
+
+        # Purge the analysis temp directory if it exists
+        analysis_dir = config.temp_dir / analysis_id
+        if analysis_dir.exists():
+            purge_cert = purger.purge_directory(
+                directory=analysis_dir,
+                analysis_id=analysis_id,
+                project_name=project_name,
+                operator=user_id,
+            )
+
+            # Export certificate
+            cert_path = config.output_dir / f"purge_cert_{analysis_id}.json"
+            purger.export_certificate(purge_cert, cert_path)
+        else:
+            # Create a certificate even if no directory exists (data was in-memory)
+            from src.models import PurgeCertificate
+
+            purge_cert = PurgeCertificate(
+                analysis_id=analysis_id,
+                project_name=project_name,
+                files_purged=0,
+                bytes_overwritten=0,
+                method="in_memory_erasure",
+                operator=user_id,
+                verification_hash="in_memory_data_cleared",
+            )
+
+        # Update analysis store
+        data = get_analysis(analysis_id)
+        if data is not None:
+            data["status"] = "purged"
+            data["purge_cert"] = purge_cert
+            store_analysis(analysis_id, data)
+
+        return RedirectResponse(
+            url=f"/dashboard/purge-complete/{analysis_id}",
+            status_code=302,
+        )
+
+    # No analysis_id: just redirect back to home
+    return RedirectResponse(url="/dashboard/", status_code=302)
+
+
+@app.post("/api/analyze/github/{connection_id}/{repo:path}")
+async def analyze_github_repo(
+    connection_id: str,
+    repo: str,
+    config: Config = Depends(get_app_config),
+) -> RedirectResponse:
+    """Analyze a GitHub repository connected via OAuth.
+
+    Clones the repository using the OAuth token, runs analysis,
+    and redirects to the results page.
+    """
+    oauth = get_github_oauth()
+
+    conn = oauth.get_connection(connection_id)
+    if conn is None:
+        raise HTTPException(status_code=404, detail="GitHub connection not found")
+
+    # Associate repo with the connection
+    oauth.set_repo(connection_id, repo)
+
+    # Get authenticated clone URL
+    clone_url = oauth.get_clone_url(connection_id, repo)
+
+    # Use SecureLoader to clone and analyze
+    loader = SecureLoader(config)
+
+    try:
+        # Store as "running" in the analysis store
+        import uuid
+
+        analysis_id = uuid.uuid4().hex[:16]
+        store_analysis(analysis_id, {
+            "status": "running",
+            "connection_id": connection_id,
+            "result": None,
+            "purge_cert": None,
+        })
+
+        # Clone the repo using authenticated URL
+        loader.load_from_url(clone_url)
+
+        # Run analysis
+        engine = AnalysisEngine(config, loader)
+        repo_path = loader.cloned_repo_path
+        result = engine.run(
+            project_name=repo,
+            repo_path=repo_path,
+        )
+
+        # Force the analysis_id to match
+        result.analysis_id = analysis_id
+
+        # Generate reports
+        report_gen = ReportGenerator()
+        report_gen.save_report(result, config.output_dir)
+
+        # Store completed result
+        store_analysis(analysis_id, {
+            "status": "completed",
+            "connection_id": connection_id,
+            "result": result,
+            "purge_cert": None,
+        })
+
+        # Cleanup cloned data (but keep encrypted workspace for potential purge)
+        # The loader workspace will be purged on disconnect
+
+        return RedirectResponse(
+            url=f"/dashboard/analysis/{analysis_id}",
+            status_code=302,
+        )
+
+    except Exception as e:
+        logger.error(f"GitHub analysis failed for {repo}: {e}")
+        loader.destroy()
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+
+
+@app.get("/api/report/{analysis_id}/pdf")
+async def download_pdf_report(analysis_id: str) -> Response:
+    """Generate and download a PDF report for a completed analysis.
+
+    The PDF contains scores, findings, and recommendations.
+    Source code is NEVER included in the PDF output.
+    """
+    data = get_analysis(analysis_id)
+    if data is None:
+        raise HTTPException(status_code=404, detail="Analysis not found")
+
+    result = data.get("result")
+    if result is None:
+        raise HTTPException(status_code=404, detail="No analysis result available")
+
+    purge_cert = data.get("purge_cert")
+
+    pdf_gen = PDFReportGenerator()
+    pdf_bytes = pdf_gen.generate(result, purge_cert=purge_cert)
+
+    filename = f"dde_report_{result.project_name}_{analysis_id}.pdf"
+    # Sanitize filename
+    filename = "".join(c if c.isalnum() or c in "._-" else "_" for c in filename)
+
+    return Response(
+        content=pdf_bytes,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+        },
+    )

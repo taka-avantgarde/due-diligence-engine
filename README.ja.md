@@ -38,6 +38,46 @@
 
 ---
 
+## URLを入れるだけ
+
+```bash
+dde analyze https://github.com/some-startup/their-product
+```
+
+これだけです。ワンコマンドで技術デューデリジェンス完了。
+
+### VCの方へ
+
+```
+Step 1: スタートアップのGitHubリポジトリURLをもらう
+Step 2: dde analyze <URL>
+Step 3: スコアカードを確認
+```
+
+### スタートアップの方へ（技術力を証明する）
+
+このファイルをリポジトリに追加するだけ — VCがいつでもDDを実行できます：
+
+```yaml
+# .github/workflows/dde.yml
+name: Technical Due Diligence
+on: workflow_dispatch
+jobs:
+  dd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: taka-avantgarde/due-diligence-engine@main
+        with:
+          skip_ai: 'true'
+```
+
+VCがスタートアップのリポジトリで **「Run workflow」** をクリック → 即座にDDレポートが生成されます。
+
+---
+
 ## 機能一覧
 
 | 機能 | 説明 |

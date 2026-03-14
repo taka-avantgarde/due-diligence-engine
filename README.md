@@ -38,6 +38,46 @@ Total time: **~15 minutes** vs. weeks with traditional Tech DD.
 
 ---
 
+## Just Paste the URL
+
+```bash
+dde analyze https://github.com/some-startup/their-product
+```
+
+That's it. One command. Full technical due diligence.
+
+### For VCs
+
+```
+Step 1: Get the startup's GitHub repo URL
+Step 2: dde analyze <URL>
+Step 3: Review the scorecard
+```
+
+### For Startups (Prove Your Tech)
+
+Add this to your repo — VCs can trigger it anytime:
+
+```yaml
+# .github/workflows/dde.yml
+name: Technical Due Diligence
+on: workflow_dispatch
+jobs:
+  dd:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: taka-avantgarde/due-diligence-engine@main
+        with:
+          skip_ai: 'true'
+```
+
+VCs click **"Run workflow"** on the startup's repo → instant DD report.
+
+---
+
 ## Features
 
 | Feature | Description |

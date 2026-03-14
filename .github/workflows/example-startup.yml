@@ -1,0 +1,50 @@
+# ============================================================
+# スタートアップ向け: このファイルをあなたのリポジトリに
+# .github/workflows/dde.yml としてコピーするだけ！
+#
+# For Startups: Just copy this file to your repo as
+# .github/workflows/dde.yml — that's it!
+# ============================================================
+
+name: Technical Due Diligence
+
+on:
+  # VCからのリクエスト時に手動実行
+  workflow_dispatch:
+    inputs:
+      ai_analysis:
+        description: 'Enable AI analysis (requires API key in secrets)'
+        type: boolean
+        default: false
+
+  # PR時にも自動実行（オプション）
+  # pull_request:
+  #   branches: [main]
+
+jobs:
+  due-diligence:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Full history for git forensics
+
+      - name: Run Due Diligence Engine
+        uses: taka-avantgarde/due-diligence-engine@main
+        id: dde
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          skip_ai: ${{ !inputs.ai_analysis }}
+          output_format: 'md'
+
+      - name: Display Score
+        run: |
+          echo "## DD結果 / DD Results"
+          echo "Score: ${{ steps.dde.outputs.score }}/100"
+          echo "Grade: ${{ steps.dde.outputs.grade }}"
+          echo "Red Flags: ${{ steps.dde.outputs.red_flags }}"
+          echo ""
+          echo "Report artifact uploaded. Download from Actions tab."

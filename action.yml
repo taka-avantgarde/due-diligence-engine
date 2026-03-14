@@ -1,0 +1,91 @@
+name: 'Due Diligence Engine'
+description: 'AI-powered technical due diligence for startup codebases. Paste a GitHub URL → get a score.'
+author: 'taka-avantgarde'
+
+branding:
+  icon: 'shield'
+  color: 'blue'
+
+inputs:
+  anthropic_api_key:
+    description: 'Anthropic API key for AI-enhanced analysis'
+    required: false
+  skip_ai:
+    description: 'Skip AI analysis (local-only, free)'
+    required: false
+    default: 'false'
+  output_format:
+    description: 'Output formats (md, html)'
+    required: false
+    default: 'md'
+  fail_below:
+    description: 'Fail the check if score is below this threshold (0-100)'
+    required: false
+    default: '0'
+
+outputs:
+  score:
+    description: 'Overall DD score (0-100)'
+  grade:
+    description: 'Grade (A/B/C/D/F)'
+  report_path:
+    description: 'Path to the generated report'
+  red_flags:
+    description: 'Number of red flags detected'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install DDE
+      shell: bash
+      run: |
+        pip install -e ${{ github.action_path }}
+
+    - name: Run Analysis
+      shell: bash
+      env:
+        ANTHROPIC_API_KEY: ${{ inputs.anthropic_api_key }}
+      run: |
+        ARGS="--format ${{ inputs.output_format }}"
+        if [ "${{ inputs.skip_ai }}" = "true" ] || [ -z "${{ inputs.anthropic_api_key }}" ]; then
+          ARGS="$ARGS --skip-ai"
+        fi
+
+        dde analyze . $ARGS -o dde_output 2>&1 | tee dde_log.txt
+
+        # Extract score from report
+        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' dde_output/dde_report_*.md 2>/dev/null || echo "0")
+        GRADE=$(grep -oP 'Grade:\s*\K[A-F]' dde_output/dde_report_*.md 2>/dev/null || echo "?")
+        FLAGS=$(grep -c 'RED FLAG\|red_flag' dde_output/dde_report_*.md 2>/dev/null || echo "0")
+        REPORT=$(ls dde_output/dde_report_*.md 2>/dev/null | head -1)
+
+        echo "score=$SCORE" >> $GITHUB_OUTPUT
+        echo "grade=$GRADE" >> $GITHUB_OUTPUT
+        echo "red_flags=$FLAGS" >> $GITHUB_OUTPUT
+        echo "report_path=$REPORT" >> $GITHUB_OUTPUT
+
+        echo "## Due Diligence Score: $SCORE/100 (Grade: $GRADE)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "Red Flags: $FLAGS" >> $GITHUB_STEP_SUMMARY
+
+    - name: Upload Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: dde-report
+        path: dde_output/
+
+    - name: Score Threshold Check
+      shell: bash
+      if: ${{ inputs.fail_below != '0' }}
+      run: |
+        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' dde_output/dde_report_*.md 2>/dev/null || echo "0")
+        THRESHOLD=${{ inputs.fail_below }}
+        if [ "$SCORE" -lt "$THRESHOLD" ]; then
+          echo "::error::DDE Score ($SCORE) is below threshold ($THRESHOLD)"
+          exit 1
+        fi

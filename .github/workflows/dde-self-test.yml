@@ -1,0 +1,25 @@
+name: DDE Self-Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  self-analysis:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run DDE on self
+        uses: ./
+        id: dde
+        with:
+          skip_ai: 'true'
+
+      - name: Show Results
+        run: |
+          echo "Score: ${{ steps.dde.outputs.score }}"
+          echo "Grade: ${{ steps.dde.outputs.grade }}"
+          echo "Red Flags: ${{ steps.dde.outputs.red_flags }}"

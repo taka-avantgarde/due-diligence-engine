@@ -39,3 +39,4 @@ data/tmp/
 
 # Purge logs are kept for audit trail
 # DO NOT gitignore: output/purge_certificates/
+dde_output/

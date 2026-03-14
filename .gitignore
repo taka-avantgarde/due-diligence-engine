@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+*.whl
+
+# Virtual Environment
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment variables
+.env
+.env.local
+
+# Output (analysis reports are kept, raw data is purged)
+output/tmp/
+output/raw/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary ingested data (MUST be gitignored for NDA compliance)
+data/ingest/
+data/tmp/
+*.tmpfs
+
+# Purge logs are kept for audit trail
+# DO NOT gitignore: output/purge_certificates/

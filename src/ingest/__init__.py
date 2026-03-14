@@ -1,0 +1,1 @@
+"""Secure data ingestion module."""

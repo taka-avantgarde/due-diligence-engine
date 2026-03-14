@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DDE Scorecard: {{ result.project_name }}</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --border: #334155;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent: #38bdf8;
+    --green: #22c55e;
+    --yellow: #eab308;
+    --red: #ef4444;
+    --orange: #f97316;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    padding: 2rem;
+  }
+  .container { max-width: 900px; margin: 0 auto; }
+  .header {
+    text-align: center;
+    padding: 2rem 0;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .header h1 { font-size: 1.5rem; color: var(--accent); margin-bottom: 0.5rem; }
+  .header .project-name { font-size: 2rem; font-weight: 700; }
+  .header .meta { color: var(--text-dim); font-size: 0.85rem; margin-top: 0.5rem; }
+
+  .score-hero {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+    margin-bottom: 2rem;
+  }
+  .score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+  }
+  .score-circle .number { font-size: 3rem; line-height: 1; }
+  .score-circle .label { font-size: 0.8rem; opacity: 0.8; }
+
+  .grade-A { background: linear-gradient(135deg, #22c55e33, #22c55e11); border: 3px solid var(--green); }
+  .grade-B { background: linear-gradient(135deg, #84cc1633, #84cc1611); border: 3px solid #84cc16; }
+  .grade-C { background: linear-gradient(135deg, #eab30833, #eab30811); border: 3px solid var(--yellow); }
+  .grade-D { background: linear-gradient(135deg, #f9731633, #f9731611); border: 3px solid var(--orange); }
+  .grade-F { background: linear-gradient(135deg, #ef444433, #ef444411); border: 3px solid var(--red); }
+
+  .recommendation {
+    background: var(--surface);
+    padding: 1.5rem;
+    border-radius: 0.5rem;
+    text-align: center;
+    max-width: 500px;
+  }
+
+  .section {
+    background: var(--surface);
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .section h2 {
+    font-size: 1.2rem;
+    color: var(--accent);
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 0.75rem; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--accent); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; }
+
+  .bar-container {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.5s ease;
+  }
+  .bar-green { background: var(--green); }
+  .bar-yellow { background: var(--yellow); }
+  .bar-red { background: var(--red); }
+
+  .flag { padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; }
+  .flag-critical { background: #ef444422; border-left: 4px solid var(--red); }
+  .flag-high { background: #f9731622; border-left: 4px solid var(--orange); }
+  .flag-medium { background: #eab30822; border-left: 4px solid var(--yellow); }
+  .flag-low { background: #22c55e22; border-left: 4px solid var(--green); }
+  .flag .title { font-weight: 600; }
+  .flag .desc { font-size: 0.9rem; color: var(--text-dim); margin-top: 0.25rem; }
+  .flag .severity {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 1rem;
+  }
+  .metric-card {
+    background: var(--bg);
+    padding: 1rem;
+    border-radius: 0.5rem;
+    text-align: center;
+  }
+  .metric-card .value { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .metric-card .label { font-size: 0.75rem; color: var(--text-dim); margin-top: 0.25rem; }
+
+  .footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    padding: 2rem 0;
+    border-top: 1px solid var(--border);
+    margin-top: 2rem;
+  }
+
+  @media print {
+    body { background: white; color: black; }
+    .section { border: 1px solid #ccc; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Technical Due Diligence Scorecard</h1>
+    <div class="project-name">{{ result.project_name }}</div>
+    <div class="meta">
+      Analysis ID: {{ result.analysis_id }} |
+      {{ result.timestamp.strftime('%Y-%m-%d %H:%M UTC') }}
+    </div>
+  </div>
+
+  {% if score %}
+  <div class="score-hero">
+    <div class="score-circle grade-{{ score.grade }}">
+      <div class="number">{{ "%.0f"|format(score.overall_score) }}</div>
+      <div class="label">/ 100 ({{ score.grade }})</div>
+    </div>
+    <div class="recommendation">
+      <p>{{ score.recommendation }}</p>
+    </div>
+  </div>
+
+  <!-- Score Dimensions -->
+  <div class="section">
+    <h2>Score Breakdown</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th>Score</th>
+          <th>Weight</th>
+          <th style="width: 40%">Bar</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for dim in score.dimensions %}
+        <tr>
+          <td><strong>{{ dim.name }}</strong></td>
+          <td>{{ "%.0f"|format(dim.score) }}/100</td>
+          <td>{{ "%.0f"|format(dim.weight * 100) }}%</td>
+          <td>
+            <div class="bar-container">
+              <div class="bar-fill {% if dim.score >= 70 %}bar-green{% elif dim.score >= 40 %}bar-yellow{% else %}bar-red{% endif %}"
+                   style="width: {{ dim.score }}%"></div>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="4" style="color: var(--text-dim); font-size: 0.85rem; padding-top: 0;">
+            {{ dim.rationale }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Red Flags -->
+  {% if score.red_flags %}
+  <div class="section">
+    <h2>Red Flags ({{ score.red_flags|length }})</h2>
+    {% for flag in score.red_flags %}
+    <div class="flag flag-{{ flag.severity.value }}">
+      <span class="severity">{{ flag.severity.value }}</span>
+      <span class="title">{{ flag.title }}</span>
+      <div class="desc">{{ flag.description }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endif %}
+
+  <!-- Code Metrics -->
+  <div class="section">
+    <h2>Codebase Metrics</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="value">{{ code.total_files }}</div>
+        <div class="label">Files</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ "{:,}".format(code.total_lines) }}</div>
+        <div class="label">Lines of Code</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ code.languages|length }}</div>
+        <div class="label">Languages</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ "%.0f"|format(code.api_wrapper_ratio * 100) }}%</div>
+        <div class="label">API Wrapper Ratio</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ code.dependency_count }}</div>
+        <div class="label">Dependencies</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ "Yes" if code.has_tests else "No" }}</div>
+        <div class="label">Tests</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Git Forensics -->
+  {% if git.total_commits > 0 %}
+  <div class="section">
+    <h2>Git Forensics</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="value">{{ git.total_commits }}</div>
+        <div class="label">Commits</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ git.unique_authors }}</div>
+        <div class="label">Authors</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ "%.0f"|format(git.rush_commit_ratio * 100) }}%</div>
+        <div class="label">Rush Ratio</div>
+      </div>
+    </div>
+    {% if git.suspicious_patterns %}
+    <div style="margin-top: 1rem;">
+      <strong>Suspicious Patterns:</strong>
+      <ul>
+        {% for pattern in git.suspicious_patterns %}
+        <li>{{ pattern }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+  {% endif %}
+
+  <!-- Consistency -->
+  <div class="section">
+    <h2>Claim Consistency</h2>
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <div class="value">{{ consistency.verified_claims|length }}</div>
+        <div class="label">Verified</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ consistency.unverified_claims|length }}</div>
+        <div class="label">Unverified</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ consistency.contradictions|length }}</div>
+        <div class="label">Contradictions</div>
+      </div>
+      <div class="metric-card">
+        <div class="value">{{ "%.0f"|format(consistency.consistency_score) }}%</div>
+        <div class="label">Score</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cost -->
+  <div class="section">
+    <h2>Analysis Cost</h2>
+    <p>Total API cost: <strong>${{ "%.4f"|format(result.total_cost_usd) }}</strong></p>
+    <table>
+      <thead>
+        <tr><th>Model</th><th>Input Tokens</th><th>Output Tokens</th></tr>
+      </thead>
+      <tbody>
+        {% for tier, usage in result.model_usage.items() %}
+        {% if usage.get('input_tokens', 0) > 0 %}
+        <tr>
+          <td>{{ tier|title }}</td>
+          <td>{{ "{:,}".format(usage.get('input_tokens', 0)) }}</td>
+          <td>{{ "{:,}".format(usage.get('output_tokens', 0)) }}</td>
+        </tr>
+        {% endif %}
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="footer">
+    Generated by Due Diligence Engine v0.1.0 on {{ now.strftime('%Y-%m-%d %H:%M UTC') }}
+  </div>
+
+</div>
+</body>
+</html>

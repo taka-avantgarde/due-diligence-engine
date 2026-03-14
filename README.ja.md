@@ -18,7 +18,7 @@
 
 ## これは何？
 
-**Due Diligence Engine** は、VCや投資家がNDA締結後にスタートアップの技術的主張を検証するためのCLIツールです。機密資料（ソースコード、アーキテクチャ文書、デモ）を一時的に取り込み、Claude Opus 4.6で分析し、スコア付きレポートとアーキテクチャ可視化スライドを生成した後、**取り込んだデータを完全に破棄**します。
+**Due Diligence Engine** は、VCや投資家がNDA締結後にスタートアップの技術的主張を検証するためのCLI + Webツールです。GitHub OAuthでPrivateリポジトリに一時的にアクセスし、Claude Opus 4.6でソースコードを分析、スコア付きレポートを生成した後、**ワンクリックでアクセス解除 + データ完全破棄**を実行します。
 
 ### 課題
 
@@ -30,8 +30,8 @@
 ### 解決策
 
 ```
-取込 → 分析 → スコアリング → レポート → 破棄
- 5分   10分     自動          自動       自動
+接続 → 分析 → スコアリング → レポート → 切断 & 破棄
+ 1分    10分     自動          自動       ワンクリック
 ```
 
 所要時間: **約15分**。従来のTech DDの数週間と比較してください。
@@ -42,14 +42,16 @@
 
 | 機能 | 説明 |
 |------|------|
+| **GitHub Private Repo連携** | OAuth連携でスタートアップがPrivateリポジトリへの一時アクセスを許可 |
 | **コード実在性チェック** | AST解析でAIロジックがコードベースに実在するか検証 |
 | **AIウォッシュ検出** | 「独自AI」と偽るAPIラッパーを検出 |
 | **Git履歴フォレンジック** | コミット履歴の不審パターンを分析（DD直前の急造など） |
 | **文書-コード整合性** | 技術文書の主張と実装の乖離を検出 |
 | **アーキテクチャ可視化** | 実際のシステム構成をMermaid図で自動生成 |
 | **100点満点スコアリング** | 6軸の加重スコアリング + RED FLAG自動検出 |
-| **NDA対応データ破棄** | 暗号消去 + 検証可能な破棄証明書 |
-| **スライド生成** | 投資委員会向けHTML/PDFスライド |
+| **PDF出力** | 投資委員会向けプロフェッショナルPDFレポート |
+| **切断 & 破棄ボタン** | ワンクリックでGitHub切断 + データ暗号消去 + 破棄証明書発行 |
+| **Webダッシュボード** | 非技術系VC向けブラウザベースUI |
 
 ---
 
@@ -84,11 +86,12 @@
 
 - Python 3.11+
 - Anthropic APIキー（Claude Opus 4.6）
+- GitHub OAuth App（Privateリポジトリアクセス用）
 
 ### インストール
 
 ```bash
-git clone https://github.com/your-username/due-diligence-engine.git
+git clone https://github.com/taka-avantgarde/due-diligence-engine.git
 cd due-diligence-engine
 pip install -e .
 ```
@@ -97,9 +100,13 @@ pip install -e .
 
 ```bash
 export ANTHROPIC_API_KEY="your-api-key"
+
+# オプション: Webダッシュボードでの Private Repo アクセス用
+export GITHUB_CLIENT_ID="your-github-oauth-app-id"
+export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ```
 
-### 使い方
+### 使い方 — CLI
 
 ```bash
 # GitHub URLを貼るだけで分析開始！
@@ -125,10 +132,23 @@ dde analyze some-startup/repo --skip-ai
 
 # リーダーボードを表示（80点以上のみ）
 dde leaderboard
-
-# SaaSサーバー起動
-dde serve
 ```
+
+### 使い方 — Webダッシュボード（Private Repo対応）
+
+```bash
+# Webサーバーを起動
+dde serve
+
+# ブラウザで http://localhost:8000/dashboard/ を開く
+```
+
+Webダッシュボードの機能:
+1. **Connect with GitHub** — OAuthフローでスタートアップのPrivateリポジトリにアクセス
+2. **リポジトリ選択 & 分析** — 対象リポジトリを選んで分析実行
+3. **結果閲覧** — スコアカード、RED FLAGS、アーキテクチャ図
+4. **PDF出力** — 投資委員会向けレポートをダウンロード
+5. **切断 & 破棄** — アクセス解除 + データ暗号消去
 
 ---
 
@@ -136,14 +156,14 @@ dde serve
 
 ```
                     ┌──────────────────┐
-                    │   NDA資料        │
-                    │ (コード/文書/API) │
+                    │  GitHub Private  │
+                    │  Repo (OAuth経由) │
                     └────────┬─────────┘
                              │
                     ┌────────▼─────────┐
                     │  1. 取込         │
-                    │  暗号化tmpfs     │
-                    │  RAMのみ格納     │
+                    │  Shallow clone   │
+                    │  暗号化ストア     │
                     └────────┬─────────┘
                              │
               ┌──────────────┼──────────────┐
@@ -158,8 +178,8 @@ dde serve
                              │
                     ┌────────▼─────────┐
                     │ 2. 分析          │
-                    │ Claude Opus 4.6  │
-                    │ 深層推論         │
+                    │ Haiku → Sonnet   │
+                    │ → Opus（ハイブリッド）│
                     └────────┬─────────┘
                              │
                     ┌────────▼─────────┐
@@ -168,13 +188,31 @@ dde serve
                     │ RED FLAG検出     │
                     └────────┬─────────┘
                              │
-                ┌────────────┼────────────┐
-                │                         │
-       ┌────────▼───────┐      ┌─────────▼────────┐
-       │ 4. レポート     │      │ 5. 破棄          │
-       │ MD / HTML / PDF│      │ 暗号消去         │
-       │ スライド        │      │ 破棄証明書       │
-       └────────────────┘      └──────────────────┘
+              ┌──────────────┼──────────────┐
+              │              │              │
+     ┌────────▼───────┐ ┌───▼────────┐ ┌───▼──────────┐
+     │ 4. レポート     │ │ 5. PDF     │ │ 6. 破棄      │
+     │ MD / HTML      │ │ 出力       │ │ 切断         │
+     │ スライド        │ │（コードなし）│ │ + 暗号消去   │
+     └────────────────┘ └────────────┘ │ + 破棄証明書  │
+                                       └──────────────┘
+```
+
+---
+
+## Private Repoワークフロー（VC ↔ スタートアップ）
+
+```
+Step 1: VCがスタートアップにアクセス許可リンクを送付
+Step 2: スタートアップがGitHub OAuthを承認（リポジトリアクセスを許可）
+Step 3: DDEが暗号化一時ディレクトリにリポジトリをクローン
+Step 4: 分析実行（Haiku → Sonnet → Opus）
+Step 5: VCがスコアカードを確認 + PDFをダウンロード
+Step 6: VCが「切断 & 破棄」をクリック
+         ├─ GitHubトークンを無効化
+         ├─ 全ソースコードを暗号消去
+         ├─ 破棄証明書を発行
+         └─ スコアと所見のみ保持（コードなし）
 ```
 
 ---
@@ -205,6 +243,24 @@ dde serve
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ```
 
+### PDFレポート
+
+カバーページ、スコア内訳、RED FLAGS、アーキテクチャ所見、NDAフッター付きのプロフェッショナルPDF。**ソースコードは一切含まれません** — 分析所見と推奨事項のみ。
+
+### 切断 & 破棄 確認
+
+```
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 破棄証明書
+ 証明書ID:     dde_purge_a1b2c3d4
+ 日時:         2026-03-14T15:30:00Z
+ 削除ファイル: 847件
+ 消去バイト:   12,345,678
+ 消去方式:     3パスランダム上書き
+ GitHubトークン: 無効化済み
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
 ---
 
 ## データセキュリティ & NDA遵守
@@ -212,10 +268,12 @@ dde serve
 | 保証事項 | 実装方法 |
 |---------|---------|
 | **クラウド保存なし** | 全データはローカルの暗号化tmpfsで処理 |
+| **OAuthトークン暗号化** | Fernet暗号化、インメモリのみ（ディスク保存なし） |
 | **API送信時の保護** | Anthropic 0-day retention policy を活用 |
-| **暗号消去** | `shred` + 暗号化ボリューム破壊 |
-| **破棄証明書** | SHA-256ハッシュログでデータの存在と破棄を証明 |
-| **レポートに生コードなし** | レポートには所見のみ記載、ソースコードは含まない |
+| **暗号消去** | 3パスランダム上書き + 暗号化ボリューム破壊 |
+| **破棄証明書** | SHA-256署名付き証明書でデータの存在と破棄を証明 |
+| **GitHub切断** | 切断時にGitHub APIでOAuthトークンを無効化 |
+| **レポートに生コードなし** | PDF/MDレポートには所見のみ、ソースコードは含まない |
 | **監査証跡** | 全操作のタイムスタンプ付きログで監査対応 |
 
 ---
@@ -225,21 +283,30 @@ dde serve
 ```
 due-diligence-engine/
 ├── src/
-│   ├── ingest/           # セキュア・データ取込
-│   ├── analyze/          # Claude駆動分析
-│   │   ├── code.py       # AST・依存関係解析
-│   │   ├── docs.py       # 文書主張抽出
-│   │   ├── git.py        # Git履歴フォレンジック
-│   │   └── consistency.py # 整合性チェッカー
-│   ├── score/            # スコアリングエンジン
-│   ├── report/           # レポート・スライド生成
-│   ├── purge/            # セキュア・データ破棄
-│   └── cli.py            # CLIインターフェース
+│   ├── ingest/              # セキュア・データ取込（ローカル、zip、GitHub URL）
+│   ├── analyze/             # Claude駆動分析
+│   │   ├── code.py          # AST・依存関係解析
+│   │   ├── docs.py          # 文書主張抽出
+│   │   ├── git_forensics.py # Git履歴フォレンジック
+│   │   ├── consistency.py   # 整合性チェッカー
+│   │   └── engine.py        # ハイブリッドモデル・オーケストレーター
+│   ├── score/               # 100点スコアリングエンジン
+│   ├── report/
+│   │   ├── generator.py     # MD/HTMLレポート生成
+│   │   ├── slides.py        # アーキテクチャ可視化
+│   │   └── pdf_generator.py # プロフェッショナルPDF出力
+│   ├── purge/               # 暗号データ破棄
+│   ├── saas/
+│   │   ├── app.py           # FastAPIエンドポイント
+│   │   ├── dashboard.py     # WebダッシュボードUI
+│   │   ├── github_oauth.py  # GitHub OAuth連携
+│   │   ├── billing.py       # Stripe課金（2倍料金）
+│   │   └── auth.py          # APIキー認証
+│   └── cli.py               # CLIインターフェース
 ├── templates/
-│   ├── evaluation.md     # 評価フレームワーク
-│   ├── scorecard.html    # スコアカードテンプレート
-│   └── slides/           # スライドテンプレート
-├── leaderboard.json      # 80点以上のスコア（企業名・スコア・日付のみ）
+│   ├── evaluation.md        # 評価フレームワーク
+│   ├── scorecard.html       # スコアカードテンプレート
+│   └── dashboard.html       # Webダッシュボードテンプレート
 ├── pyproject.toml
 └── README.md
 ```
@@ -255,25 +322,32 @@ due-diligence-engine/
 ```bash
 pip install due-diligence-engine
 export ANTHROPIC_API_KEY="sk-..."
-dde analyze --source /path/to/repo
+dde analyze owner/repo
 ```
 
-### オプション2: SaaS API（マネージドサービス）
+### オプション2: セルフホスト Webダッシュボード（OSS / 無料）
 
-APIキーやインフラ管理を避けたいVC向け。**料金: APIコスト × 2倍**（透明なマークアップ）。
+GitHub OAuthでPrivate Repoアクセス可能なWebダッシュボードをローカル実行。
 
 ```bash
-# Anthropicキー不要 — 当社が管理
-dde analyze --source /path/to/repo --saas --api-key "dde_your_key"
+export ANTHROPIC_API_KEY="sk-..."
+export GITHUB_CLIENT_ID="..."
+export GITHUB_CLIENT_SECRET="..."
+dde serve
+# ブラウザで http://localhost:8000/dashboard/ を開く
 ```
+
+### オプション3: SaaS API（マネージドサービス）
+
+APIキーやインフラ管理を避けたいVC向け。**料金: APIコスト x 2倍**（透明なマークアップ）。
 
 #### SaaS料金表
 
 | プラン | 月額基本料 | 分析あたり | 上限 | 機能 |
 |--------|-----------|-----------|------|------|
-| **Starter** | - | APIコスト × 2（最低$0.50） | 5件/月 | スコア + 基本レポート |
-| **Professional** | - | APIコスト × 2（最低$0.50） | 25件/月 | + スライド + PDF + Git調査 |
-| **Enterprise** | 要相談 | APIコスト × 2 | 無制限 | + 破棄証明書 + 優先サポート |
+| **Starter** | - | APIコスト x 2（最低$0.50） | 5件/月 | スコア + 基本レポート |
+| **Professional** | - | APIコスト x 2（最低$0.50） | 25件/月 | + スライド + PDF + Git調査 |
+| **Enterprise** | 要相談 | APIコスト x 2 | 無制限 | + 破棄証明書 + 優先サポート |
 
 #### コスト例（1回の分析あたり）
 
@@ -287,14 +361,6 @@ dde analyze --source /path/to/repo --saas --api-key "dde_your_key"
   合計                $11.50 APIコスト  →  $23.00 請求
 ```
 
-#### SaaSサーバー起動
-
-```bash
-export STRIPE_API_KEY="sk_..."
-export ANTHROPIC_API_KEY="sk-..."
-dde serve --host 0.0.0.0 --port 8000
-```
-
 ---
 
 ## ロードマップ
@@ -306,11 +372,14 @@ dde serve --host 0.0.0.0 --port 8000
 - [x] Gitフォレンジックモジュール
 - [x] RED FLAG検出付きスコアリングエンジン
 - [x] Stripe課金付きSaaS API（2倍料金）
-- [ ] HTML/PDFスライド生成
-- [ ] 破棄証明書付き暗号消去
+- [x] GitHub URL直接分析（`dde analyze owner/repo`）
+- [x] GitHub OAuthによるPrivate Repoアクセス
+- [x] Webダッシュボード（接続→分析→切断フロー）
+- [x] PDFレポート出力（ソースコード含まず）
+- [x] 切断 & 破棄 + 破棄証明書発行
 - [ ] リーダーボード管理
-- [ ] VCチーム向けWebダッシュボード
 - [ ] バッチ分析モード（ポートフォリオ一括DD）
+- [ ] スタートアップ側アクセス承認ポータル
 
 ---
 

@@ -597,6 +597,23 @@ async def analyze_github_repo(
 
 class AnalyzeUrlRequest(BaseModel):
     repo_url: str
+    pat_token: str | None = None
+
+
+def _validate_pat(token: str) -> None:
+    """Validate GitHub PAT format. Raises HTTPException on invalid."""
+    import re as _re
+
+    if not _re.match(r"^(github_pat_[A-Za-z0-9_]{22,}|ghp_[A-Za-z0-9]{36,})$", token):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid PAT format. Must start with 'github_pat_' or 'ghp_'.",
+        )
+
+
+def _sanitize_token(message: str, token: str) -> str:
+    """Strip PAT from error messages before logging."""
+    return message.replace(token, "[REDACTED]")
 
 
 @app.post("/api/v1/analyze/url")
@@ -604,10 +621,10 @@ async def analyze_url(
     request: AnalyzeUrlRequest,
     config: Config = Depends(get_app_config),
 ) -> dict:
-    """Analyze a public GitHub repository by URL.
+    """Analyze a GitHub repository by URL.
 
-    Just paste a GitHub URL — no API key required for public repos.
-    This is the endpoint the web search bar uses.
+    For public repos, just paste the URL.
+    For private repos, include a Fine-grained PAT with Contents: Read-only.
     """
     import re
     import uuid
@@ -626,6 +643,16 @@ async def analyze_url(
     else:
         raise HTTPException(status_code=400, detail="Invalid GitHub URL")
 
+    # Validate and build clone URL
+    pat = request.pat_token.strip() if request.pat_token else None
+    if pat:
+        _validate_pat(pat)
+        clone_url = f"https://x-access-token:{pat}@github.com/{owner_repo}.git"
+        logger.info(f"Analyzing private repo with PAT: {owner_repo}")
+    else:
+        clone_url = f"https://github.com/{owner_repo}.git"
+        logger.info(f"Analyzing public repo: {owner_repo}")
+
     analysis_id = uuid.uuid4().hex[:16]
 
     # Store as running
@@ -639,7 +666,6 @@ async def analyze_url(
     # Clone and analyze
     loader = SecureLoader(config)
     try:
-        clone_url = f"https://github.com/{owner_repo}.git"
         loader.load_from_url(clone_url)
 
         engine = AnalysisEngine(config, loader)
@@ -665,7 +691,10 @@ async def analyze_url(
         return {"analysis_id": analysis_id, "status": "completed"}
 
     except Exception as e:
-        logger.error(f"URL analysis failed for {owner_repo}: {e}")
+        error_msg = str(e)
+        if pat:
+            error_msg = _sanitize_token(error_msg, pat)
+        logger.error(f"URL analysis failed for {owner_repo}: {error_msg}")
 
         # Still run local-only analysis if clone fails
         store_analysis(analysis_id, {
@@ -673,9 +702,9 @@ async def analyze_url(
             "connection_id": "",
             "result": None,
             "purge_cert": None,
-            "error": str(e),
+            "error": error_msg,
         })
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {error_msg}")
     finally:
         loader.destroy()
 

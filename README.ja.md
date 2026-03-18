@@ -161,10 +161,24 @@ pip install -e .
 ```bash
 export ANTHROPIC_API_KEY="your-api-key"
 
-# オプション: Webダッシュボードでの Private Repo アクセス用
+# オプション: GitHub OAuthでのPrivateリポアクセス用
 export GITHUB_CLIENT_ID="your-github-oauth-app-id"
 export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ```
+
+### Privateリポジトリアクセス（PAT方式）
+
+Privateリポの場合、スタートアップが **Fine-grained Personal Access Token** を発行してダッシュボードに貼り付けます：
+
+1. [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta) にアクセス
+2. **Generate new token** をクリック
+3. 設定：
+   - **Repository access**: Only select repositories → 対象リポを選択
+   - **Permissions** → Repository permissions → **Contents**: Read-only
+   - **Expiration**: 7〜30日推奨
+4. トークン（`github_pat_...`）をコピーし、DDEダッシュボードにリポURLと一緒に貼り付け
+
+PATは**一切保存されません** — メモリ上で`git clone`に1回使用後、即座に破棄されます。
 
 ### 使い方 — CLI
 

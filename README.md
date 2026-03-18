@@ -161,10 +161,24 @@ pip install -e .
 ```bash
 export ANTHROPIC_API_KEY="your-api-key"
 
-# Optional: for private repo access via Web Dashboard
+# Optional: for private repo access via GitHub OAuth
 export GITHUB_CLIENT_ID="your-github-oauth-app-id"
 export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ```
+
+### Private Repository Access (PAT)
+
+For private repos, the startup generates a **Fine-grained Personal Access Token** and pastes it into the dashboard:
+
+1. Go to [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
+2. Click **Generate new token**
+3. Set:
+   - **Repository access**: Only select repositories → choose the target repo
+   - **Permissions** → Repository permissions → **Contents**: Read-only
+   - **Expiration**: 7–30 days recommended
+4. Copy the token (`github_pat_...`) and paste it in the DDE dashboard alongside the repo URL
+
+The PAT is **never stored** — it is used once in-memory for `git clone`, then discarded. No credentials are persisted to disk.
 
 ### Usage — CLI
 

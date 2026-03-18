@@ -59,7 +59,7 @@ tailwind.config = {{
     extend: {{
       colors: {{
         surface: '#1e293b',
-        accent: '#38bdf8',
+        accent: '#5271FF',
       }}
     }}
   }}
@@ -93,9 +93,11 @@ tailwind.config = {{
     applyLang();
   }}
   function applyLang() {{
-    document.querySelectorAll("[data-" + currentLang + "]").forEach(function(el) {{
+    document.querySelectorAll("[data-en]").forEach(function(el) {{
       var val = el.getAttribute("data-" + currentLang);
-      if (val.indexOf("<") >= 0) {{ el.innerHTML = val; }} else {{ el.textContent = val; }}
+      if (val) {{
+        if (val.indexOf("<") >= 0) {{ el.innerHTML = val; }} else {{ el.textContent = val; }}
+      }}
     }});
     var enSpan = document.getElementById("lang-en");
     var jaSpan = document.getElementById("lang-ja");
@@ -111,7 +113,7 @@ tailwind.config = {{
     document.documentElement.lang = currentLang;
   }}
   document.getElementById("lang-toggle").addEventListener("click", toggleLang);
-  if (currentLang !== "en") applyLang();
+  applyLang();
   </script>
   {scripts}
 </body>
@@ -147,7 +149,7 @@ def _build_landing_html() -> str:
         '<title>Due Diligence Engine</title>\n'
         '<script src="https://cdn.tailwindcss.com"></script>\n'
         '<script>\n'
-        'tailwind.config = { theme: { extend: { colors: { surface: "#1e293b", accent: "#38bdf8" } } } }\n'
+        'tailwind.config = { theme: { extend: { colors: { surface: "#1e293b", accent: "#5271FF" } } } }\n'
         '</script>\n'
         '<style>body { font-family: "Inter", system-ui, -apple-system, sans-serif; }</style>\n'
         '</head>\n'
@@ -314,19 +316,19 @@ def _build_landing_html() -> str:
         '        </div>\n'
         '      </div>\n'
         '    </div>\n'
-        '    <div class="mt-6 w-full max-w-2xl">\n'
+        '    <div id="pro-section" class="mt-6 w-full max-w-2xl hidden">\n'
         '      <div class="bg-surface rounded-xl p-6 border border-accent/30">\n'
         '        <div class="flex items-center gap-3 mb-3">\n'
         '          <div class="bg-accent/20 text-accent font-bold text-xs tracking-wider px-3 py-1 rounded-full">PRO</div>\n'
-        '          <div class="text-white font-bold" data-en="Pro Analysis \u2014 \u00a53,000 / company (Japan only)" data-ja="Pro\u5206\u6790 \u2014 \u00a53,000 / \u793e\uff08\u65e5\u672c\u306e\u307f\uff09">Pro Analysis \u2014 \u00a53,000 / company (Japan only)</div>\n'
+        '          <div class="text-white font-bold">Pro\u5206\u6790 \u2014 \u00a53,000 / \u793e</div>\n'
         '        </div>\n'
-        '        <p class="text-slate-400 text-sm mb-4" data-en="Automated AI report + real-time support via online meeting. No API key needed." data-ja="AI\u81ea\u52d5\u30ec\u30dd\u30fc\u30c8 + \u30aa\u30f3\u30e9\u30a4\u30f3\u4f1a\u8b70\u3067\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u30b5\u30dd\u30fc\u30c8\u3002API\u30ad\u30fc\u4e0d\u8981\u3002">Automated AI report + real-time support via online meeting. No API key needed.</p>\n'
+        '        <p class="text-slate-400 text-sm mb-4">AI\u81ea\u52d5\u30ec\u30dd\u30fc\u30c8 + \u30aa\u30f3\u30e9\u30a4\u30f3\u4f1a\u8b70\u3067\u30ea\u30a2\u30eb\u30bf\u30a4\u30e0\u30b5\u30dd\u30fc\u30c8\u3002API\u30ad\u30fc\u4e0d\u8981\u3002</p>\n'
         '        <div class="flex flex-wrap gap-2 mb-4">\n'
         '          <span class="bg-orange-950/30 text-orange-400 text-xs px-3 py-1 rounded-lg">Claude + Gemini AI</span>\n'
         '          <span class="bg-slate-800 text-slate-400 text-xs px-3 py-1 rounded-lg">\u30ec\u30dd\u30fc\u30c8\u81ea\u52d5\u751f\u6210</span>\n'
         '          <span class="bg-slate-800 text-slate-400 text-xs px-3 py-1 rounded-lg">\u30aa\u30f3\u30e9\u30a4\u30f3\u30b5\u30dd\u30fc\u30c8</span>\n'
         '        </div>\n'
-        '        <p class="text-sm text-slate-300 mb-4" data-en="Contact us for Pro Analysis:" data-ja="\u304a\u6c17\u8efd\u306b\u304a\u554f\u3044\u5408\u308f\u305b\u304f\u3060\u3055\u3044\uff1a">Contact us for Pro Analysis:</p>\n'
+        '        <p class="text-sm text-slate-300 mb-4">\u304a\u6c17\u8efd\u306b\u304a\u554f\u3044\u5408\u308f\u305b\u304f\u3060\u3055\u3044\uff1a</p>\n'
         '        <div class="flex flex-col gap-2">\n'
         '          <a href="https://www.atlasassociates.io/" target="_blank" class="text-accent hover:underline text-sm font-semibold">Atlas Associates &rarr;</a>\n'
         '          <a href="mailto:support@atlasassociates.io" class="text-slate-400 hover:text-white text-sm transition-colors">support@atlasassociates.io</a>\n'
@@ -345,9 +347,11 @@ def _build_landing_html() -> str:
         '  applyLang();\n'
         '}\n'
         'function applyLang() {\n'
-        '  document.querySelectorAll("[data-" + currentLang + "]").forEach(function(el) {\n'
+        '  document.querySelectorAll("[data-en]").forEach(function(el) {\n'
         '    var val = el.getAttribute("data-" + currentLang);\n'
-        '    if (val.indexOf("<") >= 0) { el.innerHTML = val; } else { el.textContent = val; }\n'
+        '    if (val) {\n'
+        '      if (val.indexOf("<") >= 0) { el.innerHTML = val; } else { el.textContent = val; }\n'
+        '    }\n'
         '  });\n'
         '  var enSpan = document.getElementById("lang-en");\n'
         '  var jaSpan = document.getElementById("lang-ja");\n'
@@ -360,10 +364,14 @@ def _build_landing_html() -> str:
         '      jaSpan.className = "text-white font-bold";\n'
         '    }\n'
         '  }\n'
+        '  var proSection = document.getElementById("pro-section");\n'
+        '  if (proSection) {\n'
+        '    proSection.classList.toggle("hidden", currentLang !== "ja");\n'
+        '  }\n'
         '  document.documentElement.lang = currentLang;\n'
         '}\n'
         'document.getElementById("lang-toggle").addEventListener("click", toggleLang);\n'
-        'if (currentLang !== "en") applyLang();\n'
+        'applyLang();\n'
         '\n'
         'document.getElementById("private-toggle").addEventListener("click", function() {\n'
         '  var section = document.getElementById("private-section");\n'

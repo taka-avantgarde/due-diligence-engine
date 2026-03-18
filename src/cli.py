@@ -148,7 +148,8 @@ def analyze(
 
         # Generate slides
         slide_gen = SlideGenerator()
-        slide_path = output_dir / f"dde_slides_{name}_{result.analysis_id}.html"
+        safe_name = name.replace("/", "_").replace("\\", "_")
+        slide_path = output_dir / f"dde_slides_{safe_name}_{result.analysis_id}.html"
         slide_gen.save(result, slide_path)
         saved.append(slide_path)
 

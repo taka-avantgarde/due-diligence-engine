@@ -217,7 +217,8 @@ class ReportGenerator:
 
         output_dir.mkdir(parents=True, exist_ok=True)
         saved: list[Path] = []
-        base_name = f"dde_report_{result.project_name}_{result.analysis_id}"
+        safe_name = result.project_name.replace("/", "_").replace("\\", "_")
+        base_name = f"dde_report_{safe_name}_{result.analysis_id}"
 
         if "md" in formats:
             md_path = output_dir / f"{base_name}.md"

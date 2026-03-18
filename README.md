@@ -56,9 +56,13 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 |------|------|-------------|----------|
 | **Free (Local Only)** | Free | None | Code structure, git forensics, dependency scan |
 | **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1-3 providers) | Full AI analysis + cross-verification |
-| **Pro Analysis** | **$20 / analysis** (Stripe) | Claude + Gemini (managed) | No API key setup. We run both AIs for you |
+| **Pro Analysis (Japan)** | **¥3,000 / company** | Claude + Gemini (managed) | AI auto-report + real-time online meeting support |
 
 > **BYOK:** One API key is enough to start. Add more providers for cross-verification. Typical cost: ~$10-15/analysis depending on codebase size.
+>
+> **Pro Analysis (日本のみ):** 1社¥3,000で自動レポート生成 + オンライン会議でリアルタイムサポート。お気軽にお問い合わせください。
+>
+> **[Atlas Associates](https://www.atlasassociates.io/)** — support@atlasassociates.io
 
 ---
 
@@ -77,7 +81,7 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 | **10-Level Tech Rating** | Each dimension rated Lv.1-10 with clear criteria |
 | **PDF Export** | Professional investment committee-ready PDF reports |
 | **Disconnect & Purge** | One-click data erasure + purge certificate |
-| **Stripe Payment** | Pro Analysis with secure Stripe Checkout ($20/analysis) |
+| **Pro Analysis Service** | ¥3,000/company with real-time online meeting support (Japan only) |
 | **Bilingual Dashboard** | English / 日本語 toggle |
 
 ---
@@ -127,7 +131,7 @@ export ANTHROPIC_API_KEY="sk-ant-..."     # Claude
 export GOOGLE_AI_API_KEY="AIza..."        # Gemini
 export OPENAI_API_KEY="sk-..."            # ChatGPT
 
-# Optional: Stripe (for Pro Analysis)
+# Optional: for managed Pro Analysis service
 export STRIPE_API_KEY="sk_live_..."
 ```
 
@@ -199,7 +203,7 @@ Add a product/service URL alongside the GitHub repo to enable credibility analys
 | Local CLI | Free | `dde analyze owner/repo --skip-ai` |
 | BYOK CLI | Free + API costs | Your own API keys, full AI analysis |
 | BYOK Dashboard | Free + API costs | Web UI with GitHub PAT support |
-| Pro Analysis | $20/analysis | Managed Claude + Gemini (Stripe) |
+| Pro Analysis (Japan) | ¥3,000/company | Managed AI analysis + online meeting support |
 
 ---
 
@@ -210,7 +214,7 @@ Add a product/service URL alongside the GitHub repo to enable credibility analys
 - [x] Provider score comparison (per-provider breakdown)
 - [x] Site vs Code cross-validation engine
 - [x] Credibility scoring with contradiction detection
-- [x] Pro Analysis with Stripe payment ($20/analysis)
+- [x] Pro Analysis service (¥3,000/company, Japan only)
 - [x] Bilingual dashboard (English / 日本語)
 - [x] PDF report export
 - [x] Disconnect & Purge with certificate

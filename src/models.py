@@ -153,6 +153,25 @@ class ConsistencyResult(BaseModel):
     findings: list[str] = Field(default_factory=list)
 
 
+class AIProviderResult(BaseModel):
+    """単一AIプロバイダーの分析結果。
+
+    各プロバイダー（Claude/Gemini/ChatGPT）が6軸スコア・レッドフラグ・
+    判定結果を独立して返す。複数プロバイダーの結果をクロス検証に使用。
+    """
+
+    provider: str  # "claude", "gemini", "chatgpt"
+    model_id: str
+    dimension_scores: dict[str, float] = Field(default_factory=dict)  # 6軸スコア (0-100)
+    red_flags: list[RedFlag] = Field(default_factory=list)
+    verdict: str = ""  # "strong_invest", "invest_with_conditions", etc.
+    confidence: float = 0.0
+    executive_summary: str = ""
+    usage: dict[str, int] = Field(default_factory=dict)  # input_tokens, output_tokens
+    cost_usd: float = 0.0
+    error: str | None = None  # エラー時のメッセージ
+
+
 class AnalysisResult(BaseModel):
     """Complete analysis result aggregating all passes."""
 
@@ -164,6 +183,7 @@ class AnalysisResult(BaseModel):
     git_forensics: GitForensicsResult = Field(default_factory=GitForensicsResult)
     consistency: ConsistencyResult = Field(default_factory=ConsistencyResult)
     score: Score | None = None
+    ai_results: dict[str, AIProviderResult] = Field(default_factory=dict)  # provider名→結果
     model_usage: dict[str, dict[str, int]] = Field(default_factory=dict)
     total_cost_usd: float = 0.0
 

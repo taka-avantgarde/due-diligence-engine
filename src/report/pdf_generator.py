@@ -42,7 +42,7 @@ from reportlab.platypus import (
     TableStyle,
 )
 
-from src.models import AnalysisResult, PurgeCertificate, Severity
+from src.models import AIProviderResult, AnalysisResult, PurgeCertificate, Severity
 
 logger = logging.getLogger(__name__)
 
@@ -467,6 +467,10 @@ class PDFReportGenerator:
         # Score breakdown
         story.extend(self._build_score_breakdown(result))
 
+        # Multi-AI provider results
+        if result.ai_results:
+            story.extend(self._build_ai_provider_section(result))
+
         # Red flags
         if result.score and result.score.red_flags:
             story.append(PageBreak())
@@ -702,6 +706,135 @@ class PDFReportGenerator:
                 Paragraph(f"<b>{self._dim_name(dim.name)}</b> ({dim.score:.0f}/100)", s["body"])
             )
             elements.append(Paragraph(dim.rationale, s["body_small"]))
+
+        return elements
+
+    def _build_ai_provider_section(self, result: AnalysisResult) -> list:
+        """マルチAIプロバイダーの分析結果セクションを生成。"""
+        s = self._styles
+        t = self._t
+        elements: list = []
+
+        ai_title = "AI Provider Analysis" if self._lang == "en" else "AIプロバイダー分析"
+        elements.append(Paragraph(ai_title, s["heading1"]))
+        elements.append(
+            HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=4 * mm)
+        )
+
+        # プロバイダーカラー
+        provider_colors = {
+            "claude": COLOR_ORANGE,
+            "gemini": COLOR_ACCENT,
+            "chatgpt": COLOR_GREEN,
+        }
+
+        # 各プロバイダーのサマリー
+        for name, ai_result in result.ai_results.items():
+            if ai_result.error:
+                elements.append(Paragraph(
+                    f"<b>{name.capitalize()}</b>: Error - {ai_result.error}",
+                    s["body_small"],
+                ))
+                continue
+
+            color = provider_colors.get(name, COLOR_TEXT)
+            elements.append(Paragraph(
+                f'<font color="{color.hexval()}"><b>{name.capitalize()}</b></font>'
+                f' ({ai_result.model_id}) — '
+                f'Verdict: <b>{ai_result.verdict}</b> | '
+                f'Confidence: {ai_result.confidence:.0f}%',
+                s["body"],
+            ))
+            if ai_result.executive_summary:
+                elements.append(Paragraph(ai_result.executive_summary, s["body_small"]))
+            elements.append(Spacer(1, 3 * mm))
+
+        # プロバイダー比較テーブル
+        valid_providers = [
+            (name, r) for name, r in result.ai_results.items()
+            if r.error is None and r.dimension_scores
+        ]
+
+        if valid_providers:
+            elements.append(Spacer(1, 4 * mm))
+            comparison_title = "Provider Score Comparison" if self._lang == "en" else "プロバイダースコア比較"
+            elements.append(Paragraph(comparison_title, s["heading2"]))
+
+            dim_keys = [
+                "technical_originality", "technology_advancement",
+                "implementation_depth", "architecture_quality",
+                "claim_consistency", "security_posture",
+            ]
+            dim_labels_en = {
+                "technical_originality": "Originality",
+                "technology_advancement": "Advancement",
+                "implementation_depth": "Implementation",
+                "architecture_quality": "Architecture",
+                "claim_consistency": "Consistency",
+                "security_posture": "Security",
+            }
+            dim_labels_ja = {
+                "technical_originality": "独自性",
+                "technology_advancement": "先進性",
+                "implementation_depth": "実装深度",
+                "architecture_quality": "アーキテクチャ",
+                "claim_consistency": "整合性",
+                "security_posture": "セキュリティ",
+            }
+            dim_labels = dim_labels_ja if self._lang == "ja" else dim_labels_en
+
+            # ヘッダー行
+            header = [t.get("dimension", "Dimension")]
+            for name, _ in valid_providers:
+                header.append(name.capitalize())
+            avg_label = "Avg" if self._lang == "en" else "平均"
+            header.append(avg_label)
+
+            table_data = [header]
+            for key in dim_keys:
+                row = [dim_labels.get(key, key)]
+                scores = []
+                for _, r in valid_providers:
+                    score_val = r.dimension_scores.get(key, 0)
+                    row.append(f"{score_val:.0f}")
+                    scores.append(score_val)
+                avg = sum(scores) / len(scores) if scores else 0
+                row.append(f"{avg:.0f}")
+                table_data.append(row)
+
+            # コスト行
+            cost_label = "Cost (USD)" if self._lang == "en" else "コスト (USD)"
+            cost_row = [cost_label]
+            total_cost = 0.0
+            for _, r in valid_providers:
+                cost_row.append(f"${r.cost_usd:.4f}")
+                total_cost += r.cost_usd
+            cost_row.append(f"${total_cost:.4f}")
+            table_data.append(cost_row)
+
+            n_cols = len(header)
+            col_width = 15 * cm / n_cols
+            col_widths = [col_width] * n_cols
+
+            font_header = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
+            font_body = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
+
+            table = Table(table_data, colWidths=col_widths)
+            table.setStyle(TableStyle([
+                ("BACKGROUND", (0, 0), (-1, 0), COLOR_ACCENT),
+                ("TEXTCOLOR", (0, 0), (-1, 0), COLOR_WHITE),
+                ("FONTNAME", (0, 0), (-1, 0), font_header),
+                ("FONTNAME", (0, 1), (-1, -1), font_body),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("ALIGN", (1, 0), (-1, -1), "CENTER"),
+                ("GRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+                ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_WHITE, COLOR_LIGHT_BG]),
+                ("TOPPADDING", (0, 0), (-1, -1), 5),
+                ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
+                ("LEFTPADDING", (0, 0), (-1, -1), 6),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 6),
+            ]))
+            elements.append(table)
 
         return elements
 

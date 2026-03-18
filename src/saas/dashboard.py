@@ -232,17 +232,40 @@ def _build_landing_html() -> str:
         '    </div>\n'
         '    <div class="mt-12 w-full max-w-2xl">\n'
         '      <div class="bg-surface rounded-xl p-6 border border-green-900/50">\n'
-        '        <div class="flex items-center gap-3 mb-3">\n'
-        '          <div class="text-green-400 font-bold text-sm tracking-wider">BYOK</div>\n'
-        '          <div class="text-white font-bold" data-en="Bring Your Own Key" data-ja="&#33258;&#31038;API&#12461;&#12540;&#12391;&#20998;&#26512;">Bring Your Own Key</div>\n'
+        '        <button id="byok-toggle" class="w-full flex items-center justify-between cursor-pointer">\n'
+        '          <div class="flex items-center gap-3">\n'
+        '            <div class="text-green-400 font-bold text-sm tracking-wider">BYOK</div>\n'
+        '            <div class="text-white font-bold" data-en="Bring Your Own Key" data-ja="&#33258;&#31038;API&#12461;&#12540;&#12391;&#20998;&#26512;">Bring Your Own Key</div>\n'
+        '          </div>\n'
+        '          <svg id="byok-chevron" class="w-5 h-5 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>\n'
+        '        </button>\n'
+        '        <div id="byok-section" class="hidden mt-4">\n'
+        '          <p class="text-slate-400 text-sm mb-4" data-en="Use your own AI API key for full-powered analysis. Supports multiple providers simultaneously." data-ja="&#12372;&#33258;&#36523;&#12398;AI API&#12461;&#12540;&#12391;&#26412;&#26684;&#20998;&#26512;&#12290;&#35079;&#25968;&#12503;&#12525;&#12496;&#12452;&#12480;&#12540;&#12398;&#21516;&#26178;&#20351;&#29992;&#12395;&#23550;&#24540;&#12290;">Use your own AI API key for full-powered analysis. Supports multiple providers simultaneously.</p>\n'
+        '          <div class="space-y-4">\n'
+        '            <div>\n'
+        '              <div class="flex items-center gap-2 mb-2">\n'
+        '                <span class="bg-orange-950/50 text-orange-300 text-xs px-3 py-1 rounded-lg border border-orange-800/50">Claude (Anthropic)</span>\n'
+        '              </div>\n'
+        '              <input id="api-key-claude" type="password" placeholder="sk-ant-..." class="w-full bg-slate-900 border border-slate-700 focus:border-orange-500 rounded-lg px-4 py-3 text-white text-sm placeholder-slate-600 outline-none transition-colors" autocomplete="off" />\n'
+        '            </div>\n'
+        '            <div>\n'
+        '              <div class="flex items-center gap-2 mb-2">\n'
+        '                <span class="bg-blue-950/50 text-blue-300 text-xs px-3 py-1 rounded-lg border border-blue-800/50">Gemini (Google)</span>\n'
+        '              </div>\n'
+        '              <input id="api-key-gemini" type="password" placeholder="AIza..." class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-lg px-4 py-3 text-white text-sm placeholder-slate-600 outline-none transition-colors" autocomplete="off" />\n'
+        '            </div>\n'
+        '            <div>\n'
+        '              <div class="flex items-center gap-2 mb-2">\n'
+        '                <span class="bg-emerald-950/50 text-emerald-300 text-xs px-3 py-1 rounded-lg border border-emerald-800/50">ChatGPT (OpenAI)</span>\n'
+        '              </div>\n'
+        '              <input id="api-key-chatgpt" type="password" placeholder="sk-..." class="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-lg px-4 py-3 text-white text-sm placeholder-slate-600 outline-none transition-colors" autocomplete="off" />\n'
+        '            </div>\n'
+        '          </div>\n'
+        '          <div class="flex items-center gap-2 mt-4">\n'
+        '            <svg class="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>\n'
+        '            <span class="text-xs text-slate-500" data-en="API keys are never stored. Used once in-memory for analysis, then immediately discarded. Costs are billed directly to your account." data-ja="API&#12461;&#12540;&#12399;&#20445;&#23384;&#12373;&#12428;&#12414;&#12379;&#12435;&#12290;&#20998;&#26512;&#12395;1&#22238;&#20351;&#29992;&#24460;&#12289;&#21363;&#24231;&#12395;&#30772;&#26820;&#12290;&#12467;&#12473;&#12488;&#12399;&#21508;&#33258;&#12398;&#12450;&#12459;&#12454;&#12531;&#12488;&#12395;&#30452;&#25509;&#35531;&#27714;&#12290;">API keys are never stored. Used once in-memory for analysis, then immediately discarded. Costs are billed directly to your account.</span>\n'
+        '          </div>\n'
         '        </div>\n'
-        '        <p class="text-slate-400 text-sm mb-3" data-en="Use your own AI API key for full-powered analysis. Supports:" data-ja="&#12372;&#33258;&#36523;&#12398;AI API&#12461;&#12540;&#12391;&#26412;&#26684;&#20998;&#26512;&#12290;&#23550;&#24540;AI:">Use your own AI API key for full-powered analysis. Supports:</p>\n'
-        '        <div class="flex flex-wrap gap-3 mb-3">\n'
-        '          <span class="bg-orange-950/50 text-orange-300 text-xs px-3 py-1.5 rounded-lg border border-orange-800/50">Claude (Anthropic)</span>\n'
-        '          <span class="bg-blue-950/50 text-blue-300 text-xs px-3 py-1.5 rounded-lg border border-blue-800/50">Gemini (Google)</span>\n'
-        '          <span class="bg-emerald-950/50 text-emerald-300 text-xs px-3 py-1.5 rounded-lg border border-emerald-800/50">ChatGPT (OpenAI)</span>\n'
-        '        </div>\n'
-        '        <p class="text-slate-500 text-xs" data-en="API costs are billed directly to your account. DDE charges nothing extra." data-ja="API&#12467;&#12473;&#12488;&#12399;&#21508;&#33258;&#12398;&#12450;&#12459;&#12454;&#12531;&#12488;&#12395;&#30452;&#25509;&#35531;&#27714;&#12290;DDE&#12398;&#36861;&#21152;&#26009;&#37329;&#12399;&#12354;&#12426;&#12414;&#12379;&#12435;&#12290;">API costs are billed directly to your account. DDE charges nothing extra.</p>\n'
         '      </div>\n'
         '    </div>\n'
         '  </div>\n'
@@ -266,6 +289,13 @@ def _build_landing_html() -> str:
         'document.getElementById("private-toggle").addEventListener("click", function() {\n'
         '  var section = document.getElementById("private-section");\n'
         '  var chevron = document.getElementById("private-chevron");\n'
+        '  section.classList.toggle("hidden");\n'
+        '  chevron.style.transform = section.classList.contains("hidden") ? "" : "rotate(90deg)";\n'
+        '});\n'
+        '\n'
+        'document.getElementById("byok-toggle").addEventListener("click", function() {\n'
+        '  var section = document.getElementById("byok-section");\n'
+        '  var chevron = document.getElementById("byok-chevron");\n'
         '  section.classList.toggle("hidden");\n'
         '  chevron.style.transform = section.classList.contains("hidden") ? "" : "rotate(90deg)";\n'
         '});\n'
@@ -314,6 +344,15 @@ def _build_landing_html() -> str:
         '  var body = {repo_url: repo};\n'
         '  var patEl = document.getElementById("pat-input");\n'
         '  if (patEl && patEl.value.trim()) { body.pat_token = patEl.value.trim(); }\n'
+        '\n'
+        '  var apiKeys = {};\n'
+        '  var ck = document.getElementById("api-key-claude");\n'
+        '  if (ck && ck.value.trim()) apiKeys.claude = ck.value.trim();\n'
+        '  var gk = document.getElementById("api-key-gemini");\n'
+        '  if (gk && gk.value.trim()) apiKeys.gemini = gk.value.trim();\n'
+        '  var ok = document.getElementById("api-key-chatgpt");\n'
+        '  if (ok && ok.value.trim()) apiKeys.chatgpt = ok.value.trim();\n'
+        '  if (Object.keys(apiKeys).length > 0) body.api_keys = apiKeys;\n'
         '\n'
         '  fetch("/api/v1/analyze/url", {\n'
         '    method: "POST",\n'
@@ -881,6 +920,117 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
           </table>
         </div>
         """
+
+        # Provider-based AI analysis scores
+        ai_results = getattr(result, "ai_results", None)
+        if ai_results:
+            _provider_labels = {
+                "claude": "Claude (Anthropic)",
+                "gemini": "Gemini (Google)",
+                "chatgpt": "ChatGPT (OpenAI)",
+            }
+            _provider_styles = {
+                "claude": "bg-orange-950/50 text-orange-300 border-orange-800/50",
+                "gemini": "bg-blue-950/50 text-blue-300 border-blue-800/50",
+                "chatgpt": "bg-emerald-950/50 text-emerald-300 border-emerald-800/50",
+            }
+            _provider_badge = {
+                "claude": "bg-orange-950/50 text-orange-300",
+                "gemini": "bg-blue-950/50 text-blue-300",
+                "chatgpt": "bg-emerald-950/50 text-emerald-300",
+            }
+
+            provider_title = "AI Provider Analysis" if lang == "en" else "AIプロバイダー別分析"
+            verdict_label = "Verdict" if lang == "en" else "判定"
+            confidence_label = "Confidence" if lang == "en" else "確信度"
+            summary_label = "Executive Summary" if lang == "en" else "エグゼクティブサマリー"
+
+            provider_cards_html = ""
+            active_providers = []
+
+            for provider_key in ["claude", "gemini", "chatgpt"]:
+                pr = ai_results.get(provider_key) if isinstance(ai_results, dict) else getattr(ai_results, provider_key, None)
+                if pr is None:
+                    continue
+                active_providers.append(provider_key)
+                label = _provider_labels[provider_key]
+                style = _provider_styles[provider_key]
+                pr_verdict = pr.get("verdict", "N/A") if isinstance(pr, dict) else getattr(pr, "verdict", "N/A")
+                pr_confidence = pr.get("confidence", 0) if isinstance(pr, dict) else getattr(pr, "confidence", 0)
+                pr_summary = pr.get("executive_summary", "") if isinstance(pr, dict) else getattr(pr, "executive_summary", "")
+
+                provider_cards_html += f"""
+                <div class="{style} border rounded-xl p-5 mb-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <span class="font-bold text-sm">{label}</span>
+                    <span class="text-xs opacity-75">{confidence_label}: {pr_confidence}%</span>
+                  </div>
+                  <div class="mb-2">
+                    <span class="text-xs uppercase tracking-wider opacity-60">{verdict_label}</span>
+                    <div class="text-white font-semibold text-lg">{pr_verdict}</div>
+                  </div>
+                  <div>
+                    <span class="text-xs uppercase tracking-wider opacity-60">{summary_label}</span>
+                    <p class="text-sm mt-1 opacity-80">{pr_summary}</p>
+                  </div>
+                </div>
+                """
+
+            # Provider comparison table (6-axis scores per provider)
+            if active_providers:
+                dim_names_en = [
+                    "Technical Originality", "Technology Advancement",
+                    "Implementation Depth", "Architecture Quality",
+                    "Claim Consistency", "Security Posture",
+                ]
+                comparison_title = "Provider Score Comparison" if lang == "en" else "プロバイダー別スコア比較"
+                provider_header_cols = ""
+                for pk in active_providers:
+                    badge_cls = _provider_badge[pk]
+                    short_name = pk.capitalize()
+                    provider_header_cols += f'<th class="text-center py-2"><span class="{badge_cls} text-xs px-2 py-0.5 rounded-lg">{short_name}</span></th>'
+
+                comparison_rows = ""
+                for dim_name in dim_names_en:
+                    dim_display = _dim_ja.get(dim_name, dim_name) if lang == "ja" else dim_name
+                    cells = ""
+                    for pk in active_providers:
+                        pr = ai_results.get(pk) if isinstance(ai_results, dict) else getattr(ai_results, pk, None)
+                        pr_dims = pr.get("dimensions", {}) if isinstance(pr, dict) else getattr(pr, "dimensions", {})
+                        dim_score = pr_dims.get(dim_name, "-") if isinstance(pr_dims, dict) else getattr(pr_dims, dim_name, "-")
+                        if isinstance(dim_score, (int, float)):
+                            cell_color = "text-green-400" if dim_score >= 70 else "text-yellow-400" if dim_score >= 40 else "text-red-400"
+                            cells += f'<td class="text-center py-2 {cell_color} font-mono">{dim_score:.0f}</td>'
+                        else:
+                            cells += f'<td class="text-center py-2 text-slate-600">-</td>'
+                    comparison_rows += f"""
+                    <tr class="border-b border-slate-800/50">
+                      <td class="py-2 text-sm text-white">{dim_display}</td>
+                      {cells}
+                    </tr>
+                    """
+
+                provider_cards_html += f"""
+                <div class="bg-surface rounded-xl p-5 border border-slate-800 mt-4">
+                  <h3 class="text-sm font-semibold text-accent mb-3">{comparison_title}</h3>
+                  <table class="w-full">
+                    <thead>
+                      <tr class="text-xs text-accent uppercase tracking-wider">
+                        <th class="text-left py-2">{t['dimension']}</th>
+                        {provider_header_cols}
+                      </tr>
+                    </thead>
+                    <tbody>{comparison_rows}</tbody>
+                  </table>
+                </div>
+                """
+
+            score_html += f"""
+            <div class="mb-6">
+              <h2 class="text-lg font-semibold text-accent mb-4">{provider_title}</h2>
+              {provider_cards_html}
+            </div>
+            """
 
         # Tech Level Ratings detail
         if score.tech_ratings:

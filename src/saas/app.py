@@ -598,6 +598,7 @@ async def analyze_github_repo(
 class AnalyzeUrlRequest(BaseModel):
     repo_url: str
     pat_token: str | None = None
+    api_keys: dict[str, str] | None = None  # {"claude": "sk-...", "gemini": "...", "chatgpt": "sk-..."}
 
 
 def _validate_pat(token: str) -> None:
@@ -614,6 +615,29 @@ def _validate_pat(token: str) -> None:
 def _sanitize_token(message: str, token: str) -> str:
     """Strip PAT from error messages before logging."""
     return message.replace(token, "[REDACTED]")
+
+
+def _validate_api_keys(keys: dict[str, str] | None) -> dict[str, str] | None:
+    """BYOKのAPIキーをバリデーション・サニタイズ。
+
+    許可されたプロバイダー名のみ受け付け、空文字列のキーは除外。
+    """
+    if not keys:
+        return None
+
+    allowed_providers = {"claude", "gemini", "chatgpt"}
+    validated: dict[str, str] = {}
+
+    for provider, key in keys.items():
+        provider = provider.strip().lower()
+        key = key.strip()
+        if provider not in allowed_providers:
+            continue
+        if not key:
+            continue
+        validated[provider] = key
+
+    return validated if validated else None
 
 
 @app.post("/api/v1/analyze/url")
@@ -668,7 +692,10 @@ async def analyze_url(
     try:
         loader.load_from_url(clone_url)
 
-        engine = AnalysisEngine(config, loader)
+        # BYOKキーのバリデーション・サニタイズ
+        byok_keys = _validate_api_keys(request.api_keys) if request.api_keys else None
+
+        engine = AnalysisEngine(config, loader, api_keys=byok_keys)
         repo_path = loader.cloned_repo_path
         result = engine.run(
             project_name=owner_repo,

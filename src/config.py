@@ -117,6 +117,8 @@ class Config:
     """Application-wide configuration."""
 
     anthropic_api_key: str = ""
+    google_ai_api_key: str = ""
+    openai_api_key: str = ""
     stripe_api_key: str = ""
     stripe_webhook_secret: str = ""
     saas_host: str = "0.0.0.0"
@@ -131,6 +133,8 @@ class Config:
         """Load configuration from environment variables."""
         return cls(
             anthropic_api_key=os.environ.get("ANTHROPIC_API_KEY", ""),
+            google_ai_api_key=os.environ.get("GOOGLE_AI_API_KEY", ""),
+            openai_api_key=os.environ.get("OPENAI_API_KEY", ""),
             stripe_api_key=os.environ.get("STRIPE_API_KEY", ""),
             stripe_webhook_secret=os.environ.get("STRIPE_WEBHOOK_SECRET", ""),
             saas_host=os.environ.get("DDE_HOST", "0.0.0.0"),
@@ -138,6 +142,22 @@ class Config:
             data_dir=Path(os.environ.get("DDE_DATA_DIR", str(Path.home() / ".dde"))),
             log_level=os.environ.get("DDE_LOG_LEVEL", "INFO"),
         )
+
+    def get_ai_api_keys(self) -> dict[str, str]:
+        """環境変数から設定されたAI APIキーをdict形式で返す。
+
+        Returns:
+            {"claude": "sk-...", "gemini": "...", "chatgpt": "sk-..."} 形式。
+            キーが未設定のプロバイダーは含まれない。
+        """
+        keys: dict[str, str] = {}
+        if self.anthropic_api_key:
+            keys["claude"] = self.anthropic_api_key
+        if self.google_ai_api_key:
+            keys["gemini"] = self.google_ai_api_key
+        if self.openai_api_key:
+            keys["chatgpt"] = self.openai_api_key
+        return keys
 
     def ensure_dirs(self) -> None:
         """Create required directories if they don't exist."""

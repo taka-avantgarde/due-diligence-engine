@@ -146,7 +146,11 @@ class Scorer:
     """
 
     def score(self, result: AnalysisResult) -> Score:
-        """Compute the full score from an AnalysisResult."""
+        """ヒューリスティックスコアとAI結果を統合して最終スコアを算出。
+
+        AI結果がある場合: (heuristic * 0.3 + ai_avg * 0.7)
+        AI結果がない場合: ヒューリスティック100%
+        """
         dimensions = [
             self._score_technical_originality(result),
             self._score_technology_advancement(result),
@@ -155,6 +159,10 @@ class Scorer:
             self._score_claim_consistency(result),
             self._score_security_posture(result),
         ]
+
+        # マルチAI結果がある場合、各次元のスコアをAI平均と加重統合
+        if result.ai_results:
+            dimensions = self._integrate_ai_scores(dimensions, result)
 
         # Collect all red flags
         all_flags: list[RedFlag] = []
@@ -173,6 +181,73 @@ class Scorer:
         )
         score.compute()
         return score
+
+    def _integrate_ai_scores(
+        self,
+        heuristic_dims: list[ScoreDimension],
+        result: AnalysisResult,
+    ) -> list[ScoreDimension]:
+        """ヒューリスティックスコアとマルチAI平均スコアを加重統合。
+
+        各次元: 統合スコア = heuristic * 0.3 + ai_avg * 0.7
+        """
+        dim_key_map = {
+            "Technical Originality": "technical_originality",
+            "Technology Advancement": "technology_advancement",
+            "Implementation Depth": "implementation_depth",
+            "Architecture Quality": "architecture_quality",
+            "Claim Consistency": "claim_consistency",
+            "Security Posture": "security_posture",
+        }
+
+        valid_ai = [
+            r for r in result.ai_results.values()
+            if r.error is None and r.dimension_scores
+        ]
+
+        if not valid_ai:
+            return heuristic_dims
+
+        integrated: list[ScoreDimension] = []
+        for dim in heuristic_dims:
+            ai_key = dim_key_map.get(dim.name)
+            if not ai_key:
+                integrated.append(dim)
+                continue
+
+            ai_scores = [
+                r.dimension_scores.get(ai_key, 0)
+                for r in valid_ai
+                if ai_key in r.dimension_scores
+            ]
+
+            if ai_scores:
+                ai_avg = sum(ai_scores) / len(ai_scores)
+                blended = dim.score * 0.3 + ai_avg * 0.7
+
+                provider_details = ", ".join(
+                    f"{r.provider.capitalize()}: {r.dimension_scores.get(ai_key, 0):.0f}"
+                    for r in valid_ai
+                    if ai_key in r.dimension_scores
+                )
+                rationale = (
+                    f"{dim.rationale} "
+                    f"[AI avg: {ai_avg:.0f} ({provider_details}) | "
+                    f"Heuristic: {dim.score:.0f} | Blended: {blended:.0f}]"
+                )
+
+                integrated.append(ScoreDimension(
+                    name=dim.name,
+                    score=round(blended, 1),
+                    weight=dim.weight,
+                    rationale=rationale,
+                    sub_scores=dim.sub_scores,
+                    flags=dim.flags,
+                ))
+            else:
+                integrated.append(dim)
+
+        return integrated
 
     def get_level_criteria(self, dimension_key: str) -> list[TechLevel]:
         """Get the 10-level criteria for a given dimension."""

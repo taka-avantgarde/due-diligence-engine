@@ -1,43 +1,63 @@
-"""Main analysis orchestrator using hybrid model strategy.
+"""メイン分析オーケストレーター（マルチAIプロバイダー対応）。
 
-Strategy: Haiku (fast scan) -> Sonnet (deep analyze) -> Opus (final judge)
-This balances cost and quality by using cheaper models for initial passes
-and reserving the most capable model for final judgment.
+戦略:
+1. ローカル分析（API不要）: コード構造、ドキュメント、Git履歴、整合性チェック
+2. AI分析（オプション）: 環境変数 or BYOKキーで設定されたプロバイダーを並列実行
+   - 従来方式: Haiku→Sonnet→Opus 3段階パイプライン（環境変数のANTHROPIC_API_KEY使用時）
+   - 新方式: マルチプロバイダー並列分析（BYOKキー使用時、最大3社同時）
+3. スコアリング: ヒューリスティック + AI結果の加重平均
 """
 
 from __future__ import annotations
 
 import json
 import logging
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
 import anthropic
 
+from src.ai.providers import (
+    AIProvider,
+    create_provider,
+    estimate_provider_cost,
+)
 from src.analyze.code import CodeAnalyzer
 from src.analyze.consistency import ConsistencyAnalyzer
 from src.analyze.docs import DocAnalyzer
 from src.analyze.git_forensics import GitForensicsAnalyzer
 from src.config import MODELS, Config, estimate_cost
 from src.ingest.secure_loader import SecureLoader
-from src.models import AnalysisResult, RedFlag, Severity
+from src.models import AIProviderResult, AnalysisResult, RedFlag, Severity
 from src.score.scorer import Scorer
 
 logger = logging.getLogger(__name__)
 
 
 class AnalysisEngine:
-    """Orchestrates the full due diligence analysis pipeline.
+    """分析パイプライン全体を統括するオーケストレーター。
 
-    Uses a three-tier model strategy:
-    1. Haiku: Fast initial scan and file classification
-    2. Sonnet: Deep analysis of code patterns and claims
-    3. Opus: Final judgment, scoring rationale, and recommendation
+    従来の3段階AI分析に加え、BYOKマルチプロバイダー並列分析に対応。
+    設定されたプロバイダー（1〜3社）を同時実行し、各社独立の評価結果を取得。
     """
 
-    def __init__(self, config: Config, loader: SecureLoader) -> None:
+    def __init__(
+        self,
+        config: Config,
+        loader: SecureLoader,
+        api_keys: dict[str, str] | None = None,
+    ) -> None:
+        """
+        Args:
+            config: アプリケーション設定。
+            loader: セキュアローダー。
+            api_keys: BYOKのAPIキー dict {"claude": "sk-...", "gemini": "...", "chatgpt": "sk-..."} 。
+                      省略時は config の環境変数キーを使用。
+        """
         self._config = config
         self._loader = loader
+        self._api_keys = api_keys or {}
         self._client: anthropic.Anthropic | None = None
         self._usage: dict[str, dict[str, int]] = {
             "haiku": {"input_tokens": 0, "output_tokens": 0},
@@ -51,25 +71,37 @@ class AnalysisEngine:
             self._client = anthropic.Anthropic(api_key=self._config.anthropic_api_key)
         return self._client
 
+    def _get_effective_api_keys(self) -> dict[str, str]:
+        """BYOK キーと環境変数キーをマージして有効なキーセットを返す。
+
+        BYOKキーが優先。環境変数キーはBYOKにないプロバイダーのみ補完。
+        """
+        keys = dict(self._api_keys)
+        env_keys = self._config.get_ai_api_keys()
+        for provider, key in env_keys.items():
+            if provider not in keys:
+                keys[provider] = key
+        return keys
+
     def run(
         self,
         project_name: str,
         repo_path: Path | None = None,
         skip_git: bool = False,
     ) -> AnalysisResult:
-        """Execute the full analysis pipeline.
+        """分析パイプラインを実行。
 
         Args:
-            project_name: Name of the project being analyzed.
-            repo_path: Path to git repo (for git forensics). If None, skips git analysis.
-            skip_git: If True, skip git forensics entirely.
+            project_name: 分析対象プロジェクト名。
+            repo_path: gitリポジトリのパス（省略時はgit分析をスキップ）。
+            skip_git: Trueの場合、gitフォレンジックをスキップ。
 
         Returns:
-            Complete AnalysisResult with scores and findings.
+            スコアと所見を含む AnalysisResult。
         """
         result = AnalysisResult(project_name=project_name)
 
-        # Phase 1: Local analysis (no API calls)
+        # Phase 1: ローカル分析（API呼び出しなし）
         logger.info("Phase 1: Running local analysis...")
         code_analyzer = CodeAnalyzer(self._loader)
         result.code_analysis = code_analyzer.analyze()
@@ -86,52 +118,173 @@ class AnalysisEngine:
             result.code_analysis, result.doc_analysis
         )
 
-        # Phase 2: AI-enhanced analysis (Haiku scan -> Sonnet analyze -> Opus judge)
-        if self._config.anthropic_api_key:
-            logger.info("Phase 2: Running AI-enhanced analysis...")
+        # Phase 2: AI分析（マルチプロバイダー対応）
+        effective_keys = self._get_effective_api_keys()
+
+        if effective_keys:
+            logger.info(f"Phase 2: Running AI analysis with {len(effective_keys)} provider(s): {list(effective_keys.keys())}")
+            self._run_multi_provider_analysis(result, effective_keys)
+        elif self._config.anthropic_api_key:
+            # 後方互換: 環境変数のAnthropicキーのみの場合は従来の3段階パイプライン
+            logger.info("Phase 2: Running legacy AI-enhanced analysis (Haiku→Sonnet→Opus)...")
             ai_findings = self._run_ai_analysis(result)
             self._merge_ai_findings(result, ai_findings)
         else:
             logger.warning("No API key configured. Skipping AI-enhanced analysis.")
 
-        # Phase 3: Scoring
+        # Phase 3: スコアリング
         logger.info("Phase 3: Computing scores...")
         scorer = Scorer()
         result.score = scorer.score(result)
 
-        # Record usage and cost
+        # 使用量とコストを記録
         result.model_usage = self._usage
-        result.total_cost_usd = self._compute_total_cost()
+        result.total_cost_usd = self._compute_total_cost(result)
 
         return result
 
+    def _run_multi_provider_analysis(
+        self,
+        result: AnalysisResult,
+        api_keys: dict[str, str],
+    ) -> None:
+        """マルチプロバイダー並列分析を実行。
+
+        設定されたプロバイダー（1〜3社）をThreadPoolExecutorで並列実行し、
+        各社の結果を AnalysisResult.ai_results に格納。
+        """
+        summary = self._build_analysis_summary(result)
+        context = json.dumps({
+            "code_findings": result.code_analysis.findings[:20],
+            "doc_claims": [c.get("text", "") for c in result.doc_analysis.claims[:10]],
+            "consistency_score": result.consistency.consistency_score,
+            "contradictions": result.consistency.contradictions[:5],
+        }, ensure_ascii=False)
+
+        providers: list[AIProvider] = []
+        for name, key in api_keys.items():
+            try:
+                provider = create_provider(name, key)
+                providers.append(provider)
+            except ValueError as e:
+                logger.warning(f"Skipping unknown provider {name}: {e}")
+
+        if not providers:
+            return
+
+        # 並列実行
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures = {
+                executor.submit(self._execute_provider, p, summary, context): p
+                for p in providers
+            }
+
+            for future in as_completed(futures):
+                provider = futures[future]
+                try:
+                    ai_result = future.result()
+                    result.ai_results[provider.provider_name] = ai_result
+
+                    # AI検出レッドフラグをコード分析結果にマージ
+                    for flag in ai_result.red_flags:
+                        result.code_analysis.red_flags.append(flag)
+
+                    logger.info(
+                        f"  {provider.provider_name}: verdict={ai_result.verdict}, "
+                        f"confidence={ai_result.confidence}, cost=${ai_result.cost_usd:.4f}"
+                    )
+                except Exception as e:
+                    logger.error(f"Provider {provider.provider_name} failed: {e}")
+                    result.ai_results[provider.provider_name] = AIProviderResult(
+                        provider=provider.provider_name,
+                        model_id=provider.model_id,
+                        error=str(e),
+                    )
+
+    def _execute_provider(
+        self,
+        provider: AIProvider,
+        summary: str,
+        context: str,
+    ) -> AIProviderResult:
+        """単一プロバイダーの分析を実行し、AIProviderResultに変換。"""
+        raw = provider.analyze(summary, context)
+
+        if raw.get("error") or raw.get("parse_error"):
+            return AIProviderResult(
+                provider=provider.provider_name,
+                model_id=provider.model_id,
+                error=raw.get("error", "JSON parse error"),
+                usage=provider.usage,
+            )
+
+        # dimension_scores の正規化
+        dim_scores = raw.get("dimension_scores", {})
+
+        # red_flags の変換
+        red_flags: list[RedFlag] = []
+        severity_map = {
+            "critical": Severity.CRITICAL,
+            "high": Severity.HIGH,
+            "medium": Severity.MEDIUM,
+            "low": Severity.LOW,
+        }
+        for flag_data in raw.get("red_flags", []):
+            if isinstance(flag_data, dict) and "title" in flag_data:
+                red_flags.append(RedFlag(
+                    category=f"ai_{provider.provider_name}",
+                    title=flag_data.get("title", "Unknown"),
+                    description=flag_data.get("description", ""),
+                    severity=severity_map.get(
+                        flag_data.get("severity", "medium"), Severity.MEDIUM
+                    ),
+                ))
+
+        # コスト計算
+        usage = provider.usage
+        cost = estimate_provider_cost(
+            provider.provider_name,
+            usage.get("input_tokens", 0),
+            usage.get("output_tokens", 0),
+        )
+
+        return AIProviderResult(
+            provider=provider.provider_name,
+            model_id=provider.model_id,
+            dimension_scores=dim_scores,
+            red_flags=red_flags,
+            verdict=raw.get("verdict", ""),
+            confidence=raw.get("confidence", 0),
+            executive_summary=raw.get("executive_summary", ""),
+            usage=usage,
+            cost_usd=cost,
+        )
+
+    # --- 従来の3段階パイプライン（後方互換） ---
+
     def _run_ai_analysis(self, result: AnalysisResult) -> dict[str, Any]:
-        """Run the three-tier AI analysis pipeline."""
+        """従来の Haiku→Sonnet→Opus 3段階AI分析パイプラインを実行。"""
         findings: dict[str, Any] = {
             "haiku_scan": {},
             "sonnet_analysis": {},
             "opus_judgment": {},
         }
 
-        # Prepare summary for AI models
         summary = self._build_analysis_summary(result)
 
-        # Tier 1: Haiku scan - fast classification and initial flags
         logger.info("  Tier 1: Haiku scan...")
         findings["haiku_scan"] = self._haiku_scan(summary)
 
-        # Tier 2: Sonnet analysis - deep pattern analysis
         logger.info("  Tier 2: Sonnet deep analysis...")
         findings["sonnet_analysis"] = self._sonnet_analyze(summary, findings["haiku_scan"])
 
-        # Tier 3: Opus judgment - final verdict
         logger.info("  Tier 3: Opus final judgment...")
         findings["opus_judgment"] = self._opus_judge(summary, findings["sonnet_analysis"])
 
         return findings
 
     def _haiku_scan(self, summary: str) -> dict[str, Any]:
-        """Tier 1: Fast scan with Haiku for initial classification."""
+        """Tier 1: Haikuによる高速スキャン。"""
         model = MODELS["haiku"]
 
         prompt = f"""You are a technical due diligence scanner. Quickly classify this project
@@ -162,7 +315,7 @@ Respond in JSON format:
             return {"error": str(e)}
 
     def _sonnet_analyze(self, summary: str, haiku_result: dict) -> dict[str, Any]:
-        """Tier 2: Deep analysis with Sonnet."""
+        """Tier 2: Sonnetによる深層分析。"""
         model = MODELS["sonnet"]
 
         prompt = f"""You are a senior technical due diligence analyst. Perform a deep analysis
@@ -236,7 +389,7 @@ Respond in JSON format:
             return {"error": str(e)}
 
     def _opus_judge(self, summary: str, sonnet_result: dict) -> dict[str, Any]:
-        """Tier 3: Final judgment with Opus."""
+        """Tier 3: Opusによる最終判定。"""
         model = MODELS["opus"]
 
         prompt = f"""You are the final arbiter in a technical due diligence process for an
@@ -279,7 +432,7 @@ Respond in JSON format:
             return {"error": str(e)}
 
     def _build_analysis_summary(self, result: AnalysisResult) -> str:
-        """Build a text summary of all analysis results for AI models."""
+        """全分析結果のテキストサマリーを生成。"""
         lines = [
             f"Project: {result.project_name}",
             f"",
@@ -334,10 +487,9 @@ Respond in JSON format:
     def _merge_ai_findings(
         self, result: AnalysisResult, ai_findings: dict[str, Any]
     ) -> None:
-        """Merge AI-generated findings back into the analysis result."""
+        """従来パイプラインのAI所見をマージ。"""
         sonnet = ai_findings.get("sonnet_analysis", {})
 
-        # Add AI-detected red flags
         for flag_data in sonnet.get("additional_red_flags", []):
             if isinstance(flag_data, dict) and "title" in flag_data:
                 severity_map = {
@@ -358,35 +510,40 @@ Respond in JSON format:
                 )
 
     def _track_usage(self, tier: str, usage: Any) -> None:
-        """Track token usage for cost computation."""
+        """トークン使用量を記録。"""
         if hasattr(usage, "input_tokens"):
             self._usage[tier]["input_tokens"] += usage.input_tokens
             self._usage[tier]["output_tokens"] += usage.output_tokens
 
-    def _compute_total_cost(self) -> float:
-        """Compute total API cost across all tiers."""
+    def _compute_total_cost(self, result: AnalysisResult) -> float:
+        """全プロバイダーのAPI合計コストを計算。"""
         total = 0.0
+
+        # 従来パイプラインのコスト
         for tier, tokens in self._usage.items():
-            total += estimate_cost(
-                tier, tokens["input_tokens"], tokens["output_tokens"]
-            )
+            if tokens["input_tokens"] > 0 or tokens["output_tokens"] > 0:
+                total += estimate_cost(
+                    tier, tokens["input_tokens"], tokens["output_tokens"]
+                )
+
+        # マルチプロバイダーのコスト
+        for ai_result in result.ai_results.values():
+            total += ai_result.cost_usd
+
         return round(total, 4)
 
 
 def _parse_json_response(text: str) -> dict[str, Any]:
-    """Parse JSON from Claude's response, handling markdown code blocks."""
-    # Strip markdown code block if present
+    """AIの応答からJSON部分を抽出してパース。"""
     text = text.strip()
     if text.startswith("```"):
         lines = text.splitlines()
-        # Remove first and last lines (```json and ```)
         lines = [l for l in lines if not l.strip().startswith("```")]
         text = "\n".join(lines)
 
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        # Try to find JSON object in the text
         start = text.find("{")
         end = text.rfind("}") + 1
         if start >= 0 and end > start:

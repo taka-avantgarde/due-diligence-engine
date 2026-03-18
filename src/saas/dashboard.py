@@ -140,8 +140,8 @@ def _build_landing_html() -> str:
         '      <h1 class="text-5xl font-bold text-white mb-3 tracking-tight">Due Diligence Engine</h1>\n'
         '      <p id="hero-sub" class="text-slate-400 text-lg mb-6" data-en="Paste a GitHub URL. Get a technology score in minutes." data-ja="GitHub URL&#12434;&#36028;&#12427;&#12384;&#12369;&#12290;&#25968;&#20998;&#12391;&#25216;&#34899;&#12473;&#12467;&#12450;&#12434;&#21462;&#24471;&#12290;">Paste a GitHub URL. Get a technology score in minutes.</p>\n'
         '      <div class="bg-yellow-950/30 border border-yellow-800/50 rounded-xl px-5 py-3 mb-8 max-w-xl mx-auto">\n'
-        '        <p class="text-yellow-400/90 text-xs leading-relaxed" data-en="&#9888; This is a quick preliminary check without an AI API key. For accurate, in-depth analysis powered by Claude, please set up your own API key (BYOK). See &lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;Configuration&lt;/a&gt;." data-ja="&#9888; &#12371;&#12428;&#12399;AI API&#12461;&#12540;&#12394;&#12375;&#12398;&#31777;&#26131;&#12481;&#12455;&#12483;&#12463;&#12391;&#12377;&#12290;Claude&#12395;&#12424;&#12427;&#27491;&#30906;&#12391;&#35443;&#32048;&#12394;&#20998;&#26512;&#12395;&#12399;&#12289;&#12372;&#33258;&#36523;&#12398;API&#12461;&#12540;&#12434;&#35373;&#23450;&#12375;&#12390;&#12367;&#12384;&#12373;&#12356;&#65288;BYOK&#65289;&#12290;&lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;&#35373;&#23450;&#26041;&#27861;&lt;/a&gt;">\n'
-        '          &#9888; This is a quick preliminary check without an AI API key. For accurate, in-depth analysis powered by Claude, please set up your own API key (BYOK). See <a href="https://github.com/taka-avantgarde/Due-diligence-engine#configuration" target="_blank" class="underline">Configuration</a>.\n'
+        '        <p class="text-yellow-400/90 text-xs leading-relaxed" data-en="&#9888; This demo runs a quick preliminary check (local code analysis only). For accurate, in-depth AI-powered analysis, please set up your own AI API key &mdash; Claude, Gemini, or ChatGPT (BYOK: cost is on your account). See &lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;Configuration&lt;/a&gt;." data-ja="&#9888; &#12371;&#12398;&#12487;&#12514;&#12399;&#31777;&#26131;&#12481;&#12455;&#12483;&#12463;&#65288;&#12525;&#12540;&#12459;&#12523;&#12467;&#12540;&#12489;&#20998;&#26512;&#12398;&#12415;&#65289;&#12391;&#12377;&#12290;&#27491;&#30906;&#12394;AI&#20998;&#26512;&#12395;&#12399;&#12289;&#12372;&#33258;&#36523;&#12398;AI API&#12461;&#12540;&#12434;&#35373;&#23450;&#12375;&#12390;&#12367;&#12384;&#12373;&#12356; &mdash; Claude, Gemini, ChatGPT&#65288;BYOK: &#12467;&#12473;&#12488;&#12399;&#21508;&#33258;&#12398;&#12450;&#12459;&#12454;&#12531;&#12488;&#36000;&#25285;&#65289;&#12290;&lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;&#35373;&#23450;&#26041;&#27861;&lt;/a&gt;">\n'
+        '          &#9888; This demo runs a quick preliminary check (local code analysis only). For accurate, in-depth AI-powered analysis, please set up your own AI API key &mdash; Claude, Gemini, or ChatGPT (BYOK: cost is on your account). See <a href="https://github.com/taka-avantgarde/Due-diligence-engine#configuration" target="_blank" class="underline">Configuration</a>.\n'
         '        </p>\n'
         '      </div>\n'
         '      <form id="analyze-form" class="relative w-full">\n'
@@ -230,16 +230,19 @@ def _build_landing_html() -> str:
         '        <p class="text-slate-500 text-xs" data-en="Security maturity level?" data-ja="&#12475;&#12461;&#12517;&#12522;&#12486;&#12451;&#25104;&#29087;&#24230;&#12399;&#65311;">Security maturity level?</p>\n'
         '      </div>\n'
         '    </div>\n'
-        '    <div class="flex flex-col sm:flex-row gap-4 mt-12">\n'
-        '      <div class="bg-surface rounded-xl px-6 py-4 border border-green-900/50 text-center">\n'
-        '        <div class="text-green-400 font-bold text-sm">BYOK</div>\n'
-        '        <div class="text-white text-xl font-bold">FREE</div>\n'
-        '        <div class="text-slate-500 text-xs" data-en="Your own API key" data-ja="&#33258;&#31038;API&#12461;&#12540;">Your own API key</div>\n'
-        '      </div>\n'
-        '      <div class="bg-surface rounded-xl px-6 py-4 border border-accent/30 text-center">\n'
-        '        <div class="text-accent font-bold text-sm">SaaS</div>\n'
-        '        <div class="text-white text-xl font-bold">2x API Cost</div>\n'
-        '        <div class="text-slate-500 text-xs" data-en="We handle everything" data-ja="&#20840;&#12390;&#12362;&#20219;&#12379;">We handle everything</div>\n'
+        '    <div class="mt-12 w-full max-w-2xl">\n'
+        '      <div class="bg-surface rounded-xl p-6 border border-green-900/50">\n'
+        '        <div class="flex items-center gap-3 mb-3">\n'
+        '          <div class="text-green-400 font-bold text-sm tracking-wider">BYOK</div>\n'
+        '          <div class="text-white font-bold" data-en="Bring Your Own Key" data-ja="&#33258;&#31038;API&#12461;&#12540;&#12391;&#20998;&#26512;">Bring Your Own Key</div>\n'
+        '        </div>\n'
+        '        <p class="text-slate-400 text-sm mb-3" data-en="Use your own AI API key for full-powered analysis. Supports:" data-ja="&#12372;&#33258;&#36523;&#12398;AI API&#12461;&#12540;&#12391;&#26412;&#26684;&#20998;&#26512;&#12290;&#23550;&#24540;AI:">Use your own AI API key for full-powered analysis. Supports:</p>\n'
+        '        <div class="flex flex-wrap gap-3 mb-3">\n'
+        '          <span class="bg-orange-950/50 text-orange-300 text-xs px-3 py-1.5 rounded-lg border border-orange-800/50">Claude (Anthropic)</span>\n'
+        '          <span class="bg-blue-950/50 text-blue-300 text-xs px-3 py-1.5 rounded-lg border border-blue-800/50">Gemini (Google)</span>\n'
+        '          <span class="bg-emerald-950/50 text-emerald-300 text-xs px-3 py-1.5 rounded-lg border border-emerald-800/50">ChatGPT (OpenAI)</span>\n'
+        '        </div>\n'
+        '        <p class="text-slate-500 text-xs" data-en="API costs are billed directly to your account. DDE charges nothing extra." data-ja="API&#12467;&#12473;&#12488;&#12399;&#21508;&#33258;&#12398;&#12450;&#12459;&#12454;&#12531;&#12488;&#12395;&#30452;&#25509;&#35531;&#27714;&#12290;DDE&#12398;&#36861;&#21152;&#26009;&#37329;&#12399;&#12354;&#12426;&#12414;&#12379;&#12435;&#12290;">API costs are billed directly to your account. DDE charges nothing extra.</p>\n'
         '      </div>\n'
         '    </div>\n'
         '  </div>\n'
@@ -1110,14 +1113,14 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
 
     # Disclaimer text
     disclaimer_en = (
-        "&#9888; This is a preliminary check without a Claude API key. "
-        "Scores are based on local code analysis only. "
-        "For accurate AI-powered analysis, please configure your own Claude API key (BYOK)."
+        "&#9888; This is a preliminary check (local code analysis only, no AI API key). "
+        "For accurate, in-depth analysis, please configure your own AI API key "
+        "&mdash; Claude, Gemini, or ChatGPT (BYOK: cost is on your account)."
     )
     disclaimer_ja = (
-        "&#9888; \u3053\u308c\u306fClaude API\u30ad\u30fc\u306a\u3057\u306e\u7c21\u6613\u30c1\u30a7\u30c3\u30af\u3067\u3059\u3002"
-        "\u30b9\u30b3\u30a2\u306f\u30ed\u30fc\u30ab\u30eb\u30b3\u30fc\u30c9\u5206\u6790\u306e\u307f\u306b\u57fa\u3065\u3044\u3066\u3044\u307e\u3059\u3002"
-        "\u6b63\u78ba\u306aAI\u5206\u6790\u306b\u306f\u3001\u3054\u81ea\u8eab\u306eClaude API\u30ad\u30fc\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\uff08BYOK\uff09\u3002"
+        "&#9888; \u3053\u308c\u306f\u7c21\u6613\u30c1\u30a7\u30c3\u30af\uff08\u30ed\u30fc\u30ab\u30eb\u30b3\u30fc\u30c9\u5206\u6790\u306e\u307f\u3001AI API\u30ad\u30fc\u306a\u3057\uff09\u3067\u3059\u3002"
+        "\u6b63\u78ba\u306a\u5206\u6790\u306b\u306f\u3001\u3054\u81ea\u8eab\u306eAI API\u30ad\u30fc\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044"
+        " &mdash; Claude, Gemini, ChatGPT\uff08BYOK: \u30b3\u30b9\u30c8\u306f\u5404\u81ea\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u8ca0\u62c5\uff09\u3002"
     )
     disclaimer_text = disclaimer_ja if lang == "ja" else disclaimer_en
 

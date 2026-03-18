@@ -46,6 +46,8 @@ Want to see how it works before setting up your own API key? Try our hosted demo
 
 Just paste any public GitHub URL and click Analyze. No API key needed for basic analysis.
 
+> **Note:** The hosted demo performs a **quick preliminary check** using local code analysis only (no AI API key). For accurate, in-depth analysis powered by Claude (Haiku → Sonnet → Opus pipeline), please set up your own Claude API key. See [Configuration](#configuration) for BYOK (Bring Your Own Key) setup.
+
 ---
 
 ## Just Paste the URL

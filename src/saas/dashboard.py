@@ -138,7 +138,12 @@ def _build_landing_html() -> str:
         '  <div class="flex flex-col items-center justify-center min-h-[70vh]">\n'
         '    <div class="text-center max-w-2xl w-full">\n'
         '      <h1 class="text-5xl font-bold text-white mb-3 tracking-tight">Due Diligence Engine</h1>\n'
-        '      <p id="hero-sub" class="text-slate-400 text-lg mb-10" data-en="Paste a GitHub URL. Get a technology score in minutes." data-ja="GitHub URL&#12434;&#36028;&#12427;&#12384;&#12369;&#12290;&#25968;&#20998;&#12391;&#25216;&#34899;&#12473;&#12467;&#12450;&#12434;&#21462;&#24471;&#12290;">Paste a GitHub URL. Get a technology score in minutes.</p>\n'
+        '      <p id="hero-sub" class="text-slate-400 text-lg mb-6" data-en="Paste a GitHub URL. Get a technology score in minutes." data-ja="GitHub URL&#12434;&#36028;&#12427;&#12384;&#12369;&#12290;&#25968;&#20998;&#12391;&#25216;&#34899;&#12473;&#12467;&#12450;&#12434;&#21462;&#24471;&#12290;">Paste a GitHub URL. Get a technology score in minutes.</p>\n'
+        '      <div class="bg-yellow-950/30 border border-yellow-800/50 rounded-xl px-5 py-3 mb-8 max-w-xl mx-auto">\n'
+        '        <p class="text-yellow-400/90 text-xs leading-relaxed" data-en="&#9888; This is a quick preliminary check without an AI API key. For accurate, in-depth analysis powered by Claude, please set up your own API key (BYOK). See &lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;Configuration&lt;/a&gt;." data-ja="&#9888; &#12371;&#12428;&#12399;AI API&#12461;&#12540;&#12394;&#12375;&#12398;&#31777;&#26131;&#12481;&#12455;&#12483;&#12463;&#12391;&#12377;&#12290;Claude&#12395;&#12424;&#12427;&#27491;&#30906;&#12391;&#35443;&#32048;&#12394;&#20998;&#26512;&#12395;&#12399;&#12289;&#12372;&#33258;&#36523;&#12398;API&#12461;&#12540;&#12434;&#35373;&#23450;&#12375;&#12390;&#12367;&#12384;&#12373;&#12356;&#65288;BYOK&#65289;&#12290;&lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;&#35373;&#23450;&#26041;&#27861;&lt;/a&gt;">\n'
+        '          &#9888; This is a quick preliminary check without an AI API key. For accurate, in-depth analysis powered by Claude, please set up your own API key (BYOK). See <a href="https://github.com/taka-avantgarde/Due-diligence-engine#configuration" target="_blank" class="underline">Configuration</a>.\n'
+        '        </p>\n'
+        '      </div>\n'
         '      <form id="analyze-form" class="relative w-full">\n'
         '        <div class="flex items-center bg-slate-900 border-2 border-slate-700 focus-within:border-accent rounded-2xl overflow-hidden transition-all duration-300 shadow-xl shadow-black/30">\n'
         '          <div class="pl-5 text-slate-500">\n'
@@ -1092,6 +1097,19 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
     </div>
     """
 
+    # Disclaimer text
+    disclaimer_en = (
+        "&#9888; This is a preliminary check without a Claude API key. "
+        "Scores are based on local code analysis only. "
+        "For accurate AI-powered analysis, please configure your own Claude API key (BYOK)."
+    )
+    disclaimer_ja = (
+        "&#9888; \u3053\u308c\u306fClaude API\u30ad\u30fc\u306a\u3057\u306e\u7c21\u6613\u30c1\u30a7\u30c3\u30af\u3067\u3059\u3002"
+        "\u30b9\u30b3\u30a2\u306f\u30ed\u30fc\u30ab\u30eb\u30b3\u30fc\u30c9\u5206\u6790\u306e\u307f\u306b\u57fa\u3065\u3044\u3066\u3044\u307e\u3059\u3002"
+        "\u6b63\u78ba\u306aAI\u5206\u6790\u306b\u306f\u3001\u3054\u81ea\u8eab\u306eClaude API\u30ad\u30fc\u3092\u8a2d\u5b9a\u3057\u3066\u304f\u3060\u3055\u3044\uff08BYOK\uff09\u3002"
+    )
+    disclaimer_text = disclaimer_ja if lang == "ja" else disclaimer_en
+
     content = f"""
     <div class="mb-6">
       <h1 class="text-2xl font-bold text-white mb-1">{t['analysis_results']}</h1>
@@ -1100,6 +1118,10 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
         {result.project_name} &mdash;
         {result.timestamp.strftime('%Y-%m-%d %H:%M UTC')}
       </p>
+    </div>
+
+    <div class="bg-yellow-950/30 border border-yellow-800/50 rounded-xl px-5 py-3 mb-6">
+      <p class="text-yellow-400/90 text-xs leading-relaxed">{disclaimer_text}</p>
     </div>
 
     {score_html}

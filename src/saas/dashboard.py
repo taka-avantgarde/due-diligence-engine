@@ -279,7 +279,7 @@ def _build_landing_html() -> str:
         '    if (resp.ok) return resp.json();\n'
         '    return resp.json().then(function(err) { throw new Error(err.detail || "Analysis failed"); });\n'
         '  }).then(function(data) {\n'
-        '    window.location.href = "/dashboard/analysis/" + data.analysis_id;\n'
+        '    window.location.href = "/dashboard/analysis/" + data.analysis_id + "?lang=" + currentLang;\n'
         '  }).catch(function(err) {\n'
         '    statusText.textContent = "Error: " + err.message;\n'
         '    statusSub.textContent = currentLang === "ja" ? "\\u3082\\u3046\\u4e00\\u5ea6\\u304a\\u8a66\\u3057\\u304f\\u3060\\u3055\\u3044" : "Please try again.";\n'
@@ -387,17 +387,122 @@ async def repos_page(
 # Page: Analysis Results
 # ---------------------------------------------------------------------------
 
+# i18n strings for results page
+_I18N = {
+    "en": {
+        "analysis_results": "Analysis Results",
+        "analysis_not_found": "Analysis Not Found",
+        "not_found_desc": "The requested analysis could not be found.",
+        "return_home": "Return to home",
+        "score_breakdown": "Score Breakdown",
+        "dimension": "Dimension",
+        "score": "Score",
+        "weight": "Weight",
+        "bar": "Bar",
+        "tech_level_details": "Technology Level Details",
+        "show_all_levels": "Show all 10 levels",
+        "red_flags": "Red Flags",
+        "export_pdf": "Export PDF",
+        "disconnect_purge": "Disconnect &amp; Purge",
+        "code_summary": "Code Analysis Summary",
+        "git_summary": "Git Forensics Summary",
+        "analysis_cost": "Analysis Cost",
+        "total_api_cost": "Total API Cost",
+        "files": "Files",
+        "lines": "Lines of Code",
+        "languages": "Languages",
+        "wrapper_ratio": "API Wrapper Ratio",
+        "tests": "Tests",
+        "cicd": "CI/CD",
+        "docs": "Documentation",
+        "deps": "Dependencies",
+        "commits": "Total Commits",
+        "authors": "Unique Authors",
+        "first_commit": "First Commit",
+        "last_commit": "Last Commit",
+        "rush_ratio": "Rush Commit Ratio",
+        "yes": "Yes",
+        "no": "No",
+        "analyzing": "Analyzing...",
+        "analysis_in_progress": "Analysis in Progress",
+        "running_pipeline": "Running AI-powered due diligence pipeline...",
+    },
+    "ja": {
+        "analysis_results": "分析結果",
+        "analysis_not_found": "分析が見つかりません",
+        "not_found_desc": "リクエストされた分析は見つかりませんでした。",
+        "return_home": "ホームに戻る",
+        "score_breakdown": "スコア内訳",
+        "dimension": "評価軸",
+        "score": "スコア",
+        "weight": "重み",
+        "bar": "バー",
+        "tech_level_details": "技術レベル詳細",
+        "show_all_levels": "全10段階を表示",
+        "red_flags": "レッドフラグ",
+        "export_pdf": "PDF出力",
+        "disconnect_purge": "切断 &amp; 破棄",
+        "code_summary": "コード分析サマリ",
+        "git_summary": "Git履歴フォレンジック",
+        "analysis_cost": "分析コスト",
+        "total_api_cost": "API合計コスト",
+        "files": "ファイル数",
+        "lines": "コード行数",
+        "languages": "言語",
+        "wrapper_ratio": "APIラッパー率",
+        "tests": "テスト",
+        "cicd": "CI/CD",
+        "docs": "ドキュメント",
+        "deps": "依存関係",
+        "commits": "コミット数",
+        "authors": "著者数",
+        "first_commit": "初回コミット",
+        "last_commit": "最終コミット",
+        "rush_ratio": "急造コミット率",
+        "yes": "あり",
+        "no": "なし",
+        "analyzing": "分析中...",
+        "analysis_in_progress": "分析を実行中",
+        "running_pipeline": "AIデューデリジェンスパイプラインを実行中...",
+    },
+}
+
+# Grade recommendations in both languages
+_GRADE_REC = {
+    "en": {
+        "A": "Strong investment candidate. Proceed with standard terms.",
+        "B": "Viable with conditions. Address flagged items before closing.",
+        "C": "Significant concerns. Require remediation plan with milestones.",
+        "D": "High risk. Consider pass or heavily discounted terms.",
+        "F": "Do not invest. Fundamental issues detected.",
+    },
+    "ja": {
+        "A": "有力な投資候補。標準条件で進行可能。",
+        "B": "条件付きで投資可能。指摘事項の対応を確認。",
+        "C": "重要な懸念あり。改善計画の提出を要求。",
+        "D": "高リスク。見送りまたは大幅な条件変更を検討。",
+        "F": "投資不可。根本的な問題を検出。",
+    },
+}
+
+
 @router.get("/analysis/{analysis_id}", response_class=HTMLResponse)
-async def analysis_page(analysis_id: str) -> HTMLResponse:
+async def analysis_page(
+    analysis_id: str,
+    lang: str = Query(default="en", description="Language: en or ja"),
+) -> HTMLResponse:
     """Show analysis progress or completed results."""
+    if lang not in ("en", "ja"):
+        lang = "en"
+    t = _I18N[lang]
     data = get_analysis(analysis_id)
 
     if data is None:
-        content = """
+        content = f"""
         <div class="text-center py-20">
-          <h1 class="text-2xl font-bold text-red-400 mb-4">Analysis Not Found</h1>
-          <p class="text-slate-500">The requested analysis could not be found.</p>
-          <a href="/dashboard/" class="text-accent hover:underline mt-4 inline-block">Return to home</a>
+          <h1 class="text-2xl font-bold text-red-400 mb-4">{t['analysis_not_found']}</h1>
+          <p class="text-slate-500">{t['not_found_desc']}</p>
+          <a href="/dashboard/" class="text-accent hover:underline mt-4 inline-block">{t['return_home']}</a>
         </div>
         """
         return _render_page("Not Found", content)
@@ -405,9 +510,9 @@ async def analysis_page(analysis_id: str) -> HTMLResponse:
     status = data.get("status", "unknown")
 
     if status == "running":
-        return _render_progress_page(analysis_id)
+        return _render_progress_page(analysis_id, lang)
     elif status == "completed":
-        return _render_results_page(analysis_id, data)
+        return _render_results_page(analysis_id, data, lang)
     elif status == "purged":
         return _render_purged_results_page(analysis_id, data)
     else:
@@ -420,15 +525,16 @@ async def analysis_page(analysis_id: str) -> HTMLResponse:
         return _render_page("Analysis", content)
 
 
-def _render_progress_page(analysis_id: str) -> HTMLResponse:
+def _render_progress_page(analysis_id: str, lang: str = "en") -> HTMLResponse:
     """Render the analysis in-progress page with auto-refresh."""
+    t = _I18N.get(lang, _I18N["en"])
     content = f"""
     <div class="flex flex-col items-center justify-center min-h-[50vh]">
       <div class="text-center">
         <div class="w-16 h-16 border-4 border-accent border-t-transparent rounded-full
                     animate-spin mx-auto mb-8"></div>
-        <h1 class="text-2xl font-bold text-white mb-4">Analysis in Progress</h1>
-        <p class="text-slate-400 mb-2">Running AI-powered due diligence pipeline...</p>
+        <h1 class="text-2xl font-bold text-white mb-4">{t['analysis_in_progress']}</h1>
+        <p class="text-slate-400 mb-2">{t['running_pipeline']}</p>
         <p class="text-slate-600 text-sm">Analysis ID: {analysis_id}</p>
 
         <div class="mt-8 bg-surface rounded-xl p-6 border border-slate-800 max-w-md mx-auto text-left">
@@ -457,8 +563,10 @@ def _render_progress_page(analysis_id: str) -> HTMLResponse:
     return _render_page("Analyzing...", content, scripts)
 
 
-def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse:
+def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en") -> HTMLResponse:
     """Render the completed analysis results page."""
+    t = _I18N.get(lang, _I18N["en"])
+    rec = _GRADE_REC.get(lang, _GRADE_REC["en"])
     result = data.get("result")
     connection_id = data.get("connection_id", "")
 
@@ -475,7 +583,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
     else:
         grade = score.grade
         overall_score = score.overall_score
-        recommendation = score.recommendation
+        recommendation = rec.get(grade, score.recommendation)
 
         # Grade color
         grade_colors = {
@@ -502,12 +610,22 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
         """
 
         # Dimensions table
+        # Map English dimension names to Japanese
+        _dim_ja = {
+            "Technical Originality": "技術独自性",
+            "Technology Advancement": "技術先進性",
+            "Implementation Depth": "実装深度",
+            "Architecture Quality": "アーキテクチャ品質",
+            "Claim Consistency": "主張整合性",
+            "Security Posture": "セキュリティ態勢",
+        }
         dims_rows = ""
         for dim in score.dimensions:
+            dim_display = _dim_ja.get(dim.name, dim.name) if lang == "ja" else dim.name
             bar_color = "bg-green-500" if dim.score >= 70 else "bg-yellow-500" if dim.score >= 40 else "bg-red-500"
             dims_rows += f"""
             <tr class="border-b border-slate-800">
-              <td class="py-3 font-medium text-white">{dim.name}</td>
+              <td class="py-3 font-medium text-white">{dim_display}</td>
               <td class="py-3 text-center">{dim.score:.0f}/100</td>
               <td class="py-3 text-center">{dim.weight:.0%}</td>
               <td class="py-3">
@@ -523,14 +641,14 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
 
         score_html += f"""
         <div class="bg-surface rounded-xl p-6 border border-slate-800 mb-6">
-          <h2 class="text-lg font-semibold text-accent mb-4">Score Breakdown</h2>
+          <h2 class="text-lg font-semibold text-accent mb-4">{t['score_breakdown']}</h2>
           <table class="w-full">
             <thead>
               <tr class="text-xs text-accent uppercase tracking-wider">
-                <th class="text-left py-2">Dimension</th>
-                <th class="text-center py-2">Score</th>
-                <th class="text-center py-2">Weight</th>
-                <th class="text-left py-2" style="width: 40%">Bar</th>
+                <th class="text-left py-2">{t['dimension']}</th>
+                <th class="text-center py-2">{t['score']}</th>
+                <th class="text-center py-2">{t['weight']}</th>
+                <th class="text-left py-2" style="width: 40%">{t['bar']}</th>
               </tr>
             </thead>
             <tbody>{dims_rows}</tbody>
@@ -558,12 +676,14 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
                     """
 
                 dim_name_ja = rating.dimension_ja or rating.dimension
+                dim_primary = dim_name_ja if lang == "ja" else rating.dimension
+                dim_secondary = rating.dimension if lang == "ja" else dim_name_ja
                 ratings_html += f"""
                 <div class="bg-surface rounded-xl p-5 border border-slate-800 mb-4">
                   <div class="flex items-center justify-between mb-3">
                     <div>
-                      <h3 class="font-semibold text-white">{rating.dimension}</h3>
-                      <span class="text-slate-500 text-xs">{dim_name_ja}</span>
+                      <h3 class="font-semibold text-white">{dim_primary}</h3>
+                      <span class="text-slate-500 text-xs">{dim_secondary}</span>
                     </div>
                     <div class="text-right">
                       <span class="text-2xl font-bold text-accent">Lv.{rating.level}</span>
@@ -576,7 +696,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
                   </div>
                   <details class="group">
                     <summary class="text-xs text-slate-500 cursor-pointer hover:text-accent transition-colors">
-                      Show all 10 levels &darr;
+                      {t['show_all_levels']} &darr;
                     </summary>
                     <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mt-3">
                       {level_bars}
@@ -587,7 +707,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
 
             score_html += f"""
             <div class="mb-6">
-              <h2 class="text-lg font-semibold text-accent mb-4">Technology Level Details</h2>
+              <h2 class="text-lg font-semibold text-accent mb-4">{t['tech_level_details']}</h2>
               {ratings_html}
             </div>
             """
@@ -654,7 +774,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
         </svg>
-        Export PDF
+        {t['export_pdf']}
       </a>
 
       <button onclick="showDisconnectModal()"
@@ -665,7 +785,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                 d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
         </svg>
-        Disconnect &amp; Purge
+        {t['disconnect_purge']}
       </button>
     </div>
 
@@ -717,7 +837,7 @@ def _render_results_page(analysis_id: str, data: dict[str, Any]) -> HTMLResponse
 
     content = f"""
     <div class="mb-6">
-      <h1 class="text-2xl font-bold text-white mb-1">Analysis Results</h1>
+      <h1 class="text-2xl font-bold text-white mb-1">{t['analysis_results']}</h1>
       <p class="text-slate-500 text-sm">
         Analysis ID: {analysis_id} &mdash;
         {result.project_name} &mdash;

@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 # Stripe 設定
 # ---------------------------------------------------------------------------
 _STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "")
-_STRIPE_PRO_PRICE_JPY = 5000  # ¥5,000/回
+_STRIPE_PRO_PRICE_CENTS = 2000  # $20/回（単位: セント）
 
 # 決済済みセッションのキャッシュ（本番ではRedis等に置き換え推奨）
 _paid_sessions: dict[str, bool] = {}
@@ -179,7 +179,7 @@ class StripeCheckoutRequest(BaseModel):
 
 @app.post("/api/v1/stripe/checkout")
 async def create_stripe_checkout(request: StripeCheckoutRequest) -> dict:
-    """Pro分析（¥5,000/回）のStripe Checkout Sessionを作成。
+    """Pro分析（$20/回）のStripe Checkout Sessionを作成。
 
     決済完了後、session_idをフロントに返却し、
     フロントがStripe.jsでリダイレクトする。
@@ -199,12 +199,12 @@ async def create_stripe_checkout(request: StripeCheckoutRequest) -> dict:
             payment_method_types=["card"],
             line_items=[{
                 "price_data": {
-                    "currency": "jpy",
+                    "currency": "usd",
                     "product_data": {
                         "name": "DDE Pro Analysis — Claude + Gemini AI",
-                        "description": "マルチAIによる包括的デューデリジェンス分析（1回）",
+                        "description": "Multi-AI comprehensive due diligence analysis (1 run)",
                     },
-                    "unit_amount": _STRIPE_PRO_PRICE_JPY,
+                    "unit_amount": _STRIPE_PRO_PRICE_CENTS,
                 },
                 "quantity": 1,
             }],
@@ -763,7 +763,7 @@ class AnalyzeUrlRequest(BaseModel):
     pat_token: str | None = None
     site_url: str | None = None  # プロダクト/サービスのWebサイトURL（クロス検証用）
     api_keys: dict[str, str] | None = None  # {"claude": "sk-...", "gemini": "...", "chatgpt": "sk-..."}
-    pro_analysis: bool = False  # True: 有料プラン（¥5,000/回、サーバー側Claude+Geminiで分析）
+    pro_analysis: bool = False  # True: 有料プラン（$20/回、サーバー側Claude+Geminiで分析）
     stripe_session_id: str | None = None  # Stripe Checkout Session ID（Pro分析時に必須）
 
 

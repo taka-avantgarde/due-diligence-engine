@@ -56,7 +56,7 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 |------|------|-------------|----------|
 | **Free (Local Only)** | Free | None | Code structure, git forensics, dependency scan |
 | **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1-3 providers) | Full AI analysis + cross-verification |
-| **Pro Analysis** | **$20 / analysis** (¥5,000 JP, Stripe) | Claude + Gemini (managed) | No API key setup. We run both AIs for you |
+| **Pro Analysis** | **$20 / analysis** (Stripe) | Claude + Gemini (managed) | No API key setup. We run both AIs for you |
 
 > **BYOK:** One API key is enough to start. Add more providers for cross-verification. Typical cost: ~$10-15/analysis depending on codebase size.
 

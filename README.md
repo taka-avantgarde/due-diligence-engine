@@ -166,19 +166,93 @@ export GITHUB_CLIENT_ID="your-github-oauth-app-id"
 export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ```
 
-### Private Repository Access (PAT)
+### Private Repository Access — PAT (Personal Access Token)
 
-For private repos, the startup generates a **Fine-grained Personal Access Token** and pastes it into the dashboard:
+For private repositories, the startup provides a **GitHub PAT (Personal Access Token)** to DDE.
+A PAT is a token string that acts as a password substitute for GitHub API / git operations. DDE supports two types:
 
-1. Go to [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
-2. Click **Generate new token**
-3. Set:
-   - **Repository access**: Only select repositories → choose the target repo
-   - **Permissions** → Repository permissions → **Contents**: Read-only
-   - **Expiration**: 7–30 days recommended
-4. Copy the token (`github_pat_...`) and paste it in the DDE dashboard alongside the repo URL
+---
 
-The PAT is **never stored** — it is used once in-memory for `git clone`, then discarded. No credentials are persisted to disk.
+#### Option A: Classic PAT (Recommended for simplicity)
+
+Classic PATs grant access to **all repositories** the token owner can access. Simple to create but broader scope.
+
+1. Open GitHub → click your **profile icon** (top-right) → **Settings**
+2. Left sidebar → scroll down → **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. Click **Generate new token** → **Generate new token (classic)**
+5. Configure:
+
+   | Setting | Value |
+   |---------|-------|
+   | **Note** | `DDE DD Analysis` (any descriptive name) |
+   | **Expiration** | `7 days` (recommended — set to match your DD timeline) |
+   | **Select scopes** | Check **`repo`** (Full control of private repositories) |
+
+   > Note: The `repo` scope includes both read and write access. DDE only performs `git clone --depth 1` (read-only). The token is used once in-memory and immediately discarded.
+
+6. Click **Generate token**
+7. **Copy the token** (`ghp_...`) — it will only be shown once
+8. Paste the token into the DDE dashboard "Private repo?" section alongside your repo URL
+
+**Direct link:** [github.com/settings/tokens](https://github.com/settings/tokens)
+
+---
+
+#### Option B: Fine-grained PAT (More secure, per-repo scope)
+
+Fine-grained PATs can be scoped to **specific repositories** with **read-only** permissions. More secure but requires Organization approval for Org repos.
+
+1. Open GitHub → **profile icon** → **Settings**
+2. Left sidebar → **Developer settings**
+3. **Personal access tokens** → **Fine-grained tokens**
+4. Click **Generate new token**
+5. Configure:
+
+   | Setting | Value |
+   |---------|-------|
+   | **Token name** | `DDE DD Analysis` |
+   | **Expiration** | `7 days` (recommended) |
+   | **Resource owner** | Select the Organization that owns the repo (e.g., `Your-Org`) |
+   | **Repository access** | **Only select repositories** → choose the target repo |
+
+6. Expand **Permissions** → **Repository permissions**:
+
+   | Permission | Access level |
+   |------------|-------------|
+   | **Contents** | **Read-only** |
+   | **Metadata** | **Read-only** (auto-selected) |
+
+   > All other permissions should remain **No access**.
+
+7. Click **Generate token**
+8. **Copy the token** (`github_pat_...`) — it will only be shown once
+9. Paste into the DDE dashboard
+
+**Direct link:** [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
+
+**Important for Organization repos:**
+- The Org admin must enable Fine-grained PATs: Org Settings → Personal access tokens → **Allow access via fine-grained personal access tokens**
+- If "Require administrator approval" is enabled, the admin must approve the token in **Pending requests** before it works
+
+---
+
+#### Which PAT type should I use?
+
+| | Classic PAT (`ghp_...`) | Fine-grained PAT (`github_pat_...`) |
+|---|---|---|
+| **Ease of setup** | Simple (2 clicks) | More steps required |
+| **Repo scope** | All repos you can access | Specific repos only |
+| **Permissions** | `repo` = read+write | Contents: Read-only |
+| **Org approval** | Not required | May require admin approval |
+| **Best for** | Quick DD, personal repos | Org repos, security-conscious startups |
+
+#### Security Guarantee
+
+- Your PAT is **never stored** on DDE servers
+- It is used **once in-memory** for `git clone --depth 1`, then immediately discarded
+- No credentials are persisted to disk, database, or logs
+- All cloned source code is cryptographically erased after analysis (purge certificate provided)
 
 ### Usage — CLI
 

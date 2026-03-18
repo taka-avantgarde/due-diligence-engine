@@ -166,19 +166,93 @@ export GITHUB_CLIENT_ID="your-github-oauth-app-id"
 export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ```
 
-### Privateリポジトリアクセス（PAT方式）
+### Privateリポジトリアクセス — PAT（Personal Access Token）
 
-Privateリポの場合、スタートアップが **Fine-grained Personal Access Token** を発行してダッシュボードに貼り付けます：
+Privateリポジトリの場合、スタートアップが **GitHub PAT（Personal Access Token / 個人アクセストークン）** をDDEに提供します。
+PATはGitHub API / git操作でパスワードの代わりに使用するトークン文字列です。DDEは2種類のPATに対応しています：
 
-1. [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta) にアクセス
-2. **Generate new token** をクリック
-3. 設定：
-   - **Repository access**: Only select repositories → 対象リポを選択
-   - **Permissions** → Repository permissions → **Contents**: Read-only
-   - **Expiration**: 7〜30日推奨
-4. トークン（`github_pat_...`）をコピーし、DDEダッシュボードにリポURLと一緒に貼り付け
+---
 
-PATは**一切保存されません** — メモリ上で`git clone`に1回使用後、即座に破棄されます。
+#### 方法A: Classic PAT（シンプルでおすすめ）
+
+Classic PATはトークン所有者がアクセスできる**全リポジトリ**に対して有効です。設定が簡単ですが、スコープは広めです。
+
+1. GitHub → 右上の**プロフィールアイコン** → **Settings**
+2. 左サイドバー → 下にスクロール → **Developer settings**
+3. **Personal access tokens** → **Tokens (classic)**
+4. **Generate new token** → **Generate new token (classic)** をクリック
+5. 設定：
+
+   | 設定項目 | 値 |
+   |---------|-----|
+   | **Note** | `DDE DD Analysis`（任意の説明） |
+   | **Expiration** | `7 days`（推奨 — DDの期間に合わせて設定） |
+   | **Select scopes** | **`repo`** にチェック（Full control of private repositories） |
+
+   > 注: `repo`スコープはread+write両方のアクセスを含みます。DDEは`git clone --depth 1`（読み取り専用）のみ実行します。トークンはメモリ上で1回使用後、即座に破棄されます。
+
+6. **Generate token** をクリック
+7. **トークンをコピー**（`ghp_...`）— 一度しか表示されません
+8. DDEダッシュボードの「Private repo?」セクションにリポURLと一緒に貼り付け
+
+**直リンク:** [github.com/settings/tokens](https://github.com/settings/tokens)
+
+---
+
+#### 方法B: Fine-grained PAT（より安全、リポ単位のスコープ）
+
+Fine-grained PATは**特定のリポジトリ**に**読み取り専用**権限でスコープを限定できます。より安全ですが、Organizationリポの場合は管理者の承認が必要な場合があります。
+
+1. GitHub → **プロフィールアイコン** → **Settings**
+2. 左サイドバー → **Developer settings**
+3. **Personal access tokens** → **Fine-grained tokens**
+4. **Generate new token** をクリック
+5. 設定：
+
+   | 設定項目 | 値 |
+   |---------|-----|
+   | **Token name** | `DDE DD Analysis` |
+   | **Expiration** | `7 days`（推奨） |
+   | **Resource owner** | リポを所有するOrganizationを選択（例: `Your-Org`） |
+   | **Repository access** | **Only select repositories** → 対象リポを選択 |
+
+6. **Permissions** → **Repository permissions** を展開：
+
+   | 権限 | アクセスレベル |
+   |------|-------------|
+   | **Contents** | **Read-only** |
+   | **Metadata** | **Read-only**（自動選択） |
+
+   > その他の権限は全て **No access** のままにしてください。
+
+7. **Generate token** をクリック
+8. **トークンをコピー**（`github_pat_...`）— 一度しか表示されません
+9. DDEダッシュボードに貼り付け
+
+**直リンク:** [github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
+
+**Organizationリポの場合の注意:**
+- Org管理者がFine-grained PATを有効化する必要があります: Org Settings → Personal access tokens → **Allow access via fine-grained personal access tokens**
+- 「Require administrator approval」が有効な場合、管理者が**Pending requests**でトークンを承認する必要があります
+
+---
+
+#### どちらのPATを使うべき？
+
+| | Classic PAT（`ghp_...`） | Fine-grained PAT（`github_pat_...`） |
+|---|---|---|
+| **設定の簡単さ** | シンプル（2クリック） | 手順が多い |
+| **リポスコープ** | アクセスできる全リポ | 特定リポのみ |
+| **権限** | `repo` = read+write | Contents: Read-only |
+| **Org承認** | 不要 | 管理者承認が必要な場合あり |
+| **おすすめ用途** | 手早くDD、個人リポ | Orgリポ、セキュリティ重視 |
+
+#### セキュリティ保証
+
+- PATはDDEサーバーに**一切保存されません**
+- メモリ上で `git clone --depth 1` に**1回だけ使用**後、即座に破棄
+- ディスク、データベース、ログのいずれにも認証情報は残りません
+- クローンされたソースコードは分析後に暗号学的に消去されます（パージ証明書を発行）
 
 ### 使い方 — CLI
 

@@ -243,11 +243,15 @@ async def landing_page() -> HTMLResponse:
     // Parse GitHub URL to owner/repo
     function parseGitHubUrl(url) {
       url = url.trim();
-      // Handle: https://github.com/owner/repo or owner/repo
-      const match = url.match(/(?:https?:\\/\\/)?(?:www\\.)?github\\.com\\/([^/]+)\\/([^/\\s#?.]+)/);
-      if (match) return match[1] + '/' + match[2].replace(/\\.git$/, '');
-      // Already owner/repo format
-      if (/^[a-zA-Z0-9_.-]+\\/[a-zA-Z0-9_.-]+$/.test(url)) return url;
+      if (!url) return null;
+      // Remove trailing slashes
+      url = url.replace(/\/+$/, '');
+      // Handle full GitHub URLs
+      var m = url.match(/github[.]com\/([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)/);
+      if (m) return m[1] + '/' + m[2].replace(/[.]git$/, '');
+      // Handle owner/repo format
+      var m2 = url.match(/^([A-Za-z0-9_.-]+)\/([A-Za-z0-9_.-]+)$/);
+      if (m2) return m2[1] + '/' + m2[2];
       return null;
     }
 
@@ -255,7 +259,7 @@ async def landing_page() -> HTMLResponse:
       const el = document.getElementById('step-' + n);
       if (!el) return;
       const icon = el.querySelector('span');
-      el.className = el.className.replace(/text-\\S+/g, '');
+      el.className = el.className.replace(/text-[a-z]+-[0-9]+/g, '').replace(/text-accent/g, '').replace(/text-slate-600/g, '');
       if (status === 'done') {
         el.classList.add('text-green-400');
         icon.innerHTML = '&#10003;';

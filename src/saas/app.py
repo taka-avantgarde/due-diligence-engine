@@ -388,23 +388,37 @@ async def github_disconnect(
     """Disconnect GitHub and purge all associated data.
 
     This endpoint:
-    1. Revokes the GitHub OAuth token
+    1. Revokes the GitHub OAuth token (if connection exists)
     2. Purges all cloned source code data
     3. Generates a purge certificate
     4. Redirects to the purge confirmation page
     """
-    oauth = get_github_oauth()
+    project_name = "unknown"
+    user_id = "system"
 
-    # Step 1: Revoke GitHub token
-    conn = oauth.get_connection(connection_id)
-    project_name = conn.repo_full_name if conn else "unknown"
-    user_id = conn.user_id if conn else "system"
-
-    await oauth.revoke_access(connection_id)
+    # Step 1: Revoke GitHub token (only if connection_id is valid and OAuth is configured)
+    if connection_id and connection_id != "none":
+        try:
+            oauth = get_github_oauth()
+            conn = oauth.get_connection(connection_id)
+            if conn:
+                project_name = conn.repo_full_name or "unknown"
+                user_id = conn.user_id or "system"
+                await oauth.revoke_access(connection_id)
+        except HTTPException:
+            # OAuth not configured or connection not found — continue with purge
+            pass
 
     # Step 2: Purge cloned data and generate certificate
     purge_cert = None
     if analysis_id:
+        # Get project name from analysis store if not from connection
+        data = get_analysis(analysis_id)
+        if data is not None and project_name == "unknown":
+            result = data.get("result")
+            if result is not None:
+                project_name = result.project_name
+
         purger = SecurePurger()
 
         # Purge the analysis temp directory if it exists
@@ -435,7 +449,6 @@ async def github_disconnect(
             )
 
         # Update analysis store
-        data = get_analysis(analysis_id)
         if data is not None:
             data["status"] = "purged"
             data["purge_cert"] = purge_cert
@@ -448,6 +461,60 @@ async def github_disconnect(
 
     # No analysis_id: just redirect back to home
     return RedirectResponse(url="/dashboard/", status_code=302)
+
+
+@app.post("/api/purge/{analysis_id}")
+async def purge_analysis_data(
+    analysis_id: str,
+    config: Config = Depends(get_app_config),
+) -> RedirectResponse:
+    """Purge analysis data without GitHub disconnection.
+
+    Used for URL-based analyses that don't have a GitHub OAuth connection.
+    """
+    data = get_analysis(analysis_id)
+    project_name = "unknown"
+    if data is not None:
+        result = data.get("result")
+        if result is not None:
+            project_name = result.project_name
+
+    purger = SecurePurger()
+
+    # Purge the analysis temp directory if it exists
+    analysis_dir = config.temp_dir / analysis_id
+    if analysis_dir.exists():
+        purge_cert = purger.purge_directory(
+            directory=analysis_dir,
+            analysis_id=analysis_id,
+            project_name=project_name,
+            operator="system",
+        )
+        cert_path = config.output_dir / f"purge_cert_{analysis_id}.json"
+        purger.export_certificate(purge_cert, cert_path)
+    else:
+        from src.models import PurgeCertificate
+
+        purge_cert = PurgeCertificate(
+            analysis_id=analysis_id,
+            project_name=project_name,
+            files_purged=0,
+            bytes_overwritten=0,
+            method="in_memory_erasure",
+            operator="system",
+            verification_hash="in_memory_data_cleared",
+        )
+
+    # Update analysis store
+    if data is not None:
+        data["status"] = "purged"
+        data["purge_cert"] = purge_cert
+        store_analysis(analysis_id, data)
+
+    return RedirectResponse(
+        url=f"/dashboard/purge-complete/{analysis_id}",
+        status_code=302,
+    )
 
 
 @app.post("/api/analyze/github/{connection_id}/{repo:path}")
@@ -614,12 +681,18 @@ async def analyze_url(
 
 
 @app.get("/api/report/{analysis_id}/pdf")
-async def download_pdf_report(analysis_id: str) -> Response:
+async def download_pdf_report(
+    analysis_id: str,
+    lang: str = Query(default="en", description="Language: en or ja"),
+) -> Response:
     """Generate and download a PDF report for a completed analysis.
 
     The PDF contains scores, findings, and recommendations.
     Source code is NEVER included in the PDF output.
     """
+    if lang not in ("en", "ja"):
+        lang = "en"
+
     data = get_analysis(analysis_id)
     if data is None:
         raise HTTPException(status_code=404, detail="Analysis not found")
@@ -631,7 +704,7 @@ async def download_pdf_report(analysis_id: str) -> Response:
     purge_cert = data.get("purge_cert")
 
     pdf_gen = PDFReportGenerator()
-    pdf_bytes = pdf_gen.generate(result, purge_cert=purge_cert)
+    pdf_bytes = pdf_gen.generate(result, purge_cert=purge_cert, lang=lang)
 
     filename = f"dde_report_{result.project_name}_{analysis_id}.pdf"
     # Sanitize filename

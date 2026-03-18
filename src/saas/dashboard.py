@@ -467,6 +467,188 @@ _I18N = {
     },
 }
 
+# Per-dimension improvement suggestions in both languages
+_DIM_ACTIONS = {
+    "en": {
+        "Technical Originality": {
+            "high": "Strong technical originality. Consider patenting core algorithms and documenting unique innovations.",
+            "mid": [
+                "Identify areas where off-the-shelf solutions can be replaced with custom implementations",
+                "Document and protect proprietary algorithms with trade secret policies",
+                "Reduce dependency on third-party API wrappers — build core logic in-house",
+            ],
+            "low": [
+                "URGENT: Current codebase appears to be primarily API wrappers with little original IP",
+                "Hire domain engineers to develop proprietary algorithms",
+                "Create a technical moat by investing in unique data processing pipelines",
+                "Consider pivoting the technical approach to differentiate from competitors",
+            ],
+        },
+        "Technology Advancement": {
+            "high": "Cutting-edge technology stack. Keep monitoring emerging standards for continued leadership.",
+            "mid": [
+                "Migrate to modern frameworks and language versions where applicable",
+                "Adopt containerization (Docker/K8s) if not already in place",
+                "Evaluate and adopt cloud-native patterns for scalability",
+            ],
+            "low": [
+                "URGENT: Technology stack is significantly outdated — plan migration roadmap",
+                "Upgrade core language/framework versions to actively supported releases",
+                "Adopt modern CI/CD practices and infrastructure-as-code",
+                "Consider microservices architecture to enable incremental modernization",
+            ],
+        },
+        "Implementation Depth": {
+            "high": "Production-grade implementation. Continue with robust testing and monitoring.",
+            "mid": [
+                "Add comprehensive error handling and retry logic for external service calls",
+                "Implement structured logging and monitoring (APM/observability)",
+                "Increase test coverage — target 80%+ for critical paths",
+            ],
+            "low": [
+                "URGENT: Implementation is at prototype/PoC level — not production-ready",
+                "Establish basic error handling, input validation, and logging",
+                "Write unit tests for all business logic — current coverage is critically low",
+                "Implement proper configuration management (no hardcoded values)",
+                "Add health checks, graceful shutdown, and deployment automation",
+            ],
+        },
+        "Architecture Quality": {
+            "high": "Well-designed architecture. Consider documenting ADRs for future team members.",
+            "mid": [
+                "Reduce tight coupling between modules — introduce clear domain boundaries",
+                "Add an API versioning strategy for backward compatibility",
+                "Document system architecture with diagrams (C4 model recommended)",
+            ],
+            "low": [
+                "URGENT: Architecture has significant structural issues ('spaghetti code' risk)",
+                "Refactor to separate concerns — introduce layered or hexagonal architecture",
+                "Eliminate circular dependencies and establish clear module boundaries",
+                "Create architecture documentation and enforce coding standards",
+                "Plan incremental refactoring sprints alongside feature development",
+            ],
+        },
+        "Claim Consistency": {
+            "high": "Claims are well-supported by code evidence. Maintain transparency in documentation.",
+            "mid": [
+                "Reconcile marketing/pitch claims with actual technical capabilities",
+                "Document known limitations honestly in technical documentation",
+                "Establish a claims verification process for investor materials",
+            ],
+            "low": [
+                "CRITICAL: Significant gap between stated claims and actual implementation",
+                "Audit all investor-facing materials against real codebase capabilities",
+                "Remove or correct overstated performance/scalability claims",
+                "Hire a technical writer to produce accurate system documentation",
+            ],
+        },
+        "Security Posture": {
+            "high": "Strong security practices. Schedule regular penetration testing and audit cycles.",
+            "mid": [
+                "Add dependency vulnerability scanning to CI pipeline (Snyk/Dependabot)",
+                "Implement secrets management (Vault, AWS Secrets Manager, etc.)",
+                "Conduct code review focused on OWASP Top 10 vulnerabilities",
+            ],
+            "low": [
+                "URGENT: Critical security gaps detected — immediate remediation required",
+                "Remove all hardcoded secrets and API keys from the codebase",
+                "Implement authentication and authorization for all API endpoints",
+                "Add input validation and sanitization for all user-facing inputs",
+                "Schedule an external security audit / penetration test",
+            ],
+        },
+    },
+    "ja": {
+        "Technical Originality": {
+            "high": "\u6280\u8853\u7684\u72ec\u81ea\u6027\u304c\u9ad8\u3044\u3002\u30b3\u30a2\u30a2\u30eb\u30b4\u30ea\u30ba\u30e0\u306e\u7279\u8a31\u53d6\u5f97\u3068\u72ec\u81ea\u6280\u8853\u306e\u6587\u66f8\u5316\u3092\u691c\u8a0e\u3002",
+            "mid": [
+                "\u65e2\u88fd\u30bd\u30ea\u30e5\u30fc\u30b7\u30e7\u30f3\u3092\u72ec\u81ea\u5b9f\u88c5\u306b\u7f6e\u304d\u63db\u3048\u53ef\u80fd\u306a\u9818\u57df\u3092\u7279\u5b9a",
+                "\u72ec\u81ea\u30a2\u30eb\u30b4\u30ea\u30ba\u30e0\u3092\u55b6\u696d\u79d8\u5bc6\u30dd\u30ea\u30b7\u30fc\u3067\u4fdd\u8b77\u30fb\u6587\u66f8\u5316",
+                "\u30b5\u30fc\u30c9\u30d1\u30fc\u30c6\u30a3API\u30e9\u30c3\u30d1\u30fc\u3078\u306e\u4f9d\u5b58\u3092\u524a\u6e1b\u2014\u30b3\u30a2\u30ed\u30b8\u30c3\u30af\u3092\u5185\u88fd\u5316",
+            ],
+            "low": [
+                "\u7dca\u6025: \u73fe\u5728\u306e\u30b3\u30fc\u30c9\u30d9\u30fc\u30b9\u306f\u4e3b\u306bAPI\u30e9\u30c3\u30d1\u30fc\u3067\u3001\u72ec\u81eaIP\u304c\u307b\u3068\u3093\u3069\u306a\u3044",
+                "\u72ec\u81ea\u30a2\u30eb\u30b4\u30ea\u30ba\u30e0\u958b\u767a\u306e\u305f\u3081\u30c9\u30e1\u30a4\u30f3\u30a8\u30f3\u30b8\u30cb\u30a2\u3092\u63a1\u7528",
+                "\u72ec\u81ea\u306e\u30c7\u30fc\u30bf\u51e6\u7406\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u3078\u306e\u6295\u8cc7\u3067\u6280\u8853\u7684\u512a\u4f4d\u6027\u3092\u78ba\u7acb",
+                "\u7af6\u5408\u3068\u306e\u5dee\u5225\u5316\u306e\u305f\u3081\u6280\u8853\u30a2\u30d7\u30ed\u30fc\u30c1\u306e\u898b\u76f4\u3057\u3092\u691c\u8a0e",
+            ],
+        },
+        "Technology Advancement": {
+            "high": "\u6700\u5148\u7aef\u306e\u6280\u8853\u30b9\u30bf\u30c3\u30af\u3002\u65b0\u8208\u6a19\u6e96\u306e\u76e3\u8996\u3092\u7d99\u7d9a\u3057\u30ea\u30fc\u30c0\u30fc\u30b7\u30c3\u30d7\u3092\u7dad\u6301\u3002",
+            "mid": [
+                "\u30e2\u30c0\u30f3\u30d5\u30ec\u30fc\u30e0\u30ef\u30fc\u30af\u30fb\u8a00\u8a9e\u30d0\u30fc\u30b8\u30e7\u30f3\u3078\u306e\u79fb\u884c\u3092\u691c\u8a0e",
+                "\u30b3\u30f3\u30c6\u30ca\u5316\uff08Docker/K8s\uff09\u304c\u672a\u5c0e\u5165\u306a\u3089\u63a1\u7528\u3092\u63a8\u5968",
+                "\u30b9\u30b1\u30fc\u30e9\u30d3\u30ea\u30c6\u30a3\u5411\u4e0a\u306e\u305f\u3081\u30af\u30e9\u30a6\u30c9\u30cd\u30a4\u30c6\u30a3\u30d6\u30d1\u30bf\u30fc\u30f3\u3092\u8a55\u4fa1",
+            ],
+            "low": [
+                "\u7dca\u6025: \u6280\u8853\u30b9\u30bf\u30c3\u30af\u304c\u5927\u5e45\u306b\u53e4\u3044\u2014\u79fb\u884c\u30ed\u30fc\u30c9\u30de\u30c3\u30d7\u3092\u7b56\u5b9a",
+                "\u30b3\u30a2\u8a00\u8a9e/\u30d5\u30ec\u30fc\u30e0\u30ef\u30fc\u30af\u3092\u30b5\u30dd\u30fc\u30c8\u4e2d\u30d0\u30fc\u30b8\u30e7\u30f3\u306b\u30a2\u30c3\u30d7\u30b0\u30ec\u30fc\u30c9",
+                "\u30e2\u30c0\u30f3CI/CD\u3068Infrastructure as Code\u3092\u63a1\u7528",
+                "\u6bb5\u968e\u7684\u306a\u30e2\u30c0\u30ca\u30a4\u30bc\u30fc\u30b7\u30e7\u30f3\u306e\u305f\u3081\u30de\u30a4\u30af\u30ed\u30b5\u30fc\u30d3\u30b9\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u3092\u691c\u8a0e",
+            ],
+        },
+        "Implementation Depth": {
+            "high": "\u672c\u756a\u54c1\u8cea\u306e\u5b9f\u88c5\u3002\u5805\u7262\u306a\u30c6\u30b9\u30c8\u3068\u30e2\u30cb\u30bf\u30ea\u30f3\u30b0\u3092\u7d99\u7d9a\u3002",
+            "mid": [
+                "\u5916\u90e8\u30b5\u30fc\u30d3\u30b9\u547c\u3073\u51fa\u3057\u306b\u5305\u62ec\u7684\u306a\u30a8\u30e9\u30fc\u30cf\u30f3\u30c9\u30ea\u30f3\u30b0\u3068\u30ea\u30c8\u30e9\u30a4\u3092\u8ffd\u52a0",
+                "\u69cb\u9020\u5316\u30ed\u30ae\u30f3\u30b0\u3068\u30e2\u30cb\u30bf\u30ea\u30f3\u30b0\uff08APM/\u53ef\u89b3\u6e2c\u6027\uff09\u3092\u5b9f\u88c5",
+                "\u30c6\u30b9\u30c8\u30ab\u30d0\u30ec\u30c3\u30b8\u3092\u5411\u4e0a\u2014\u91cd\u8981\u30d1\u30b9\u306780%\u4ee5\u4e0a\u3092\u76ee\u6a19",
+            ],
+            "low": [
+                "\u7dca\u6025: \u5b9f\u88c5\u304c\u30d7\u30ed\u30c8\u30bf\u30a4\u30d7/PoC\u30ec\u30d9\u30eb\u2014\u672c\u756a\u904b\u7528\u4e0d\u53ef",
+                "\u57fa\u672c\u7684\u306a\u30a8\u30e9\u30fc\u30cf\u30f3\u30c9\u30ea\u30f3\u30b0\u3001\u5165\u529b\u691c\u8a3c\u3001\u30ed\u30ae\u30f3\u30b0\u3092\u78ba\u7acb",
+                "\u5168\u30d3\u30b8\u30cd\u30b9\u30ed\u30b8\u30c3\u30af\u306e\u30e6\u30cb\u30c3\u30c8\u30c6\u30b9\u30c8\u3092\u4f5c\u6210\u2014\u73fe\u5728\u306e\u30ab\u30d0\u30ec\u30c3\u30b8\u306f\u6df1\u523b\u306b\u4f4e\u3044",
+                "\u9069\u5207\u306a\u8a2d\u5b9a\u7ba1\u7406\u3092\u5b9f\u88c5\uff08\u30cf\u30fc\u30c9\u30b3\u30fc\u30c9\u5024\u306e\u6392\u9664\uff09",
+                "\u30d8\u30eb\u30b9\u30c1\u30a7\u30c3\u30af\u3001\u30b0\u30ec\u30fc\u30b9\u30d5\u30eb\u30b7\u30e3\u30c3\u30c8\u30c0\u30a6\u30f3\u3001\u30c7\u30d7\u30ed\u30a4\u81ea\u52d5\u5316\u3092\u8ffd\u52a0",
+            ],
+        },
+        "Architecture Quality": {
+            "high": "\u512a\u308c\u305f\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u8a2d\u8a08\u3002\u5c06\u6765\u306e\u30c1\u30fc\u30e0\u5411\u3051\u306bADR\u306e\u6587\u66f8\u5316\u3092\u691c\u8a0e\u3002",
+            "mid": [
+                "\u30e2\u30b8\u30e5\u30fc\u30eb\u9593\u306e\u5bc6\u7d50\u5408\u3092\u89e3\u6d88\u2014\u660e\u78ba\u306a\u30c9\u30e1\u30a4\u30f3\u5883\u754c\u3092\u5c0e\u5165",
+                "\u5f8c\u65b9\u4e92\u63db\u6027\u306e\u305f\u3081\u306eAPI\u30d0\u30fc\u30b8\u30e7\u30cb\u30f3\u30b0\u6226\u7565\u3092\u8ffd\u52a0",
+                "\u30b7\u30b9\u30c6\u30e0\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u3092\u56f3\u3067\u6587\u66f8\u5316\uff08C4\u30e2\u30c7\u30eb\u63a8\u5968\uff09",
+            ],
+            "low": [
+                "\u7dca\u6025: \u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u306b\u91cd\u5927\u306a\u69cb\u9020\u7684\u554f\u984c\uff08\u30b9\u30d1\u30b2\u30c3\u30c6\u30a3\u30b3\u30fc\u30c9\u30ea\u30b9\u30af\uff09",
+                "\u95a2\u5fc3\u306e\u5206\u96e2\u306e\u305f\u3081\u30ea\u30d5\u30a1\u30af\u30bf\u30ea\u30f3\u30b0\u2014\u30ec\u30a4\u30e4\u30fc\u30c9\u307e\u305f\u306f\u30d8\u30ad\u30b5\u30b4\u30ca\u30eb\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u3092\u5c0e\u5165",
+                "\u5faa\u74b0\u4f9d\u5b58\u3092\u89e3\u6d88\u3057\u660e\u78ba\u306a\u30e2\u30b8\u30e5\u30fc\u30eb\u5883\u754c\u3092\u78ba\u7acb",
+                "\u30a2\u30fc\u30ad\u30c6\u30af\u30c1\u30e3\u6587\u66f8\u306e\u4f5c\u6210\u3068\u30b3\u30fc\u30c7\u30a3\u30f3\u30b0\u6a19\u6e96\u306e\u5f37\u5236",
+                "\u6a5f\u80fd\u958b\u767a\u3068\u4e26\u884c\u3057\u305f\u6bb5\u968e\u7684\u30ea\u30d5\u30a1\u30af\u30bf\u30ea\u30f3\u30b0\u30b9\u30d7\u30ea\u30f3\u30c8\u3092\u8a08\u753b",
+            ],
+        },
+        "Claim Consistency": {
+            "high": "\u4e3b\u5f35\u304c\u30b3\u30fc\u30c9\u8a3c\u62e0\u3067\u5341\u5206\u88cf\u4ed8\u3051\u3055\u308c\u3066\u3044\u308b\u3002\u6587\u66f8\u306e\u900f\u660e\u6027\u3092\u7dad\u6301\u3002",
+            "mid": [
+                "\u30de\u30fc\u30b1\u30c6\u30a3\u30f3\u30b0/\u30d4\u30c3\u30c1\u8cc7\u6599\u306e\u4e3b\u5f35\u3068\u5b9f\u969b\u306e\u6280\u8853\u80fd\u529b\u3092\u7167\u5408",
+                "\u6280\u8853\u6587\u66f8\u3067\u65e2\u77e5\u306e\u5236\u9650\u4e8b\u9805\u3092\u6b63\u76f4\u306b\u8a18\u8f09",
+                "\u6295\u8cc7\u5bb6\u5411\u3051\u8cc7\u6599\u306e\u4e3b\u5f35\u691c\u8a3c\u30d7\u30ed\u30bb\u30b9\u3092\u78ba\u7acb",
+            ],
+            "low": [
+                "\u91cd\u5927: \u8868\u660e\u3055\u308c\u305f\u4e3b\u5f35\u3068\u5b9f\u969b\u306e\u5b9f\u88c5\u306b\u5927\u304d\u306a\u4e56\u96e2",
+                "\u5168\u3066\u306e\u6295\u8cc7\u5bb6\u5411\u3051\u8cc7\u6599\u3092\u5b9f\u969b\u306e\u30b3\u30fc\u30c9\u30d9\u30fc\u30b9\u80fd\u529b\u3068\u7167\u5408\u76e3\u67fb",
+                "\u8a07\u5f35\u3055\u308c\u305f\u30d1\u30d5\u30a9\u30fc\u30de\u30f3\u30b9/\u30b9\u30b1\u30fc\u30e9\u30d3\u30ea\u30c6\u30a3\u306e\u4e3b\u5f35\u3092\u524a\u9664\u307e\u305f\u306f\u4fee\u6b63",
+                "\u6b63\u78ba\u306a\u30b7\u30b9\u30c6\u30e0\u6587\u66f8\u4f5c\u6210\u306e\u305f\u3081\u30c6\u30af\u30cb\u30ab\u30eb\u30e9\u30a4\u30bf\u30fc\u3092\u63a1\u7528",
+            ],
+        },
+        "Security Posture": {
+            "high": "\u5f37\u56fa\u306a\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u3002\u5b9a\u671f\u7684\u306a\u30da\u30cd\u30c8\u30ec\u30fc\u30b7\u30e7\u30f3\u30c6\u30b9\u30c8\u3068\u76e3\u67fb\u3092\u30b9\u30b1\u30b8\u30e5\u30fc\u30eb\u3002",
+            "mid": [
+                "CI\u30d1\u30a4\u30d7\u30e9\u30a4\u30f3\u306b\u4f9d\u5b58\u95a2\u4fc2\u8106\u5f31\u6027\u30b9\u30ad\u30e3\u30f3\u3092\u8ffd\u52a0\uff08Snyk/Dependabot\uff09",
+                "\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u7ba1\u7406\u3092\u5b9f\u88c5\uff08Vault, AWS Secrets Manager\u7b49\uff09",
+                "OWASP Top 10\u8106\u5f31\u6027\u306b\u7126\u70b9\u3092\u5f53\u3066\u305f\u30b3\u30fc\u30c9\u30ec\u30d3\u30e5\u30fc\u3092\u5b9f\u65bd",
+            ],
+            "low": [
+                "\u7dca\u6025: \u91cd\u5927\u306a\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u30ae\u30e3\u30c3\u30d7\u3092\u691c\u51fa\u2014\u5373\u5ea7\u306e\u4fee\u6b63\u304c\u5fc5\u8981",
+                "\u30b3\u30fc\u30c9\u30d9\u30fc\u30b9\u304b\u3089\u5168\u3066\u306e\u30cf\u30fc\u30c9\u30b3\u30fc\u30c9\u3055\u308c\u305f\u30b7\u30fc\u30af\u30ec\u30c3\u30c8\u3068API\u30ad\u30fc\u3092\u524a\u9664",
+                "\u5168API\u30a8\u30f3\u30c9\u30dd\u30a4\u30f3\u30c8\u306b\u8a8d\u8a3c\u30fb\u8a8d\u53ef\u3092\u5b9f\u88c5",
+                "\u5168\u30e6\u30fc\u30b6\u30fc\u5165\u529b\u306b\u5bfe\u3059\u308b\u30d0\u30ea\u30c7\u30fc\u30b7\u30e7\u30f3\u3068\u30b5\u30cb\u30bf\u30a4\u30ba\u3092\u8ffd\u52a0",
+                "\u5916\u90e8\u30bb\u30ad\u30e5\u30ea\u30c6\u30a3\u76e3\u67fb/\u30da\u30cd\u30c8\u30ec\u30fc\u30b7\u30e7\u30f3\u30c6\u30b9\u30c8\u3092\u8a08\u753b",
+            ],
+        },
+    },
+}
+
 # Grade recommendations in both languages
 _GRADE_REC = {
     "en": {
@@ -712,6 +894,45 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
             </div>
             """
 
+        # Detailed improvement recommendations per dimension
+        actions = _DIM_ACTIONS.get(lang, _DIM_ACTIONS["en"])
+        detail_title = "Detailed Improvement Recommendations" if lang == "en" else "\u8a73\u7d30\u6539\u5584\u63d0\u6848"
+        detail_items_html = ""
+        for dim in score.dimensions:
+            dim_display = _dim_ja.get(dim.name, dim.name) if lang == "ja" else dim.name
+            dim_actions = actions.get(dim.name, {})
+            if dim.score >= 70:
+                action_text = dim_actions.get("high", "")
+                detail_items_html += f"""
+                <div class="bg-green-950/20 border border-green-900/30 rounded-xl p-5 mb-3">
+                  <div class="flex items-center gap-2 mb-2">
+                    <span class="text-green-400 text-lg">&#10003;</span>
+                    <h4 class="font-semibold text-green-300">{dim_display} ({dim.score:.0f}/100)</h4>
+                  </div>
+                  <p class="text-slate-400 text-sm pl-7">{action_text}</p>
+                </div>
+                """
+            else:
+                items = dim_actions.get("mid" if dim.score >= 40 else "low", [])
+                severity_color = "yellow" if dim.score >= 40 else "red"
+                items_li = "".join(f'<li class="text-slate-400">{item}</li>' for item in items)
+                detail_items_html += f"""
+                <div class="bg-{severity_color}-950/20 border border-{severity_color}-900/30 rounded-xl p-5 mb-3">
+                  <div class="flex items-center gap-2 mb-3">
+                    <span class="text-{severity_color}-400 text-lg">&#9888;</span>
+                    <h4 class="font-semibold text-{severity_color}-300">{dim_display} ({dim.score:.0f}/100)</h4>
+                  </div>
+                  <ul class="text-sm space-y-1.5 list-disc list-inside pl-5">{items_li}</ul>
+                </div>
+                """
+
+        score_html += f"""
+        <div class="mb-6">
+          <h2 class="text-lg font-semibold text-accent mb-4">{detail_title}</h2>
+          {detail_items_html}
+        </div>
+        """
+
         # Red flags
         if score.red_flags:
             severity_styles = {
@@ -764,10 +985,27 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
         else:
             red_flags_html = ""
 
+    # Determine purge action URL based on whether we have a GitHub connection
+    if connection_id:
+        purge_url = f"/api/github/disconnect/{connection_id}?analysis_id={analysis_id}"
+    else:
+        purge_url = f"/api/purge/{analysis_id}"
+
+    # i18n for modal
+    modal_title = "Disconnect &amp; Purge Data" if lang == "en" else "\u5207\u65ad &amp; \u30c7\u30fc\u30bf\u7834\u68c4"
+    modal_warning = "Warning:" if lang == "en" else "\u8b66\u544a:"
+    modal_li1 = "Revoke your GitHub access token" if lang == "en" else "GitHub\u30a2\u30af\u30bb\u30b9\u30c8\u30fc\u30af\u30f3\u3092\u5931\u52b9\u5316"
+    modal_li2 = "Permanently delete all cloned source code" if lang == "en" else "\u30af\u30ed\u30fc\u30f3\u3055\u308c\u305f\u5168\u30bd\u30fc\u30b9\u30b3\u30fc\u30c9\u3092\u5b8c\u5168\u524a\u9664"
+    modal_li3 = "Generate a purge certificate as proof of deletion" if lang == "en" else "\u524a\u9664\u8a3c\u660e\u66f8\uff08\u30d1\u30fc\u30b8\u8a3c\u660e\u66f8\uff09\u3092\u767a\u884c"
+    modal_body_en = "All source code data will be permanently deleted from this tool. Only report scores and findings will be retained."
+    modal_body_ja = "\u5168\u3066\u306e\u30bd\u30fc\u30b9\u30b3\u30fc\u30c9\u30c7\u30fc\u30bf\u304c\u3053\u306e\u30c4\u30fc\u30eb\u304b\u3089\u5b8c\u5168\u306b\u524a\u9664\u3055\u308c\u307e\u3059\u3002\u30ec\u30dd\u30fc\u30c8\u306e\u30b9\u30b3\u30a2\u3068\u6240\u898b\u306e\u307f\u4fdd\u6301\u3055\u308c\u307e\u3059\u3002"
+    modal_cancel = "Cancel" if lang == "en" else "\u30ad\u30e3\u30f3\u30bb\u30eb"
+    modal_confirm = "Confirm Disconnect &amp; Purge" if lang == "en" else "\u5207\u65ad &amp; \u7834\u68c4\u3092\u5b9f\u884c"
+
     # Action buttons
     actions_html = f"""
     <div class="flex flex-col sm:flex-row gap-4 justify-center mt-8 mb-8">
-      <a href="/api/report/{analysis_id}/pdf"
+      <a href="/api/report/{analysis_id}/pdf?lang={lang}"
          class="inline-flex items-center justify-center gap-2 bg-accent hover:bg-cyan-500
                 text-slate-950 font-semibold px-6 py-3 rounded-xl transition-colors duration-200">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -793,41 +1031,35 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
     <div id="disconnect-modal" class="fixed inset-0 bg-black/70 backdrop-blur-sm
          hidden items-center justify-center z-50">
       <div class="bg-slate-900 rounded-2xl border border-red-800 p-8 max-w-lg mx-4 shadow-2xl">
-        <h3 class="text-xl font-bold text-red-400 mb-4">Disconnect &amp; Purge Data</h3>
+        <h3 class="text-xl font-bold text-red-400 mb-4">{modal_title}</h3>
 
         <div class="bg-red-950/30 border border-red-900 rounded-lg p-4 mb-4">
           <p class="text-red-300 text-sm mb-3">
-            <strong>Warning:</strong> This action will:
+            <strong>{modal_warning}</strong>
           </p>
           <ul class="text-red-300/80 text-sm space-y-1 list-disc list-inside">
-            <li>Revoke your GitHub access token</li>
-            <li>Permanently delete all cloned source code</li>
-            <li>Generate a purge certificate as proof of deletion</li>
+            <li>{modal_li1}</li>
+            <li>{modal_li2}</li>
+            <li>{modal_li3}</li>
           </ul>
         </div>
 
         <div class="bg-slate-800 rounded-lg p-4 mb-6 space-y-2">
-          <p class="text-slate-300 text-sm">
-            All source code data will be permanently deleted from this tool.
-            Only report scores and findings will be retained.
-          </p>
-          <p class="text-slate-400 text-sm" lang="ja">
-            &#20840;&#12390;&#12398;&#12477;&#12540;&#12473;&#12467;&#12540;&#12489;&#12487;&#12540;&#12479;&#12364;&#12371;&#12398;&#12484;&#12540;&#12523;&#12363;&#12425;&#23436;&#20840;&#12395;&#21066;&#38500;&#12373;&#12428;&#12414;&#12377;&#12290;&#12524;&#12509;&#12540;&#12488;&#12398;&#12473;&#12467;&#12450;&#12392;&#25152;&#35211;&#12398;&#12415;&#20445;&#25345;&#12373;&#12428;&#12414;&#12377;&#12290;
-          </p>
+          <p class="text-slate-300 text-sm">{modal_body_en}</p>
+          <p class="text-slate-400 text-sm" lang="ja">{modal_body_ja}</p>
         </div>
 
         <div class="flex gap-3 justify-end">
           <button onclick="hideDisconnectModal()"
                   class="px-5 py-2 rounded-lg bg-slate-700 hover:bg-slate-600
                          text-slate-300 transition-colors duration-200">
-            Cancel
+            {modal_cancel}
           </button>
-          <form action="/api/github/disconnect/{connection_id}" method="POST" id="disconnect-form">
-            <input type="hidden" name="analysis_id" value="{analysis_id}">
+          <form action="{purge_url}" method="POST" id="disconnect-form">
             <button type="submit"
                     class="px-5 py-2 rounded-lg bg-red-700 hover:bg-red-600
                            text-white font-semibold transition-colors duration-200">
-              Confirm Disconnect &amp; Purge
+              {modal_confirm}
             </button>
           </form>
         </div>

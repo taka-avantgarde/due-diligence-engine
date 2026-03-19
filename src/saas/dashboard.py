@@ -84,7 +84,7 @@ tailwind.config = {{
     {content}
   </main>
   <footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-600">
-    CONFIDENTIAL &mdash; Subject to NDA &mdash; Due Diligence Engine v0.1.0
+    Due Diligence Engine v0.1.0 &mdash; &copy; <a href="https://www.atlasassociates.io/" target="_blank" class="text-slate-500 hover:text-accent transition-colors">Atlas Associates Inc</a>
   </footer>
   <script>
   var currentLang = new URLSearchParams(window.location.search).get("lang") || "en";
@@ -336,7 +336,7 @@ def _build_landing_html() -> str:
         '  </div>\n'
         '</main>\n'
         '<footer class="border-t border-slate-800 mt-12 py-6 text-center text-xs text-slate-600">\n'
-        '  CONFIDENTIAL &mdash; Due Diligence Engine v0.1.0\n'
+        '  Due Diligence Engine v0.1.0 &mdash; &copy; <a href="https://www.atlasassociates.io/" target="_blank" class="text-slate-500 hover:text-accent transition-colors">Atlas Associates Inc</a>\n'
         '</footer>\n'
         '<script>\n'
         'var currentLang = new URLSearchParams(window.location.search).get("lang") || "en";\n'

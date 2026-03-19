@@ -132,8 +132,12 @@ def _extract_meta_content(html: str) -> str:
 def _extract_text_from_html(html: str) -> str:
     """HTMLからテキストを抽出（簡易パーサー、beautifulsoup不要）。
 
-    SPA対応: bodyが空の場合はmeta/OGP/JSON-LD/RSCペイロードからも抽出。
+    SPA対応: 常にmeta/OGP/JSON-LD/RSCペイロードからも抽出し、
+    bodyテキストと結合して最大限のテキストを収集する。
     """
+    # 先にオリジナルHTMLからmeta/OGP/RSCを抽出（scriptタグ削除前に実行）
+    meta_text = _extract_meta_content(html)
+
     # script, style タグの中身を除去
     text = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r"<style[^>]*>.*?</style>", " ", text, flags=re.DOTALL | re.IGNORECASE)
@@ -151,11 +155,9 @@ def _extract_text_from_html(html: str) -> str:
     # 余分な空白を圧縮
     text = re.sub(r"\s+", " ", text).strip()
 
-    # SPA対策: bodyテキストが短い場合、meta/OGP/RSCからも抽出
-    if len(text) < 100:
-        meta_text = _extract_meta_content(html)
-        if meta_text:
-            text = f"{text} {meta_text}".strip()
+    # meta/OGP/RSCテキストを常に結合（SPAでもSSRでも最大限の情報を収集）
+    if meta_text:
+        text = f"{text} {meta_text}".strip()
 
     return text
 

@@ -66,8 +66,74 @@ class CrossValidationResult(BaseModel):
     summary: str = ""
 
 
+def _extract_meta_content(html: str) -> str:
+    """HTMLのmeta/title/OGP/JSON-LDからテキストを抽出。
+
+    SPA（Next.js等）ではbodyにコンテンツがないため、
+    meta description, og:*, title, JSON-LD等からテキストを収集する。
+    """
+    parts = []
+
+    # <title>
+    title_match = re.search(r"<title[^>]*>(.*?)</title>", html, re.DOTALL | re.IGNORECASE)
+    if title_match:
+        parts.append(title_match.group(1).strip())
+
+    # meta name="description" / og:description / twitter:description
+    for attr in ("description", "og:description", "twitter:description",
+                 "og:title", "twitter:title"):
+        pattern = rf'<meta\s+(?:name|property)=["\'](?:{re.escape(attr)})["\']\s+content=["\']([^"\']+)["\']'
+        match = re.search(pattern, html, re.IGNORECASE)
+        if not match:
+            # content が先に来るパターン
+            pattern2 = rf'<meta\s+content=["\']([^"\']+)["\']\s+(?:name|property)=["\'](?:{re.escape(attr)})["\']'
+            match = re.search(pattern2, html, re.IGNORECASE)
+        if match:
+            parts.append(match.group(1).strip())
+
+    # JSON-LD (application/ld+json)
+    for ld_match in re.finditer(
+        r'<script[^>]*type=["\']application/ld\+json["\'][^>]*>(.*?)</script>',
+        html, re.DOTALL | re.IGNORECASE,
+    ):
+        try:
+            import json
+            ld_data = json.loads(ld_match.group(1))
+            if isinstance(ld_data, dict):
+                for key in ("name", "description", "headline", "about"):
+                    val = ld_data.get(key, "")
+                    if isinstance(val, str) and val:
+                        parts.append(val)
+        except Exception:
+            pass
+
+    # Next.js RSC payloadから文字列を抽出（self.__next_f.push 内のテキスト）
+    for rsc_match in re.finditer(
+        r'self\.__next_f\.push\(\[1,"(.*?)"\]\)', html, re.DOTALL,
+    ):
+        rsc_text = rsc_match.group(1)
+        # エスケープされたUnicode文字を復元
+        try:
+            rsc_text = rsc_text.encode().decode("unicode_escape")
+        except Exception:
+            pass
+        # HTML/JSONの中からcontent文字列を抽出
+        for content_match in re.finditer(r'"content":"([^"]+)"', rsc_text):
+            val = content_match.group(1)
+            if len(val) > 10 and not val.startswith("http"):
+                parts.append(val)
+        # "children":"テキスト" パターン
+        for child_match in re.finditer(r'"children":"([^"]{10,})"', rsc_text):
+            parts.append(child_match.group(1))
+
+    return " ".join(dict.fromkeys(parts))  # 重複排除しつつ順序維持
+
+
 def _extract_text_from_html(html: str) -> str:
-    """HTMLからテキストを抽出（簡易パーサー、beautifulsoup不要）。"""
+    """HTMLからテキストを抽出（簡易パーサー、beautifulsoup不要）。
+
+    SPA対応: bodyが空の場合はmeta/OGP/JSON-LD/RSCペイロードからも抽出。
+    """
     # script, style タグの中身を除去
     text = re.sub(r"<script[^>]*>.*?</script>", " ", html, flags=re.DOTALL | re.IGNORECASE)
     text = re.sub(r"<style[^>]*>.*?</style>", " ", text, flags=re.DOTALL | re.IGNORECASE)
@@ -84,6 +150,13 @@ def _extract_text_from_html(html: str) -> str:
     text = re.sub(r"&#\d+;", " ", text)
     # 余分な空白を圧縮
     text = re.sub(r"\s+", " ", text).strip()
+
+    # SPA対策: bodyテキストが短い場合、meta/OGP/RSCからも抽出
+    if len(text) < 100:
+        meta_text = _extract_meta_content(html)
+        if meta_text:
+            text = f"{text} {meta_text}".strip()
+
     return text
 
 
@@ -192,7 +265,7 @@ class SiteAnalyzer:
 
                 html = resp.text
                 text = _extract_text_from_html(html)
-                if text and len(text) > 50:
+                if text and len(text) > 20:
                     self._texts[url] = text
 
                 # リンクを再帰的にクロール

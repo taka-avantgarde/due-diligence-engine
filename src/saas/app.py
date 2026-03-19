@@ -9,14 +9,16 @@ import tempfile
 from pathlib import Path
 from typing import Annotated, Any
 
-from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, UploadFile
+from fastapi import Depends, FastAPI, File, Header, HTTPException, Query, Request as FastAPIRequest, UploadFile
 from fastapi.responses import RedirectResponse, Response
 from pydantic import BaseModel
 
 import stripe
 
 from src.analyze.engine import AnalysisEngine
-from src.config import Config, get_config
+from src.config import Config, get_config, TICKET_TIERS, REPORT_TTL_DAYS
+from src.saas.firebase_auth import verify_firebase_token, require_firebase_auth, FirebaseUser
+from src.saas import firestore_client
 from src.ingest.secure_loader import SecureLoader
 from src.purge.secure_delete import SecurePurger
 from src.report.generator import ReportGenerator
@@ -33,7 +35,8 @@ logger = logging.getLogger(__name__)
 # Stripe 設定
 # ---------------------------------------------------------------------------
 _STRIPE_API_KEY = os.environ.get("STRIPE_API_KEY", "")
-_STRIPE_PRO_PRICE_CENTS = 2000  # $20/回（単位: セント）
+_STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+_STRIPE_PRO_PRICE_CENTS = 2000  # $20/回（単位: セント）— レガシー用
 
 # 決済済みセッションのキャッシュ（本番ではRedis等に置き換え推奨）
 _paid_sessions: dict[str, bool] = {}
@@ -172,48 +175,85 @@ class HealthResponse(BaseModel):
 
 
 class StripeCheckoutRequest(BaseModel):
-    """Stripe Checkout Session 作成リクエスト"""
-    repo_url: str  # 分析対象リポジトリURL（メタデータとして保存）
-    lang: str = "en"  # 言語（リダイレクト先で使用）
+    """チケット購入用 Stripe Checkout Session 作成リクエスト。
+
+    tier: "single" | "pack_10" | "pack_50" | "pack_100"
+    firebase_id_token: バルク購入時に必須（認証済みユーザーにチケットを紐付ける）
+    lang: リダイレクト先の言語
+    """
+    tier: str = "single"
+    firebase_id_token: str | None = None
+    lang: str = "en"
 
 
 @app.post("/api/v1/stripe/checkout")
 async def create_stripe_checkout(request: StripeCheckoutRequest) -> dict:
-    """Pro分析（$20/回）のStripe Checkout Sessionを作成。
+    """チケット購入の Stripe Checkout Session を作成（JPY）。
 
-    決済完了後、session_idをフロントに返却し、
-    フロントがStripe.jsでリダイレクトする。
+    - single: 認証不要（匿名購入OK）
+    - pack_10 / pack_50 / pack_100: Firebase認証必須
     """
     if not _STRIPE_API_KEY:
         raise HTTPException(
             status_code=503,
-            detail="Stripe is not configured. Pro Analysis is temporarily unavailable.",
+            detail="Stripe is not configured.",
         )
+
+    # --- ティア検証 ---
+    tier_info = TICKET_TIERS.get(request.tier)
+    if tier_info is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid tier: {request.tier}. Valid: {list(TICKET_TIERS.keys())}",
+        )
+
+    # --- バルク購入時はFirebase認証を要求 ---
+    uid = "anonymous"
+    if tier_info.get("account_required"):
+        if not request.firebase_id_token:
+            raise HTTPException(
+                status_code=401,
+                detail="Bulk ticket purchase requires authentication. Provide firebase_id_token.",
+            )
+        try:
+            from src.saas.firestore_client import _ensure_initialized
+            _ensure_initialized()
+            from firebase_admin import auth as fb_auth
+            decoded = fb_auth.verify_id_token(request.firebase_id_token)
+            uid = decoded["uid"]
+        except Exception as e:
+            logger.warning(f"Firebase token verification failed: {e}")
+            raise HTTPException(status_code=401, detail="Invalid firebase_id_token.")
 
     stripe.api_key = _STRIPE_API_KEY
 
     try:
-        # 動的にbase URLを判定（Cloud Run / localhost両対応）
         base_url = os.environ.get("BASE_URL", "https://dde-api-vdunszkasq-an.a.run.app")
+
         session = stripe.checkout.Session.create(
             payment_method_types=["card"],
             line_items=[{
                 "price_data": {
-                    "currency": "usd",
+                    "currency": "jpy",
                     "product_data": {
-                        "name": "DDE Pro Analysis — Claude + Gemini AI",
-                        "description": "Multi-AI comprehensive due diligence analysis (1 run)",
+                        "name": f"DDE Ticket — {tier_info['name']}",
+                        "description": f"{tier_info['tickets']} report ticket(s)",
                     },
-                    "unit_amount": _STRIPE_PRO_PRICE_CENTS,
+                    "unit_amount": tier_info["price_jpy"],
                 },
                 "quantity": 1,
             }],
             mode="payment",
-            success_url=f"{base_url}/dashboard/stripe/success?session_id={{CHECKOUT_SESSION_ID}}&lang={request.lang}",
+            success_url=(
+                f"{base_url}/dashboard/stripe/success"
+                f"?session_id={{CHECKOUT_SESSION_ID}}&lang={request.lang}"
+            ),
             cancel_url=f"{base_url}/dashboard/?stripe=cancelled&lang={request.lang}",
             metadata={
-                "repo_url": request.repo_url,
-                "service": "dde_pro_analysis",
+                "tier": request.tier,
+                "uid": uid,
+                "ticket_count": str(tier_info["tickets"]),
+                "service": "dde_ticket",
             },
         )
 
@@ -226,17 +266,88 @@ async def create_stripe_checkout(request: StripeCheckoutRequest) -> dict:
 
 @app.post("/api/v1/stripe/webhook")
 async def stripe_webhook(
-    request_obj: Any = None,
+    request: FastAPIRequest,
+    stripe_signature: str | None = Header(None),
 ) -> dict:
-    """Stripe Webhook — 決済完了を検知してセッションを有効化。
+    """Stripe Webhook — 決済完了を検知しチケットを付与。
 
-    本番ではStripe Webhook Signingで署名検証を行うこと。
+    Stripe Webhook Signing で署名検証を行い、
+    checkout.session.completed イベントを処理する。
     """
-    from starlette.requests import Request as StarletteRequest
+    # raw bodyを取得（署名検証に必要）
+    payload = await request.body()
 
-    # FastAPIのRequest objectを取得
-    # Note: このエンドポイントはraw bodyが必要なため特殊な取得方法
-    return {"status": "ok"}
+    if not _STRIPE_API_KEY:
+        raise HTTPException(status_code=503, detail="Stripe not configured")
+
+    stripe.api_key = _STRIPE_API_KEY
+
+    # --- 署名検証 ---
+    if _STRIPE_WEBHOOK_SECRET and stripe_signature:
+        try:
+            event = stripe.Webhook.construct_event(
+                payload, stripe_signature, _STRIPE_WEBHOOK_SECRET,
+            )
+        except stripe.error.SignatureVerificationError:
+            logger.warning("Stripe webhook signature verification failed")
+            raise HTTPException(status_code=400, detail="Invalid signature")
+        except Exception as e:
+            logger.error(f"Stripe webhook error: {e}")
+            raise HTTPException(status_code=400, detail=str(e))
+    else:
+        # Webhook Secret未設定の場合はペイロードをそのままパース（開発用）
+        import json
+        try:
+            event = stripe.Event.construct_from(json.loads(payload), stripe.api_key)
+        except Exception:
+            logger.warning("Stripe webhook: failed to parse payload")
+            return {"status": "ignored"}
+
+    # --- checkout.session.completed イベントの処理 ---
+    if event.type == "checkout.session.completed":
+        session = event.data.object
+        metadata = session.get("metadata", {})
+        tier = metadata.get("tier", "single")
+        uid = metadata.get("uid", "anonymous")
+        ticket_count = int(metadata.get("ticket_count", "1"))
+
+        logger.info(
+            f"Stripe checkout completed: tier={tier}, uid={uid}, tickets={ticket_count}"
+        )
+
+        # チケット付与（認証済みユーザーの場合）
+        if uid != "anonymous":
+            try:
+                firestore_client.get_or_create_user(
+                    uid=uid,
+                    email=session.get("customer_details", {}).get("email", ""),
+                    display_name=session.get("customer_details", {}).get("name", ""),
+                )
+                firestore_client.add_tickets(
+                    uid=uid,
+                    count=ticket_count,
+                    purchase_id=session.get("id", ""),
+                )
+            except Exception as e:
+                logger.error(f"Failed to add tickets for uid={uid}: {e}")
+
+        # 購入レコード作成
+        try:
+            tier_info = TICKET_TIERS.get(tier, {})
+            firestore_client.create_purchase(
+                uid=uid if uid != "anonymous" else None,
+                tier=tier,
+                amount_jpy=tier_info.get("price_jpy", 0),
+                ticket_count=ticket_count,
+                stripe_session_id=session.get("id", ""),
+            )
+        except Exception as e:
+            logger.error(f"Failed to create purchase record: {e}")
+
+        # レガシー互換: 決済済みセッションキャッシュ
+        _paid_sessions[session.get("id", "")] = True
+
+    return {"status": "ok", "type": event.type}
 
 
 @app.get("/dashboard/stripe/success")
@@ -318,6 +429,225 @@ def _verify_stripe_payment(session_id: str) -> bool:
         pass
 
     return False
+
+
+# ---------------------------------------------------------------------------
+# チケット制 API エンドポイント
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/v1/account")
+async def get_account(
+    user: FirebaseUser = Depends(require_firebase_auth),
+) -> dict:
+    """認証ユーザーのアカウント情報を返す。
+
+    - ユーザー基本情報
+    - チケット残高
+    """
+    user_data = firestore_client.get_or_create_user(
+        uid=user.uid,
+        email=user.email,
+        display_name=user.display_name,
+    )
+    return {
+        "uid": user.uid,
+        "email": user.email,
+        "display_name": user.display_name,
+        "photo_url": user.photo_url,
+        "ticket_balance": user_data.get("ticket_balance", 0),
+        "created_at": str(user_data.get("created_at", "")),
+    }
+
+
+@app.get("/api/v1/reports")
+async def get_reports(
+    user: FirebaseUser = Depends(require_firebase_auth),
+) -> dict:
+    """認証ユーザーのレポート一覧を返す（有効期限内のもののみ）。"""
+    reports = firestore_client.get_user_reports(uid=user.uid)
+    return {
+        "uid": user.uid,
+        "reports": reports,
+        "count": len(reports),
+    }
+
+
+class TicketUseRequest(BaseModel):
+    """チケット消費リクエスト。
+
+    repo_url: 分析対象のGitHubリポジトリURL
+    site_url: （任意）プロダクトWebサイトURL
+    """
+    repo_url: str
+    site_url: str | None = None
+
+
+@app.post("/api/v1/tickets/use")
+async def use_ticket_and_analyze(
+    request: TicketUseRequest,
+    user: FirebaseUser = Depends(require_firebase_auth),
+    config: Config = Depends(get_app_config),
+) -> dict:
+    """チケットを1枚消費してレポートを生成する。
+
+    トランザクションでチケット残高を減算し、分析を実行する。
+    残高不足の場合は 402 を返す。
+    """
+    import re
+    import uuid
+
+    repo_url = request.repo_url.strip()
+
+    # --- リポジトリURLパース ---
+    match = re.match(
+        r"(?:https?://)?(?:www\.)?github\.com/([^/]+)/([^/\s#?.]+)",
+        repo_url,
+    )
+    if match:
+        owner_repo = f"{match.group(1)}/{match.group(2).rstrip('.git')}"
+    elif re.match(r"^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$", repo_url):
+        owner_repo = repo_url
+    else:
+        raise HTTPException(status_code=400, detail="Invalid GitHub URL")
+
+    analysis_id = uuid.uuid4().hex[:16]
+    report_id = f"rpt_{uuid.uuid4().hex[:12]}"
+
+    # --- チケット消費（トランザクション） ---
+    success = firestore_client.use_ticket(uid=user.uid, report_id=report_id)
+    if not success:
+        raise HTTPException(
+            status_code=402,
+            detail="Insufficient ticket balance. Please purchase tickets first.",
+        )
+
+    # --- 分析実行 ---
+    clone_url = f"https://github.com/{owner_repo}.git"
+    loader = SecureLoader(config)
+
+    try:
+        store_analysis(analysis_id, {
+            "status": "running",
+            "connection_id": "",
+            "result": None,
+            "purge_cert": None,
+        })
+
+        loader.load_from_url(clone_url)
+
+        # サーバー側AIキーで分析
+        pro_keys = config.get_ai_api_keys()
+        pro_keys = {k: v for k, v in pro_keys.items() if k in ("claude", "gemini")}
+
+        engine = AnalysisEngine(config, loader, api_keys=pro_keys if pro_keys else None)
+        repo_path = loader.cloned_repo_path
+        result = engine.run(project_name=owner_repo, repo_path=repo_path)
+        result.analysis_id = analysis_id
+
+        # サイト分析（オプション）
+        if request.site_url and request.site_url.strip():
+            try:
+                from src.analyze.site_analyzer import SiteAnalyzer, cross_validate_site_vs_code
+                from src.models import SiteAnalysisModel, SiteClaimModel, CrossValidationModel
+
+                site_analyzer = SiteAnalyzer()
+                site_result = site_analyzer.analyze(request.site_url.strip())
+
+                result.site_analysis = SiteAnalysisModel(
+                    site_url=site_result.site_url,
+                    pages_analyzed=site_result.pages_analyzed,
+                    claims=[SiteClaimModel(
+                        category=c.category, claim=c.claim,
+                        source_url=c.source_url, confidence=c.confidence,
+                    ) for c in site_result.claims],
+                    technologies_mentioned=site_result.technologies_mentioned,
+                    team_info=site_result.team_info,
+                    traction_claims=site_result.traction_claims,
+                    red_flags=site_result.red_flags,
+                    findings=site_result.findings,
+                )
+
+                cross_result = cross_validate_site_vs_code(
+                    site_result=site_result,
+                    code_languages=result.code_analysis.languages,
+                    code_findings=result.code_analysis.findings,
+                    has_tests=result.code_analysis.has_tests,
+                    has_ci_cd=result.code_analysis.has_ci_cd,
+                    dependency_count=result.code_analysis.dependency_count,
+                    doc_claims=result.doc_analysis.technical_claims,
+                )
+                result.cross_validation = CrossValidationModel(
+                    verified_claims=cross_result.verified_claims,
+                    unverified_claims=cross_result.unverified_claims,
+                    contradictions=cross_result.contradictions,
+                    exaggerations=cross_result.exaggerations,
+                    credibility_score=cross_result.credibility_score,
+                    red_flags=cross_result.red_flags,
+                    summary=cross_result.summary,
+                )
+            except Exception as site_err:
+                logger.warning(f"Site analysis failed (non-fatal): {site_err}")
+
+        # レポート生成・保存
+        report_gen = ReportGenerator()
+        report_gen.save_report(result, config.output_dir)
+
+        store_analysis(analysis_id, {
+            "status": "completed",
+            "connection_id": "",
+            "result": result,
+            "purge_cert": None,
+        })
+
+        # Firestoreにレポートレコード作成
+        firestore_client.create_report(
+            uid=user.uid,
+            analysis_id=analysis_id,
+            project_name=owner_repo,
+        )
+
+        return {
+            "analysis_id": analysis_id,
+            "report_id": report_id,
+            "status": "completed",
+            "ticket_balance": firestore_client.get_ticket_balance(user.uid),
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Ticket analysis failed for {owner_repo}: {e}")
+        store_analysis(analysis_id, {
+            "status": "error",
+            "connection_id": "",
+            "result": None,
+            "purge_cert": None,
+            "error": str(e),
+        })
+        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
+    finally:
+        loader.destroy()
+
+
+@app.get("/api/v1/pricing/tickets")
+async def get_ticket_pricing() -> dict:
+    """チケット料金体系を返す（公開エンドポイント）。"""
+    return {
+        "currency": "JPY",
+        "tiers": {
+            key: {
+                "name": tier["name"],
+                "name_ja": tier["name_ja"],
+                "price_jpy": tier["price_jpy"],
+                "tickets": tier["tickets"],
+                "unit_price": tier["unit_price"],
+                "account_required": tier["account_required"],
+            }
+            for key, tier in TICKET_TIERS.items()
+        },
+        "report_ttl_days": REPORT_TTL_DAYS,
+    }
 
 
 # --- Endpoints ---

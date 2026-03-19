@@ -112,6 +112,53 @@ PRICING_TIERS: dict[str, PricingTier] = {
 }
 
 
+# ============================================================
+# チケット制料金体系（JPY・日本市場向け）
+# ============================================================
+
+TICKET_TIERS: dict[str, dict] = {
+    "single": {
+        "name": "1 Report",
+        "name_ja": "1件",
+        "price_jpy": 3000,
+        "tickets": 1,
+        "unit_price": 3000,
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_SINGLE", ""),
+        "account_required": False,
+    },
+    "pack_10": {
+        "name": "10 Reports",
+        "name_ja": "10件パック",
+        "price_jpy": 28000,
+        "tickets": 10,
+        "unit_price": 2800,
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_PACK_10", ""),
+        "account_required": True,
+    },
+    "pack_50": {
+        "name": "50 Reports",
+        "name_ja": "50件パック",
+        "price_jpy": 120000,
+        "tickets": 50,
+        "unit_price": 2400,
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_PACK_50", ""),
+        "account_required": True,
+    },
+    "pack_100": {
+        "name": "100 Reports",
+        "name_ja": "100件パック",
+        "price_jpy": 220000,
+        "tickets": 100,
+        "unit_price": 2200,
+        "stripe_price_id": os.environ.get("STRIPE_PRICE_PACK_100", ""),
+        "account_required": True,
+    },
+}
+
+# レポートTTL（日数）
+REPORT_TTL_DAYS = 90
+
+
 @dataclass
 class Config:
     """Application-wide configuration."""

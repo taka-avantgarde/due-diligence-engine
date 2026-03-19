@@ -13,6 +13,7 @@ All HTML is rendered via inline Jinja2 templates (no separate template files).
 from __future__ import annotations
 
 import logging
+import os
 import uuid
 from datetime import datetime
 from typing import Any
@@ -23,6 +24,13 @@ from fastapi.responses import HTMLResponse
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
+
+# ---------------------------------------------------------------------------
+# Firebase Web SDK config (client-side)
+# ---------------------------------------------------------------------------
+_FIREBASE_WEB_API_KEY = os.environ.get("FIREBASE_WEB_API_KEY", "")
+_FIREBASE_AUTH_DOMAIN = "due-diligence-engine.firebaseapp.com"
+_FIREBASE_PROJECT_ID = "due-diligence-engine"
 
 # ---------------------------------------------------------------------------
 # In-memory analysis store (would be backed by a database in production)
@@ -53,6 +61,8 @@ _BASE_TEMPLATE = """<!DOCTYPE html>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} - DDE</title>
 <script src="https://cdn.tailwindcss.com"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script>
 tailwind.config = {{
   theme: {{
@@ -75,8 +85,23 @@ tailwind.config = {{
     <div class="max-w-5xl mx-auto flex items-center justify-between">
       <a href="/dashboard/" class="text-accent font-bold text-lg tracking-wide">DUE DILIGENCE ENGINE</a>
       <div class="flex items-center gap-4">
+        <a href="/dashboard/pricing" class="text-sm text-slate-400 hover:text-accent transition-colors" data-en="Pricing" data-ja="&#26009;&#37329;">Pricing</a>
         <div id="lang-toggle" style="cursor:pointer;user-select:none;display:inline-block;font-size:12px;border:1px solid #334155;border-radius:8px;padding:6px 14px"><span id="lang-en" style="color:#fff;font-weight:700">English</span> <span style="color:#475569">/</span> <span id="lang-ja" style="color:#64748b">日本語</span></div>
-        <div class="text-sm text-slate-500" data-en="Technical DD for VCs" data-ja="VC&#21521;&#12369;&#25216;&#34899;DD">Technical DD for VCs</div>
+        <div id="auth-area" class="flex items-center gap-3">
+          <button id="signin-btn" onclick="signInWithGoogle()" class="hidden bg-accent hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors" data-en="Sign in" data-ja="&#12525;&#12464;&#12452;&#12531;">Sign in</button>
+          <div id="user-area" class="hidden flex items-center gap-2 relative">
+            <span id="ticket-badge" class="hidden bg-accent/20 text-accent text-xs font-bold px-2 py-1 rounded-full"></span>
+            <button id="user-btn" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">
+              <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-slate-700" alt="avatar" />
+              <span id="user-name" class="text-sm text-white max-w-[120px] truncate"></span>
+              <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+            <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-2 min-w-[180px] z-50">
+              <a href="/dashboard/account" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" data-en="Account" data-ja="&#12450;&#12459;&#12454;&#12531;&#12488;">Account</a>
+              <button onclick="signOutUser()" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" data-en="Sign out" data-ja="&#12525;&#12464;&#12450;&#12454;&#12488;">Sign out</button>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   </nav>
@@ -87,6 +112,99 @@ tailwind.config = {{
     Due Diligence Engine v0.1.0 &mdash; &copy; <a href="https://www.atlasassociates.io/" target="_blank" class="text-slate-500 hover:text-accent transition-colors">Atlas Associates Inc</a>
   </footer>
   <script>
+  var firebaseConfig = {{
+    apiKey: "{firebase_api_key}",
+    authDomain: "{firebase_auth_domain}",
+    projectId: "{firebase_project_id}"
+  }};
+  if (typeof firebase !== 'undefined' && !firebase.apps.length && firebaseConfig.apiKey) {{
+    firebase.initializeApp(firebaseConfig);
+  }}
+
+  var currentUser = null;
+  var idToken = null;
+  var ticketBalance = 0;
+
+  function signInWithGoogle() {{
+    if (typeof firebase === 'undefined' || !firebase.apps.length) {{ alert("Firebase not configured"); return; }}
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().signInWithPopup(provider).catch(function(err) {{
+      console.error("Sign-in error:", err);
+    }});
+  }}
+
+  function signOutUser() {{
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {{
+      firebase.auth().signOut();
+    }}
+  }}
+
+  function updateAuthUI(user) {{
+    var signinBtn = document.getElementById("signin-btn");
+    var userArea = document.getElementById("user-area");
+    if (user) {{
+      if (signinBtn) signinBtn.classList.add("hidden");
+      if (userArea) {{
+        userArea.classList.remove("hidden");
+        userArea.style.display = "flex";
+        var avatar = document.getElementById("user-avatar");
+        var name = document.getElementById("user-name");
+        if (avatar) avatar.src = user.photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || "U") + "&background=5271FF&color=fff&size=32";
+        if (name) name.textContent = user.displayName || user.email || "";
+      }}
+      fetchTicketBalance();
+    }} else {{
+      if (signinBtn) {{ signinBtn.classList.remove("hidden"); signinBtn.style.display = "inline-block"; }}
+      if (userArea) {{ userArea.classList.add("hidden"); userArea.style.display = "none"; }}
+    }}
+  }}
+
+  function fetchTicketBalance() {{
+    if (!idToken) return;
+    fetch("/api/v1/account", {{
+      headers: {{ "Authorization": "Bearer " + idToken }}
+    }}).then(function(r) {{ return r.ok ? r.json() : null; }}).then(function(data) {{
+      if (data && typeof data.ticket_balance === "number") {{
+        ticketBalance = data.ticket_balance;
+        var badge = document.getElementById("ticket-badge");
+        if (badge) {{
+          badge.textContent = ticketBalance + " tickets";
+          badge.classList.toggle("hidden", ticketBalance <= 0);
+        }}
+      }}
+    }}).catch(function() {{}});
+  }}
+
+  if (typeof firebase !== 'undefined' && firebase.apps.length) {{
+    firebase.auth().onAuthStateChanged(function(user) {{
+      currentUser = user;
+      if (user) {{
+        user.getIdToken().then(function(token) {{
+          idToken = token;
+          updateAuthUI(user);
+        }});
+      }} else {{
+        idToken = null;
+        updateAuthUI(null);
+      }}
+    }});
+  }} else {{
+    var signinBtn = document.getElementById("signin-btn");
+    if (signinBtn) {{ signinBtn.classList.remove("hidden"); signinBtn.style.display = "inline-block"; }}
+  }}
+
+  var userBtn = document.getElementById("user-btn");
+  var userDropdown = document.getElementById("user-dropdown");
+  if (userBtn && userDropdown) {{
+    userBtn.addEventListener("click", function(e) {{
+      e.stopPropagation();
+      userDropdown.classList.toggle("hidden");
+    }});
+    document.addEventListener("click", function() {{
+      userDropdown.classList.add("hidden");
+    }});
+  }}
+
   var currentLang = new URLSearchParams(window.location.search).get("lang") || "en";
   function toggleLang() {{
     currentLang = currentLang === "en" ? "ja" : "en";
@@ -119,7 +237,14 @@ tailwind.config = {{
 
 def _render_page(title: str, content: str, scripts: str = "") -> HTMLResponse:
     """Render a full HTML page with the shared layout."""
-    html = _BASE_TEMPLATE.format(title=title, content=content, scripts=scripts)
+    html = _BASE_TEMPLATE.format(
+        title=title,
+        content=content,
+        scripts=scripts,
+        firebase_api_key=_FIREBASE_WEB_API_KEY,
+        firebase_auth_domain=_FIREBASE_AUTH_DOMAIN,
+        firebase_project_id=_FIREBASE_PROJECT_ID,
+    )
     return HTMLResponse(content=html)
 
 
@@ -145,6 +270,8 @@ def _build_landing_html() -> str:
         '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
         '<title>Due Diligence Engine</title>\n'
         '<script src="https://cdn.tailwindcss.com"></script>\n'
+        '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>\n'
+        '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>\n'
         '<script>\n'
         'tailwind.config = { theme: { extend: { colors: { surface: "#1e293b", accent: "#5271FF" } } } }\n'
         '</script>\n'
@@ -155,8 +282,24 @@ def _build_landing_html() -> str:
         '  <div class="max-w-5xl mx-auto flex items-center justify-between">\n'
         '    <a href="/dashboard/" class="text-accent font-bold text-lg tracking-wide">DUE DILIGENCE ENGINE</a>\n'
         '    <div class="flex items-center gap-4">\n'
+        '      <a href="/dashboard/pricing" class="text-sm text-slate-400 hover:text-accent transition-colors" data-en="Pricing" data-ja="\u6599\u91d1">Pricing</a>\n'
         '      <a id="github-link" href="https://github.com/taka-avantgarde/Due-diligence-engine" target="_blank" rel="noopener" class="text-slate-500 hover:text-white transition-all" title="GitHub Repository"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg></a>\n'
         '      <div id="lang-toggle" style="cursor:pointer;user-select:none;display:inline-block;font-size:12px;border:1px solid #334155;border-radius:8px;padding:6px 14px" onmouseover="this.style.borderColor=\'#5271FF\'" onmouseout="this.style.borderColor=\'#334155\'"><span id="lang-en" style="color:#fff;font-weight:700">English</span> <span style="color:#475569">/</span> <span id="lang-ja" style="color:#64748b">\u65e5\u672c\u8a9e</span></div>\n'
+        '      <div id="auth-area" class="flex items-center gap-3">\n'
+        '        <button id="signin-btn" onclick="signInWithGoogle()" class="hidden bg-accent hover:bg-blue-500 text-white text-sm font-semibold px-4 py-2 rounded-lg transition-colors" data-en="Sign in" data-ja="\u30ed\u30b0\u30a4\u30f3">Sign in</button>\n'
+        '        <div id="user-area" class="hidden flex items-center gap-2 relative">\n'
+        '          <span id="ticket-badge" class="hidden bg-accent/20 text-accent text-xs font-bold px-2 py-1 rounded-full"></span>\n'
+        '          <button id="user-btn" class="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity">\n'
+        '            <img id="user-avatar" src="" class="w-8 h-8 rounded-full border border-slate-700" alt="avatar" />\n'
+        '            <span id="user-name" class="text-sm text-white max-w-[120px] truncate"></span>\n'
+        '            <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>\n'
+        '          </button>\n'
+        '          <div id="user-dropdown" class="hidden absolute right-0 top-full mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-xl py-2 min-w-[180px] z-50">\n'
+        '            <a href="/dashboard/account" class="block px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" data-en="Account" data-ja="\u30a2\u30ab\u30a6\u30f3\u30c8">Account</a>\n'
+        '            <button onclick="signOutUser()" class="w-full text-left px-4 py-2 text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors" data-en="Sign out" data-ja="\u30ed\u30b0\u30a2\u30a6\u30c8">Sign out</button>\n'
+        '          </div>\n'
+        '        </div>\n'
+        '      </div>\n'
         '    </div>\n'
         '  </div>\n'
         '</nav>\n'
@@ -188,6 +331,18 @@ def _build_landing_html() -> str:
         '        </div>\n'
         '        <p id="url-hint" class="text-slate-600 text-sm mt-3 text-left pl-2" data-en="GitHub repo URL (optional if Site URL is provided below)." data-ja="GitHub\u30ea\u30ddURL\uff08\u4e0b\u306e\u30b5\u30a4\u30c8URL\u3060\u3051\u3067\u3082\u5206\u6790\u53ef\u80fd\uff09">GitHub repo URL (optional if Site URL is provided below).</p>\n'
         '      </form>\n'
+        '      <div id="landing-ticket-bar" class="hidden mt-4 w-full">\n'
+        '        <div class="flex items-center justify-between bg-accent/10 border border-accent/30 rounded-xl px-5 py-3">\n'
+        '          <div class="flex items-center gap-3">\n'
+        '            <span class="text-accent font-bold text-lg" id="landing-ticket-count">0</span>\n'
+        '            <span class="text-slate-400 text-sm" data-en="tickets remaining" data-ja="\u30c1\u30b1\u30c3\u30c8\u6b8b\u308a">tickets remaining</span>\n'
+        '          </div>\n'
+        '          <a href="/dashboard/pricing" class="text-accent hover:underline text-sm font-semibold" data-en="Buy more" data-ja="\u8cfc\u5165">Buy more</a>\n'
+        '        </div>\n'
+        '      </div>\n'
+        '      <div class="mt-3 text-center">\n'
+        '        <a href="/dashboard/pricing" class="text-sm text-slate-500 hover:text-accent transition-colors" data-en="View Pricing &rarr;" data-ja="\u6599\u91d1\u30d7\u30e9\u30f3\u3092\u898b\u308b &rarr;">View Pricing &rarr;</a>\n'
+        '      </div>\n'
         '      <div class="mt-4 w-full">\n'
         '        <div class="bg-surface rounded-xl border border-slate-800 p-4 mb-4">\n'
         '          <div class="flex items-center gap-2 mb-2">\n'
@@ -339,6 +494,79 @@ def _build_landing_html() -> str:
         '  Due Diligence Engine v0.1.0 &mdash; &copy; <a href="https://www.atlasassociates.io/" target="_blank" class="text-slate-500 hover:text-accent transition-colors">Atlas Associates Inc</a>\n'
         '</footer>\n'
         '<script>\n'
+        'var firebaseConfig = {\n'
+        f'  apiKey: "{_FIREBASE_WEB_API_KEY}",\n'
+        f'  authDomain: "{_FIREBASE_AUTH_DOMAIN}",\n'
+        f'  projectId: "{_FIREBASE_PROJECT_ID}"\n'
+        '};\n'
+        'if (typeof firebase !== "undefined" && !firebase.apps.length && firebaseConfig.apiKey) {\n'
+        '  firebase.initializeApp(firebaseConfig);\n'
+        '}\n'
+        'var currentUser = null;\n'
+        'var idToken = null;\n'
+        'var ticketBalance = 0;\n'
+        '\n'
+        'function signInWithGoogle() {\n'
+        '  if (typeof firebase === "undefined" || !firebase.apps.length) { alert("Firebase not configured"); return; }\n'
+        '  var provider = new firebase.auth.GoogleAuthProvider();\n'
+        '  firebase.auth().signInWithPopup(provider).catch(function(err) { console.error("Sign-in error:", err); });\n'
+        '}\n'
+        'function signOutUser() {\n'
+        '  if (typeof firebase !== "undefined" && firebase.apps.length) firebase.auth().signOut();\n'
+        '}\n'
+        'function updateAuthUI(user) {\n'
+        '  var signinBtn = document.getElementById("signin-btn");\n'
+        '  var userArea = document.getElementById("user-area");\n'
+        '  if (user) {\n'
+        '    if (signinBtn) signinBtn.classList.add("hidden");\n'
+        '    if (userArea) {\n'
+        '      userArea.classList.remove("hidden"); userArea.style.display = "flex";\n'
+        '      var avatar = document.getElementById("user-avatar");\n'
+        '      var name = document.getElementById("user-name");\n'
+        '      if (avatar) avatar.src = user.photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || "U") + "&background=5271FF&color=fff&size=32";\n'
+        '      if (name) name.textContent = user.displayName || user.email || "";\n'
+        '    }\n'
+        '    fetchTicketBalance();\n'
+        '  } else {\n'
+        '    if (signinBtn) { signinBtn.classList.remove("hidden"); signinBtn.style.display = "inline-block"; }\n'
+        '    if (userArea) { userArea.classList.add("hidden"); userArea.style.display = "none"; }\n'
+        '    var tb = document.getElementById("landing-ticket-bar");\n'
+        '    if (tb) tb.classList.add("hidden");\n'
+        '  }\n'
+        '}\n'
+        'function fetchTicketBalance() {\n'
+        '  if (!idToken) return;\n'
+        '  fetch("/api/v1/account", { headers: {"Authorization": "Bearer " + idToken} })\n'
+        '    .then(function(r) { return r.ok ? r.json() : null; })\n'
+        '    .then(function(data) {\n'
+        '      if (data && typeof data.ticket_balance === "number") {\n'
+        '        ticketBalance = data.ticket_balance;\n'
+        '        var badge = document.getElementById("ticket-badge");\n'
+        '        if (badge) { badge.textContent = ticketBalance + " tickets"; badge.classList.toggle("hidden", ticketBalance <= 0); }\n'
+        '        var tb = document.getElementById("landing-ticket-bar");\n'
+        '        var tc = document.getElementById("landing-ticket-count");\n'
+        '        if (tb && tc && ticketBalance > 0) { tb.classList.remove("hidden"); tc.textContent = ticketBalance; }\n'
+        '      }\n'
+        '    }).catch(function() {});\n'
+        '}\n'
+        'if (typeof firebase !== "undefined" && firebase.apps.length) {\n'
+        '  firebase.auth().onAuthStateChanged(function(user) {\n'
+        '    currentUser = user;\n'
+        '    if (user) {\n'
+        '      user.getIdToken().then(function(token) { idToken = token; updateAuthUI(user); });\n'
+        '    } else { idToken = null; updateAuthUI(null); }\n'
+        '  });\n'
+        '} else {\n'
+        '  var signinBtn = document.getElementById("signin-btn");\n'
+        '  if (signinBtn) { signinBtn.classList.remove("hidden"); signinBtn.style.display = "inline-block"; }\n'
+        '}\n'
+        'var userBtn = document.getElementById("user-btn");\n'
+        'var userDropdown = document.getElementById("user-dropdown");\n'
+        'if (userBtn && userDropdown) {\n'
+        '  userBtn.addEventListener("click", function(e) { e.stopPropagation(); userDropdown.classList.toggle("hidden"); });\n'
+        '  document.addEventListener("click", function() { userDropdown.classList.add("hidden"); });\n'
+        '}\n'
+        '\n'
         'var currentLang = new URLSearchParams(window.location.search).get("lang") || "en";\n'
         'function toggleLang() {\n'
         '  currentLang = currentLang === "en" ? "ja" : "en";\n'
@@ -533,6 +761,267 @@ def _build_landing_html() -> str:
         '</body>\n'
         '</html>\n'
     )
+
+
+# ---------------------------------------------------------------------------
+# Page: Pricing
+# ---------------------------------------------------------------------------
+
+@router.get("/pricing", response_class=HTMLResponse)
+async def pricing_page() -> HTMLResponse:
+    """Pricing page with 4 ticket tiers."""
+    content = (
+        '<div class="max-w-4xl mx-auto">\n'
+        '  <div class="text-center mb-12">\n'
+        '    <h1 class="text-4xl font-bold text-white mb-3" data-en="Pricing" data-ja="\u6599\u91d1\u30d7\u30e9\u30f3">Pricing</h1>\n'
+        '    <p class="text-slate-400 text-lg" data-en="Pay per report. No subscription required." data-ja="\u30ec\u30dd\u30fc\u30c8\u5358\u4f4d\u306e\u8ab2\u91d1\u3002\u30b5\u30d6\u30b9\u30af\u30ea\u30d7\u30b7\u30e7\u30f3\u4e0d\u8981\u3002">Pay per report. No subscription required.</p>\n'
+        '  </div>\n'
+        '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">\n'
+        # --- Tier 1: 1 Report ---
+        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
+        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">STARTER</div>\n'
+        '      <div class="text-white text-3xl font-bold mb-1" data-en="1 Report" data-ja="1\u30ec\u30dd\u30fc\u30c8">1 Report</div>\n'
+        '      <div class="text-white text-2xl font-bold mb-1">&yen;3,000</div>\n'
+        '      <div class="text-slate-500 text-sm mb-4" data-en="&yen;3,000 / report" data-ja="&yen;3,000 / \u4ef6">&yen;3,000 / report</div>\n'
+        '      <div class="flex-1"></div>\n'
+        '      <div class="text-slate-500 text-xs mb-4" data-en="No account required" data-ja="\u30a2\u30ab\u30a6\u30f3\u30c8\u4e0d\u8981">No account required</div>\n'
+        '      <button onclick="purchaseTier(\'single\', 3000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" data-en="Purchase" data-ja="\u8cfc\u5165">Purchase</button>\n'
+        '    </div>\n'
+        # --- Tier 2: 10 Reports ---
+        '    <div class="bg-surface rounded-2xl border border-accent/50 p-6 flex flex-col relative hover:border-accent transition-all">\n'
+        '      <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-3 py-1 rounded-full" data-en="POPULAR" data-ja="\u4eba\u6c17">POPULAR</div>\n'
+        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">TEAM</div>\n'
+        '      <div class="text-white text-3xl font-bold mb-1" data-en="10 Reports" data-ja="10\u30ec\u30dd\u30fc\u30c8">10 Reports</div>\n'
+        '      <div class="text-white text-2xl font-bold mb-1">&yen;28,000</div>\n'
+        '      <div class="text-slate-500 text-sm mb-4" data-en="&yen;2,800 / report" data-ja="&yen;2,800 / \u4ef6">&yen;2,800 / report</div>\n'
+        '      <div class="flex-1"></div>\n'
+        '      <div class="text-slate-500 text-xs mb-4" data-en="Login required" data-ja="\u8981\u30ed\u30b0\u30a4\u30f3">Login required</div>\n'
+        '      <button onclick="purchaseTier(\'team\', 28000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" data-en="Purchase" data-ja="\u8cfc\u5165">Purchase</button>\n'
+        '    </div>\n'
+        # --- Tier 3: 50 Reports ---
+        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
+        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">BUSINESS</div>\n'
+        '      <div class="text-white text-3xl font-bold mb-1" data-en="50 Reports" data-ja="50\u30ec\u30dd\u30fc\u30c8">50 Reports</div>\n'
+        '      <div class="text-white text-2xl font-bold mb-1">&yen;120,000</div>\n'
+        '      <div class="text-slate-500 text-sm mb-4" data-en="&yen;2,400 / report" data-ja="&yen;2,400 / \u4ef6">&yen;2,400 / report</div>\n'
+        '      <div class="flex-1"></div>\n'
+        '      <div class="text-slate-500 text-xs mb-4" data-en="Login required" data-ja="\u8981\u30ed\u30b0\u30a4\u30f3">Login required</div>\n'
+        '      <button onclick="purchaseTier(\'business\', 120000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" data-en="Purchase" data-ja="\u8cfc\u5165">Purchase</button>\n'
+        '    </div>\n'
+        # --- Tier 4: 100 Reports ---
+        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
+        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">ENTERPRISE</div>\n'
+        '      <div class="text-white text-3xl font-bold mb-1" data-en="100 Reports" data-ja="100\u30ec\u30dd\u30fc\u30c8">100 Reports</div>\n'
+        '      <div class="text-white text-2xl font-bold mb-1">&yen;220,000</div>\n'
+        '      <div class="text-slate-500 text-sm mb-4" data-en="&yen;2,200 / report" data-ja="&yen;2,200 / \u4ef6">&yen;2,200 / report</div>\n'
+        '      <div class="flex-1"></div>\n'
+        '      <div class="text-slate-500 text-xs mb-4" data-en="Login required" data-ja="\u8981\u30ed\u30b0\u30a4\u30f3">Login required</div>\n'
+        '      <button onclick="purchaseTier(\'enterprise\', 220000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" data-en="Purchase" data-ja="\u8cfc\u5165">Purchase</button>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="mt-12 bg-surface rounded-2xl border border-slate-800 p-8">\n'
+        '    <h2 class="text-xl font-bold text-white mb-4" data-en="How it works" data-ja="\u5229\u7528\u65b9\u6cd5">How it works</h2>\n'
+        '    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">\n'
+        '      <div class="flex items-start gap-3">\n'
+        '        <div class="bg-accent/20 text-accent font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">1</div>\n'
+        '        <div>\n'
+        '          <div class="text-white font-semibold text-sm" data-en="Purchase tickets" data-ja="\u30c1\u30b1\u30c3\u30c8\u8cfc\u5165">Purchase tickets</div>\n'
+        '          <div class="text-slate-500 text-xs mt-1" data-en="Each ticket = 1 full AI-powered DD report" data-ja="1\u30c1\u30b1\u30c3\u30c8 = 1\u4ef6\u306eAI DD\u30ec\u30dd\u30fc\u30c8">Each ticket = 1 full AI-powered DD report</div>\n'
+        '        </div>\n'
+        '      </div>\n'
+        '      <div class="flex items-start gap-3">\n'
+        '        <div class="bg-accent/20 text-accent font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">2</div>\n'
+        '        <div>\n'
+        '          <div class="text-white font-semibold text-sm" data-en="Enter URL" data-ja="URL\u5165\u529b">Enter URL</div>\n'
+        '          <div class="text-slate-500 text-xs mt-1" data-en="Paste a GitHub repo or website URL" data-ja="GitHub\u30ea\u30dd\u307e\u305f\u306f\u30b5\u30a4\u30c8URL\u3092\u8cbc\u308a\u4ed8\u3051">Paste a GitHub repo or website URL</div>\n'
+        '        </div>\n'
+        '      </div>\n'
+        '      <div class="flex items-start gap-3">\n'
+        '        <div class="bg-accent/20 text-accent font-bold w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">3</div>\n'
+        '        <div>\n'
+        '          <div class="text-white font-semibold text-sm" data-en="Get report" data-ja="\u30ec\u30dd\u30fc\u30c8\u53d6\u5f97">Get report</div>\n'
+        '          <div class="text-slate-500 text-xs mt-1" data-en="Claude + Gemini + ChatGPT cross-validated DD" data-ja="Claude + Gemini + ChatGPT \u30af\u30ed\u30b9\u691c\u8a3cDD">Claude + Gemini + ChatGPT cross-validated DD</div>\n'
+        '        </div>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="text-center mt-8">\n'
+        '    <a href="/dashboard/" class="text-accent hover:underline text-sm" data-en="&larr; Back to Analysis" data-ja="&larr; \u5206\u6790\u30da\u30fc\u30b8\u3078\u623b\u308b">&larr; Back to Analysis</a>\n'
+        '  </div>\n'
+        '</div>\n'
+    )
+
+    scripts = (
+        '<script>\n'
+        'function purchaseTier(tier, price) {\n'
+        '  // For single report, no login required\n'
+        '  if (tier !== "single" && !currentUser) {\n'
+        '    signInWithGoogle();\n'
+        '    // After sign-in, retry\n'
+        '    var checkAuth = setInterval(function() {\n'
+        '      if (currentUser && idToken) {\n'
+        '        clearInterval(checkAuth);\n'
+        '        doPurchase(tier, price);\n'
+        '      }\n'
+        '    }, 500);\n'
+        '    setTimeout(function() { clearInterval(checkAuth); }, 60000);\n'
+        '    return;\n'
+        '  }\n'
+        '  doPurchase(tier, price);\n'
+        '}\n'
+        'function doPurchase(tier, price) {\n'
+        '  var headers = {"Content-Type": "application/json"};\n'
+        '  if (idToken) headers["Authorization"] = "Bearer " + idToken;\n'
+        '  fetch("/api/v1/stripe/checkout", {\n'
+        '    method: "POST",\n'
+        '    headers: headers,\n'
+        '    body: JSON.stringify({tier: tier, lang: currentLang})\n'
+        '  }).then(function(r) {\n'
+        '    if (r.ok) return r.json();\n'
+        '    return r.json().then(function(e) { throw new Error(e.detail || "Checkout error"); });\n'
+        '  }).then(function(d) {\n'
+        '    if (d.checkout_url) window.location.href = d.checkout_url;\n'
+        '  }).catch(function(err) {\n'
+        '    alert(err.message);\n'
+        '  });\n'
+        '}\n'
+        '</script>\n'
+    )
+
+    return _render_page("Pricing", content, scripts)
+
+
+# ---------------------------------------------------------------------------
+# Page: Account
+# ---------------------------------------------------------------------------
+
+@router.get("/account", response_class=HTMLResponse)
+async def account_page() -> HTMLResponse:
+    """Account page showing user profile, ticket balance, and report history."""
+    content = (
+        '<div id="account-loading" class="flex flex-col items-center justify-center min-h-[50vh]">\n'
+        '  <div class="w-12 h-12 border-4 border-accent border-t-transparent rounded-full animate-spin mb-4"></div>\n'
+        '  <p class="text-slate-400" data-en="Loading account..." data-ja="\u30a2\u30ab\u30a6\u30f3\u30c8\u8aad\u307f\u8fbc\u307f\u4e2d...">Loading account...</p>\n'
+        '</div>\n'
+        '<div id="account-signin" class="hidden flex flex-col items-center justify-center min-h-[50vh]">\n'
+        '  <div class="text-center">\n'
+        '    <h1 class="text-2xl font-bold text-white mb-4" data-en="Sign in required" data-ja="\u30ed\u30b0\u30a4\u30f3\u304c\u5fc5\u8981\u3067\u3059">Sign in required</h1>\n'
+        '    <p class="text-slate-400 mb-6" data-en="Please sign in with Google to view your account." data-ja="Google\u3067\u30ed\u30b0\u30a4\u30f3\u3057\u3066\u304f\u3060\u3055\u3044\u3002">Please sign in with Google to view your account.</p>\n'
+        '    <button onclick="signInWithGoogle()" class="bg-accent hover:bg-blue-500 text-white font-semibold px-8 py-3 rounded-xl transition-colors" data-en="Sign in with Google" data-ja="Google\u3067\u30ed\u30b0\u30a4\u30f3">Sign in with Google</button>\n'
+        '  </div>\n'
+        '</div>\n'
+        '<div id="account-content" class="hidden max-w-3xl mx-auto">\n'
+        '  <div class="bg-surface rounded-2xl border border-slate-800 p-8 mb-8">\n'
+        '    <div class="flex items-center gap-6">\n'
+        '      <img id="acct-avatar" src="" class="w-20 h-20 rounded-full border-2 border-accent" alt="avatar" />\n'
+        '      <div>\n'
+        '        <h1 id="acct-name" class="text-2xl font-bold text-white"></h1>\n'
+        '        <p id="acct-email" class="text-slate-400"></p>\n'
+        '      </div>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="bg-surface rounded-2xl border border-slate-800 p-8 mb-8">\n'
+        '    <div class="text-center">\n'
+        '      <div class="text-slate-500 text-sm mb-2" data-en="Ticket Balance" data-ja="\u30c1\u30b1\u30c3\u30c8\u6b8b\u9ad8">Ticket Balance</div>\n'
+        '      <div id="acct-tickets" class="text-6xl font-bold text-accent mb-2">0</div>\n'
+        '      <div class="text-slate-500 text-sm" data-en="reports remaining" data-ja="\u30ec\u30dd\u30fc\u30c8\u6b8b\u308a">reports remaining</div>\n'
+        '      <a href="/dashboard/pricing" class="inline-block mt-4 bg-accent hover:bg-blue-500 text-white font-semibold px-6 py-2 rounded-lg transition-colors text-sm" data-en="Buy more tickets" data-ja="\u30c1\u30b1\u30c3\u30c8\u3092\u8cfc\u5165">\n'
+        '        Buy more tickets</a>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="bg-surface rounded-2xl border border-slate-800 p-8">\n'
+        '    <h2 class="text-xl font-bold text-white mb-6" data-en="Report History" data-ja="\u30ec\u30dd\u30fc\u30c8\u5c65\u6b74">Report History</h2>\n'
+        '    <div id="acct-reports-empty" class="hidden text-center py-8">\n'
+        '      <p class="text-slate-500" data-en="No reports yet. Run your first analysis!" data-ja="\u307e\u3060\u30ec\u30dd\u30fc\u30c8\u304c\u3042\u308a\u307e\u305b\u3093\u3002\u6700\u521d\u306e\u5206\u6790\u3092\u5b9f\u884c\u3057\u307e\u3057\u3087\u3046\uff01">No reports yet. Run your first analysis!</p>\n'
+        '      <a href="/dashboard/" class="text-accent hover:underline text-sm mt-2 inline-block" data-en="Go to Analysis" data-ja="\u5206\u6790\u3078">\u2192 Go to Analysis</a>\n'
+        '    </div>\n'
+        '    <div id="acct-reports-table" class="hidden overflow-x-auto">\n'
+        '      <table class="w-full text-sm">\n'
+        '        <thead>\n'
+        '          <tr class="border-b border-slate-800">\n'
+        '            <th class="text-left text-slate-500 pb-3 font-medium" data-en="Date" data-ja="\u65e5\u4ed8">Date</th>\n'
+        '            <th class="text-left text-slate-500 pb-3 font-medium" data-en="Project" data-ja="\u30d7\u30ed\u30b8\u30a7\u30af\u30c8">Project</th>\n'
+        '            <th class="text-left text-slate-500 pb-3 font-medium" data-en="Grade" data-ja="\u30b0\u30ec\u30fc\u30c9">Grade</th>\n'
+        '            <th class="text-left text-slate-500 pb-3 font-medium" data-en="Status" data-ja="\u30b9\u30c6\u30fc\u30bf\u30b9">Status</th>\n'
+        '            <th class="text-right text-slate-500 pb-3 font-medium"></th>\n'
+        '          </tr>\n'
+        '        </thead>\n'
+        '        <tbody id="acct-reports-body"></tbody>\n'
+        '      </table>\n'
+        '    </div>\n'
+        '  </div>\n'
+        '  <div class="text-center mt-8">\n'
+        '    <a href="/dashboard/" class="text-accent hover:underline text-sm" data-en="&larr; Back to Analysis" data-ja="&larr; \u5206\u6790\u30da\u30fc\u30b8\u3078\u623b\u308b">&larr; Back to Analysis</a>\n'
+        '  </div>\n'
+        '</div>\n'
+    )
+
+    scripts = (
+        '<script>\n'
+        'function loadAccount() {\n'
+        '  var loadEl = document.getElementById("account-loading");\n'
+        '  var signinEl = document.getElementById("account-signin");\n'
+        '  var contentEl = document.getElementById("account-content");\n'
+        '  \n'
+        '  function waitForAuth() {\n'
+        '    if (typeof firebase === "undefined" || !firebase.apps.length) {\n'
+        '      loadEl.classList.add("hidden");\n'
+        '      signinEl.classList.remove("hidden");\n'
+        '      return;\n'
+        '    }\n'
+        '    firebase.auth().onAuthStateChanged(function(user) {\n'
+        '      if (!user) {\n'
+        '        loadEl.classList.add("hidden");\n'
+        '        signinEl.classList.remove("hidden");\n'
+        '        return;\n'
+        '      }\n'
+        '      user.getIdToken().then(function(token) {\n'
+        '        loadEl.classList.add("hidden");\n'
+        '        contentEl.classList.remove("hidden");\n'
+        '        var avatar = document.getElementById("acct-avatar");\n'
+        '        avatar.src = user.photoURL || "https://ui-avatars.com/api/?name=" + encodeURIComponent(user.displayName || "U") + "&background=5271FF&color=fff&size=80";\n'
+        '        document.getElementById("acct-name").textContent = user.displayName || "";\n'
+        '        document.getElementById("acct-email").textContent = user.email || "";\n'
+        '        \n'
+        '        fetch("/api/v1/account", {\n'
+        '          headers: {"Authorization": "Bearer " + token}\n'
+        '        }).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {\n'
+        '          if (data && typeof data.ticket_balance === "number") {\n'
+        '            document.getElementById("acct-tickets").textContent = data.ticket_balance;\n'
+        '          }\n'
+        '        }).catch(function() {});\n'
+        '        \n'
+        '        fetch("/api/v1/reports", {\n'
+        '          headers: {"Authorization": "Bearer " + token}\n'
+        '        }).then(function(r) { return r.ok ? r.json() : null; }).then(function(data) {\n'
+        '          if (!data || !data.reports || data.reports.length === 0) {\n'
+        '            document.getElementById("acct-reports-empty").classList.remove("hidden");\n'
+        '            return;\n'
+        '          }\n'
+        '          document.getElementById("acct-reports-table").classList.remove("hidden");\n'
+        '          var tbody = document.getElementById("acct-reports-body");\n'
+        '          tbody.innerHTML = data.reports.map(function(r) {\n'
+        '            var gradeColor = {"A":"text-green-400","B":"text-blue-400","C":"text-yellow-400","D":"text-orange-400","F":"text-red-400"};\n'
+        '            var gc = gradeColor[r.grade] || "text-slate-400";\n'
+        '            var statusBadge = r.status === "completed"\n'
+        '              ? \'<span class="bg-green-900/50 text-green-400 text-xs px-2 py-0.5 rounded-full">\' + (currentLang === "ja" ? "\\u5b8c\\u4e86" : "Done") + "</span>"\n'
+        '              : \'<span class="bg-yellow-900/50 text-yellow-400 text-xs px-2 py-0.5 rounded-full">\' + (currentLang === "ja" ? "\\u51e6\\u7406\\u4e2d" : "Running") + "</span>";\n'
+        '            var link = r.analysis_id ? \'<a href="/dashboard/analysis/\' + r.analysis_id + \'?lang=\' + currentLang + \'" class="text-accent hover:underline text-xs">\' + (currentLang === "ja" ? "\\u898b\\u308b" : "View") + "</a>" : "";\n'
+        '            return "<tr class=\\"border-b border-slate-800/50\\"><td class=\\"py-3 text-slate-300\\">" + (r.date || "") + "</td><td class=\\"py-3 text-white\\">" + (r.project_name || "") + "</td><td class=\\"py-3 ' + gc + ' font-bold\\">" + (r.grade || "-") + "</td><td class=\\"py-3\\">" + statusBadge + "</td><td class=\\"py-3 text-right\\">" + link + "</td></tr>";\n'
+        '          }).join("");\n'
+        '        }).catch(function() {\n'
+        '          document.getElementById("acct-reports-empty").classList.remove("hidden");\n'
+        '        });\n'
+        '      });\n'
+        '    });\n'
+        '  }\n'
+        '  waitForAuth();\n'
+        '}\n'
+        'loadAccount();\n'
+        '</script>\n'
+    )
+
+    return _render_page("Account", content, scripts)
 
 
 # ---------------------------------------------------------------------------

@@ -16,10 +16,7 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
 
 ---
 
-## Multi-AI Cross-Verification + Site Credibility Analysis
-
-> **One AI can be wrong. Three AIs cross-checking each other dramatically reduce blind spots.**
-> **Now with Site vs Code cross-validation — detect exaggerations before they cost you.**
+## Multi-AI Cross-Verification
 
 ```
          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
@@ -44,9 +41,9 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
 
 **https://due-diligence-engine.web.app/dashboard/**
 
-Paste any public GitHub URL and click Analyze. Optionally add a product website URL for cross-validation.
+Paste any public GitHub URL and click Analyze.
 
-> Basic analysis (local code scan) is free. For AI-powered analysis, configure your own API keys (BYOK).
+> Basic analysis (local code scan) is free. For AI-powered analysis, configure your own API keys — **BYOK (Bring Your Own Key)**.
 
 ---
 
@@ -55,9 +52,9 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 | Plan | Cost | AI Providers | Features |
 |------|------|-------------|----------|
 | **Free (Local Only)** | Free | None | Code structure, git forensics, dependency scan |
-| **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1-3 providers) | Full AI analysis + cross-verification |
+| **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1–3 providers) | Full AI analysis + cross-verification |
 
-> **BYOK:** One API key is enough to start. Add more providers for cross-verification. Typical cost: ~$10-15/analysis depending on codebase size.
+> **BYOK (Bring Your Own Key):** One API key is enough to start. Claude, Gemini, and ChatGPT are all supported. Add more providers for cross-verification. Typical cost: ~$10–15/analysis depending on codebase size.
 
 ---
 
@@ -66,14 +63,11 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 | Feature | Description |
 |---------|-------------|
 | **Multi-AI Cross-Verification** | Claude + Gemini + ChatGPT evaluate independently, then cross-verify |
-| **Site vs Code Cross-Validation** | Scrape product website → extract claims → verify against actual source code |
-| **Credibility Score** | 0-100 score measuring how truthful a startup's site claims are vs their code |
-| **Exaggeration Detection** | Flag unrealistic performance claims, buzzword density, missing tech evidence |
-| **BYOK (Bring Your Own Key)** | Use your own API keys — 1 provider or all 3. No vendor lock-in |
+| **BYOK (Bring Your Own Key)** | Use your own API keys — Claude, Gemini, or ChatGPT. 1 provider or all 3. No vendor lock-in |
 | **GitHub Private Repo Access** | PAT-based access — startups grant temporary read-only access |
 | **AI-Washing Detection** | Detect thin API wrappers disguised as "proprietary AI" |
 | **Git Forensics** | Analyze commit history for suspicious patterns (rush commits before DD) |
-| **10-Level Tech Rating** | Each dimension rated Lv.1-10 with clear criteria |
+| **10-Level Tech Rating** | Each dimension rated Lv.1–10 with clear criteria |
 | **PDF Export** | Professional investment committee-ready PDF reports |
 | **Disconnect & Purge** | One-click data erasure + purge certificate |
 | **Bilingual Dashboard** | English / 日本語 toggle |
@@ -81,6 +75,32 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 ---
 
 ## Scoring Framework
+
+### Final Score Formula
+
+```
+Final Score = Heuristic (30%) + AI Average (70%)
+```
+
+### Score Barometer
+
+```
+  0          40          60          75          90        100
+  |----------|-----------|-----------|-----------|----------|
+  F          D           C           B           A
+  Do Not    High Risk   Concerns    Viable      Strong
+  Invest               Noted      w/Conditions Candidate
+```
+
+| Score | Grade | Recommendation |
+|-------|-------|----------------|
+| 90–100 | 🏆 **A** | Strong investment candidate |
+| 75–89  | ✅ **B** | Viable with conditions |
+| 60–74  | ⚡ **C** | Significant concerns — review required |
+| 40–59  | ⚠️ **D** | High risk |
+| 0–39   | 🚫 **F** | Do not invest |
+
+---
 
 ### 6 Dimensions
 
@@ -93,19 +113,25 @@ Paste any public GitHub URL and click Analyze. Optionally add a product website 
 | Claim Consistency | 10% | Pitch vs. reality |
 | Security Posture | 10% | Security maturity |
 
-### Final Score
+---
+
+### 10-Level Tech Rating
+
+Each dimension is rated on a **Lv.1–10** scale with explicit criteria:
 
 ```
-Final Score = Heuristic (30%) + AI Average (70%)
+Lv.1 ──── Lv.2 ──── Lv.3 ──── Lv.4 ──── Lv.5 ──── Lv.6 ──── Lv.7 ──── Lv.8 ──── Lv.9 ──── Lv.10
+ ▓          ▓▓         ▓▓▓        ▓▓▓▓       ▓▓▓▓▓      ▓▓▓▓▓▓     ▓▓▓▓▓▓▓    ▓▓▓▓▓▓▓▓   ▓▓▓▓▓▓▓▓▓  ▓▓▓▓▓▓▓▓▓▓
+Worst                                       Baseline                                                  Best
 ```
 
-| Score | Grade | Recommendation |
-|-------|-------|---------------|
-| 90-100 | A | Strong investment candidate |
-| 75-89 | B | Viable with conditions |
-| 60-74 | C | Significant concerns |
-| 40-59 | D | High risk |
-| 0-39 | F | Do not invest |
+| Level | Technical Originality | Implementation Depth | Architecture Quality |
+|-------|-----------------------|---------------------|---------------------|
+| Lv.1  | Pure copy / no original code | UI mockup only | Spaghetti code |
+| Lv.3  | Multi-API glue logic | Working prototype | Basic layering |
+| Lv.5  | Extended framework + partial IP | Beta — basic tests | Clean separation |
+| Lv.7  | Core tech fully original | Production-grade + monitoring | Microservices |
+| Lv.10 | Frontier / world-first | Mission-critical, DR complete | Distributed systems |
 
 ---
 
@@ -161,24 +187,6 @@ For private repos, provide a **GitHub Personal Access Token**:
 
 ---
 
-## Site Cross-Validation (NEW)
-
-Add a product/service URL alongside the GitHub repo to enable credibility analysis:
-
-1. **Crawl** — DDE scrapes up to 10 pages (about, team, pricing, features, etc.)
-2. **Extract Claims** — Technology, performance, traction, security, and funding claims
-3. **Cross-Validate** — Compare site claims against actual source code
-4. **Score** — Generate a Credibility Score (0-100) with verified/unverified/contradicted claims
-
-### What It Detects
-
-- **Technology mismatches** — "We use React + ML" but codebase is Python-only with no ML code
-- **Security claim contradictions** — "E2EE encrypted" but no encryption code found
-- **Exaggerated performance** — "1000x faster" claims without benchmarks
-- **Buzzword inflation** — Excessive marketing buzzwords vs. thin technical substance
-- **Missing evidence** — Many tech claims but no documentation, tests, or CI/CD
-
----
 
 ## Data Security
 
@@ -206,12 +214,10 @@ Add a product/service URL alongside the GitHub repo to enable credibility analys
 - [x] Multi-AI analysis engine (Claude / Gemini / ChatGPT BYOK)
 - [x] BYOK API key input on web dashboard
 - [x] Provider score comparison (per-provider breakdown)
-- [x] Site vs Code cross-validation engine
-- [x] Credibility scoring with contradiction detection
 - [x] Bilingual dashboard (English / 日本語)
 - [x] PDF report export
 - [x] Disconnect & Purge with certificate
-- [ ] AI-enhanced site analysis (send site claims to AI for deeper evaluation)
+- [ ] Technical Debt + Maintainability axes
 - [ ] Batch analysis mode (portfolio-wide DD)
 - [ ] Historical tracking (re-analyze over time)
 

@@ -27,11 +27,10 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
                 └────────┬────────┴────────┬────────┘
                    ┌─────▼─────────────────▼─────┐
                    │   Cross-Verification Engine  │
-                   │   + Site Credibility Check   │
                    └──────────────┬───────────────┘
                          ┌────────▼────────┐
                          │  Unified Score   │
-                         │  + Credibility   │
+                         │  6-Dimension     │
                          └─────────────────┘
 ```
 
@@ -63,14 +62,18 @@ Paste any public GitHub URL and click Analyze.
 | Feature | Description |
 |---------|-------------|
 | **Multi-AI Cross-Verification** | Claude + Gemini + ChatGPT evaluate independently, then cross-verify |
+| **`dde prompt` — IDE AI Integration** | Generate structured prompts for Claude Code / Cursor / Copilot. Zero API keys needed |
 | **BYOK (Bring Your Own Key)** | Use your own API keys — Claude, Gemini, or ChatGPT. 1 provider or all 3. No vendor lock-in |
+| **Plain-Language Glossary** | All technical terms annotated for non-technical investors ("Translation Device" mode) |
+| **Match Rate Visualization** | Claims vs. code reality — status bar shows how honest the team is |
 | **GitHub Private Repo Access** | PAT-based access — startups grant temporary read-only access |
 | **AI-Washing Detection** | Detect thin API wrappers disguised as "proprietary AI" |
 | **Git Forensics** | Analyze commit history for suspicious patterns (rush commits before DD) |
 | **10-Level Tech Rating** | Each dimension rated Lv.1–10 with clear criteria |
+| **Stage-Aware Evaluation** | Seed / Series A / Series B / Growth — criteria adjust to startup stage |
 | **PDF Export** | Professional investment committee-ready PDF reports |
 | **Disconnect & Purge** | One-click data erasure + purge certificate |
-| **Bilingual Dashboard** | English / 日本語 toggle |
+| **Bilingual** | English / 日本語 — CLI (`--lang`) and dashboard |
 
 ---
 
@@ -235,10 +238,14 @@ export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ### CLI Usage
 
 ```bash
-# Analyze from GitHub URL
+# Generate evaluation prompt for your IDE AI (no API keys needed)
+dde prompt .
+dde prompt owner/repo --lang ja --stage seed
+
+# Full analysis with AI APIs (BYOK)
 dde analyze https://github.com/some-startup/their-product
 
-# Local-only (free, no AI)
+# Local-only heuristic analysis (free, no AI)
 dde analyze some-startup/repo --skip-ai
 ```
 
@@ -347,6 +354,7 @@ For private repos, provide a **GitHub Personal Access Token**:
 
 | Option | Cost | Description |
 |--------|------|-------------|
+| `dde prompt` | Free | IDE AI evaluates — zero API keys needed |
 | Local CLI | Free | `dde analyze owner/repo --skip-ai` |
 | BYOK CLI | Free + API costs | Your own API keys, full AI analysis |
 | BYOK Dashboard | Free + API costs | Web UI with GitHub PAT support |
@@ -361,6 +369,11 @@ For private repos, provide a **GitHub Personal Access Token**:
 - [x] Bilingual dashboard (English / 日本語)
 - [x] PDF report export
 - [x] Disconnect & Purge with certificate
+- [x] `dde prompt` — IDE AI integration (Claude Code / Cursor / Copilot)
+- [x] Plain-language glossary for non-technical readers
+- [x] Match rate visualization (claims vs. code)
+- [x] Stage-aware evaluation (seed / series_a / series_b / growth)
+- [x] Investor question auto-generation
 - [ ] Technical Debt + Maintainability axes
 - [ ] Batch analysis mode (portfolio-wide DD)
 - [ ] Historical tracking (re-analyze over time)

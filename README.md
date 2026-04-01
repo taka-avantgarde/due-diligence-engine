@@ -2,13 +2,16 @@
 
 # Due Diligence Engine
 
-**3 AIs Cross-Validate. One Verdict You Can Trust.**
+**Your IDE's AI Becomes a Due Diligence Analyst.**
 
-Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in parallel** — each evaluates independently, then cross-verifies to produce a unified, bias-resistant investment score.
+Run `dde prompt` in your terminal — Claude Code, Cursor, or Copilot reads the codebase and generates a full investment-grade evaluation. Zero API keys. Zero extra cost.
+
+For deeper analysis, DDE also runs Claude, Gemini, and ChatGPT **in parallel** — cross-verifying to produce a bias-resistant score.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 [![AI](https://img.shields.io/badge/AI-Claude_%7C_Gemini_%7C_ChatGPT-orange.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
+[![IDE](https://img.shields.io/badge/IDE_AI-Claude_Code_%7C_Cursor_%7C_Copilot-blueviolet.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
 
 [English](README.md) | [日本語](README.ja.md)
 
@@ -38,22 +41,15 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
 
 ## Try It Now
 
-**https://due-diligence-engine.web.app/dashboard/**
+**Fastest way** — in your AI terminal:
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+dde prompt owner/repo
+```
 
-Paste any public GitHub URL and click Analyze.
+**Web dashboard**: https://due-diligence-engine.web.app/dashboard/
 
-> Basic analysis (local code scan) is free. For AI-powered analysis, configure your own API keys — **BYOK (Bring Your Own Key)**.
-
----
-
-## Pricing
-
-| Plan | Cost | AI Providers | Features |
-|------|------|-------------|----------|
-| **Free (Local Only)** | Free | None | Code structure, git forensics, dependency scan |
-| **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1–3 providers) | Full AI analysis + cross-verification |
-
-> **BYOK (Bring Your Own Key):** One API key is enough to start. Claude, Gemini, and ChatGPT are all supported. Add more providers for cross-verification. Typical cost: ~$10–15/analysis depending on codebase size.
+> `dde prompt` is free (no API keys). For AI-powered cross-verification, use `dde analyze` with your own API keys — **BYOK (Bring Your Own Key)**: Claude, Gemini, and/or ChatGPT.
 
 ---
 

@@ -2,13 +2,16 @@
 
 # Due Diligence Engine
 
-**3社のAIがクロス検証。信頼できるひとつの判定を。**
+**IDEのAIが、デューデリジェンスアナリストになる。**
 
-1社のAIだけでは盲点がある。DDEはClaude、Gemini、ChatGPTを**同時並列実行** — 各社が独立評価し、クロス検証でバイアスのない投資スコアを生成。
+`dde prompt` をターミナルで実行 — Claude Code、Cursor、Copilotがコードベースを読み、投資判断レベルの評価レポートを生成。APIキー不要。追加コスト¥0。
+
+より深い分析には、Claude・Gemini・ChatGPTの**3社並列クロス検証**も対応。
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 [![AI](https://img.shields.io/badge/AI-Claude_%7C_Gemini_%7C_ChatGPT-orange.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
+[![IDE](https://img.shields.io/badge/IDE_AI-Claude_Code_%7C_Cursor_%7C_Copilot-blueviolet.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
 
 [English](README.md) | [日本語](README.ja.md)
 
@@ -38,11 +41,15 @@
 
 ## まず試してみる
 
-**https://due-diligence-engine.web.app/dashboard/**
+**最速の方法** — AIターミナルで:
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+dde prompt owner/repo --lang ja
+```
 
-公開GitHubリポジトリのURLを貼って「分析」をクリック。
+**Webダッシュボード**: https://due-diligence-engine.web.app/dashboard/
 
-> 基本分析（ローカルコードスキャン）は無料。AI分析には自分のAPIキー — **BYOK（Bring Your Own Key）** をご利用ください。
+> `dde prompt` は無料（APIキー不要）。AIクロス検証には `dde analyze` + 自分のAPIキー — **BYOK（Bring Your Own Key）**: Claude・Gemini・ChatGPT対応。
 
 ---
 
@@ -211,7 +218,7 @@ Lv.1 ──── Lv.2 ──── Lv.3 ──── Lv.4 ──── Lv.5 ─
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ✅ B — 条件付きで投資可能
-  技術スタックとコアMLモデルは genuinely 独自実装。
+  技術スタックとコアMLモデルは正真正銘の独自実装。
   SOC2主張の不一致を解消し、テストカバレッジを改善した上で
   タームシートに進むことを推奨。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

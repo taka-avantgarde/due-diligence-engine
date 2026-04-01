@@ -60,6 +60,7 @@ _BASE_TEMPLATE = """<!DOCTYPE html>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title} - DDE</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
@@ -225,9 +226,9 @@ tailwind.config = {{
       jaSpan.style.color = currentLang === "ja" ? "#fff" : "#64748b";
       jaSpan.style.fontWeight = currentLang === "ja" ? "700" : "400";
     }}
-    document.querySelectorAll(".ja-only").forEach(function(el) {
+    document.querySelectorAll(".ja-only").forEach(function(el) {{
       el.style.display = currentLang === "ja" ? "" : "none";
-    });
+    }});
     document.documentElement.lang = currentLang;
   }}
   document.getElementById("lang-toggle").addEventListener("click", toggleLang);
@@ -272,6 +273,7 @@ def _build_landing_html() -> str:
         '<meta charset="utf-8">\n'
         '<meta name="viewport" content="width=device-width, initial-scale=1.0">\n'
         '<title>Due Diligence Engine</title>\n'
+        '<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">\n'
         '<script src="https://cdn.tailwindcss.com"></script>\n'
         '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>\n'
         '<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>\n'
@@ -285,7 +287,7 @@ def _build_landing_html() -> str:
         '  <div class="max-w-5xl mx-auto flex items-center justify-between">\n'
         '    <a href="/dashboard/" class="text-accent font-bold text-lg tracking-wide">DUE DILIGENCE ENGINE</a>\n'
         '    <div class="flex items-center gap-4">\n'
-        '      <a href="/dashboard/pricing" class="text-sm text-slate-400 hover:text-accent transition-colors" data-en="Pricing" data-ja="\u6599\u91d1">Pricing</a>\n'
+        '      <a href="/dashboard/pricing" class="text-sm text-slate-400 hover:text-accent transition-colors ja-only" style="display:none" data-ja="\u6599\u91d1">\u6599\u91d1</a>\n'
         '      <a id="github-link" href="https://github.com/taka-avantgarde/Due-diligence-engine" target="_blank" rel="noopener" class="text-slate-500 hover:text-white transition-all" title="GitHub Repository"><svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg></a>\n'
         '      <div id="lang-toggle" style="cursor:pointer;user-select:none;display:inline-block;font-size:12px;border:1px solid #334155;border-radius:8px;padding:6px 14px" onmouseover="this.style.borderColor=\'#5271FF\'" onmouseout="this.style.borderColor=\'#334155\'"><span id="lang-en" style="color:#fff;font-weight:700">English</span> <span style="color:#475569">/</span> <span id="lang-ja" style="color:#64748b">\u65e5\u672c\u8a9e</span></div>\n'
         '      <div id="auth-area" class="flex items-center gap-3">\n'
@@ -317,11 +319,19 @@ def _build_landing_html() -> str:
         '        <span class="text-slate-500 text-lg">\u00d7</span>\n'
         '        <span class="bg-emerald-950/50 text-emerald-300 text-sm px-4 py-2 rounded-full border border-emerald-800/50 font-semibold">ChatGPT</span>\n'
         '      </div>\n'
-        '      <p class="text-accent text-sm font-bold tracking-wider mb-4" data-en="3 AIs Cross-Validate Your Investment" data-ja="3\u793e\u306eAI\u304c\u30af\u30ed\u30b9\u691c\u8a3c\u3059\u308b\u6295\u8cc7\u5224\u65ad">3 AIs Cross-Validate Your Investment</p>\n'
-        '      <p id="hero-sub" class="text-slate-400 text-lg mb-6" data-en="Analyze any product by its website URL or GitHub repo. Uncover real technology depth in minutes." data-ja="\u30b5\u30a4\u30c8URL\u307e\u305f\u306fGitHub\u30ea\u30dd\u304b\u3089\u3001\u30d7\u30ed\u30c0\u30af\u30c8\u306e\u771f\u306e\u6280\u8853\u529b\u3092\u6570\u5206\u3067\u53ef\u8996\u5316\u3002">Analyze any product by its website URL or GitHub repo. Uncover real technology depth in minutes.</p>\n'
+        '      <p class="text-accent text-sm font-bold tracking-wider mb-4" data-en="Your IDE\'s AI Becomes a Due Diligence Analyst" data-ja="IDE\u306eAI\u304c\u3001\u30c7\u30e5\u30fc\u30c7\u30ea\u30b8\u30a7\u30f3\u30b9\u30a2\u30ca\u30ea\u30b9\u30c8\u306b\u306a\u308b">Your IDE\'s AI Becomes a Due Diligence Analyst</p>\n'
+        '      <p id="hero-sub" class="text-slate-400 text-lg mb-6" data-en="Run dde prompt in your terminal, or paste a GitHub URL here. Uncover real technology depth in minutes." data-ja="dde prompt \u3092\u30bf\u30fc\u30df\u30ca\u30eb\u3067\u5b9f\u884c\u3001\u307e\u305f\u306fGitHub URL\u3092\u8cbc\u308a\u4ed8\u3051\u3002\u30d7\u30ed\u30c0\u30af\u30c8\u306e\u771f\u306e\u6280\u8853\u529b\u3092\u6570\u5206\u3067\u53ef\u8996\u5316\u3002">Run <code class="bg-slate-800 px-2 py-1 rounded text-accent text-base">dde prompt</code> in your terminal, or paste a GitHub URL here. Uncover real technology depth in minutes.</p>\n'
         '      <div class="bg-yellow-950/30 border border-yellow-800/50 rounded-xl px-5 py-3 mb-8 max-w-xl mx-auto">\n'
-        '        <p class="text-yellow-400/90 text-xs leading-relaxed" data-en="&#9888; &lt;b&gt;Free analysis uses pattern-matching only (no AI).&lt;/b&gt; For Claude + Gemini + ChatGPT powered in-depth analysis, add your own API keys below (BYOK &mdash; cost on your account). See &lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;Configuration&lt;/a&gt;." data-ja="&#9888; &lt;b&gt;\u7121\u6599\u5206\u6790\u306fAI\u672a\u4f7f\u7528\uff08\u30d1\u30bf\u30fc\u30f3\u30de\u30c3\u30c1\u30f3\u30b0\u306e\u307f\uff09\u3067\u3059\u3002&lt;/b&gt; Claude + Gemini + ChatGPT\u306b\u3088\u308b\u672c\u683c\u5206\u6790\u306b\u306f\u3001\u4e0b\u8a18\u304b\u3089\u3054\u81ea\u8eab\u306eAPI\u30ad\u30fc\u3092\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\uff08BYOK &mdash; \u30b3\u30b9\u30c8\u306f\u5404\u81ea\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u8ca0\u62c5\uff09\u3002&lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine/blob/main/README.ja.md#%E8%A8%AD%E5%AE%9A target=_blank class=underline&gt;\u8a2d\u5b9a\u65b9\u6cd5&lt;/a&gt;">\n'
-        '          &#9888; <b>Free analysis uses pattern-matching only (no AI).</b> For Claude + Gemini + ChatGPT powered in-depth analysis, add your own API keys below (BYOK &mdash; cost on your account). See <a href="https://github.com/taka-avantgarde/Due-diligence-engine#configuration" target="_blank" class="underline">Configuration</a>.\n'
+        '        <p class="text-yellow-400/90 text-xs leading-relaxed" data-en="&#9888; &lt;b&gt;Free analysis uses pattern-matching only (no AI).&lt;/b&gt; For AI-powered analysis, add your own API keys below &mdash; &lt;b&gt;BYOK (Bring Your Own Key)&lt;/b&gt;: Claude (Anthropic), Gemini (Google), or ChatGPT (OpenAI) are all supported. Costs are billed to your own account. See &lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine#configuration target=_blank class=underline&gt;Configuration&lt;/a&gt;." data-ja="&#9888; &lt;b&gt;\u7121\u6599\u5206\u6790\u306fAI\u672a\u4f7f\u7528\uff08\u30d1\u30bf\u30fc\u30f3\u30de\u30c3\u30c1\u30f3\u30b0\u306e\u307f\uff09\u3067\u3059\u3002&lt;/b&gt; Claude + Gemini + ChatGPT\u306b\u3088\u308b\u672c\u683c\u5206\u6790\u306b\u306f\u3001\u4e0b\u8a18\u304b\u3089\u3054\u81ea\u8eab\u306eAPI\u30ad\u30fc\u3092\u8ffd\u52a0\u3057\u3066\u304f\u3060\u3055\u3044\uff08BYOK &mdash; Bring Your Own Key\uff1a\u30b3\u30b9\u30c8\u306f\u5404\u81ea\u306e\u30a2\u30ab\u30a6\u30f3\u30c8\u8ca0\u62c5\uff09\u3002&lt;a href=https://github.com/taka-avantgarde/Due-diligence-engine/blob/main/README.ja.md#%E8%A8%AD%E5%AE%9A target=_blank class=underline&gt;\u8a2d\u5b9a\u65b9\u6cd5&lt;/a&gt;">\n'
+        '          &#9888; <b>Free analysis uses pattern-matching only (no AI).</b> For AI-powered analysis, add your own API keys below &mdash; <b>BYOK (Bring Your Own Key)</b>: Claude (Anthropic), Gemini (Google), or ChatGPT (OpenAI) are all supported. Costs are billed to your own account. See <a href="https://github.com/taka-avantgarde/Due-diligence-engine#configuration" target="_blank" class="underline">Configuration</a>.\n'
+        '        </p>\n'
+        '      </div>\n'
+        '      <div class="bg-slate-800/50 border border-slate-700 rounded-xl px-5 py-4 mb-8 max-w-xl mx-auto">\n'
+        '        <p class="text-white text-sm font-bold mb-2" data-en="&#x1F680; Prefer your AI terminal?" data-ja="&#x1F680; AI\u30bf\u30fc\u30df\u30ca\u30eb\u3092\u304a\u4f7f\u3044\u3067\u3059\u304b\uff1f">\n'
+        '          &#x1F680; Prefer your AI terminal?\n'
+        '        </p>\n'
+        '        <p class="text-slate-400 text-xs leading-relaxed" data-en="Run &lt;code class=bg-slate-900&nbsp;px-2&nbsp;py-0.5&nbsp;rounded&nbsp;text-accent&gt;dde prompt owner/repo&lt;/code&gt; in Claude Code, Cursor, or Copilot. Zero API keys needed &mdash; your IDE\'s AI does the evaluation." data-ja="Claude Code\u3001Cursor\u3001Copilot\u3067 &lt;code class=bg-slate-900&nbsp;px-2&nbsp;py-0.5&nbsp;rounded&nbsp;text-accent&gt;dde prompt owner/repo --lang ja&lt;/code&gt; \u3092\u5b9f\u884c\u3002API\u30ad\u30fc\u4e0d\u8981 &mdash; IDE\u306eAI\u304c\u8a55\u4fa1\u3057\u307e\u3059\u3002">\n'
+        '          Run <code class="bg-slate-900 px-2 py-0.5 rounded text-accent">dde prompt owner/repo</code> in Claude Code, Cursor, or Copilot. Zero API keys needed &mdash; your IDE\'s AI does the evaluation.\n'
         '        </p>\n'
         '      </div>\n'
         '      <form id="analyze-form" class="relative w-full">\n'
@@ -332,7 +342,7 @@ def _build_landing_html() -> str:
         '          <input id="repo-url" type="text" placeholder="https://github.com/owner/repo" class="flex-1 bg-transparent text-white text-lg px-4 py-5 outline-none placeholder-slate-600" autocomplete="off" spellcheck="false" />\n'
         '          <button type="submit" id="analyze-btn" class="bg-accent hover:bg-cyan-400 text-slate-950 font-bold text-lg px-8 py-5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed" data-en="Analyze" data-ja="&#20998;&#26512;">Analyze</button>\n'
         '        </div>\n'
-        '        <p id="url-hint" class="text-slate-600 text-sm mt-3 text-left pl-2" data-en="GitHub repo URL (optional if Site URL is provided below)." data-ja="GitHub\u30ea\u30ddURL\uff08\u4e0b\u306e\u30b5\u30a4\u30c8URL\u3060\u3051\u3067\u3082\u5206\u6790\u53ef\u80fd\uff09">GitHub repo URL (optional if Site URL is provided below).</p>\n'
+        '        <p id="url-hint" class="text-slate-600 text-sm mt-3 text-left pl-2" data-en="Enter a GitHub repository URL to begin analysis." data-ja="GitHub\u30ea\u30ddURL\u3092\u5165\u529b\u3057\u3066\u5206\u6790\u3092\u958b\u59cb\u3057\u3066\u304f\u3060\u3055\u3044\u3002">Enter a GitHub repository URL to begin analysis.</p>\n'
         '      </form>\n'
         '      <div id="landing-ticket-bar" class="hidden mt-4 w-full">\n'
         '        <div class="flex items-center justify-between bg-accent/10 border border-accent/30 rounded-xl px-5 py-3">\n'
@@ -345,17 +355,6 @@ def _build_landing_html() -> str:
         '      </div>\n'
         '      <div class="mt-3 text-center">\n'
         '        <a href="/dashboard/pricing" class="text-sm text-slate-500 hover:text-accent transition-colors ja-only" style="display:none">\u6599\u91d1\u30d7\u30e9\u30f3\u3092\u898b\u308b &rarr;</a>\n'
-        '      </div>\n'
-        '      <div class="mt-4 w-full">\n'
-        '        <div class="bg-surface rounded-xl border border-slate-800 p-4 mb-4">\n'
-        '          <div class="flex items-center gap-2 mb-2">\n'
-        '            <svg class="w-4 h-4 text-accent" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>\n'
-        '            <span class="text-white text-sm font-semibold" data-en="Product / Service Website" data-ja="\u30d7\u30ed\u30c0\u30af\u30c8 / \u30b5\u30fc\u30d3\u30b9\u306eWeb\u30b5\u30a4\u30c8">Product / Service Website</span>\n'
-        '            <span class="bg-orange-900/40 text-orange-400 text-xs px-2 py-0.5 rounded-full font-bold">NEW</span>\n'
-        '          </div>\n'
-        '          <input id="site-url" type="text" placeholder="https://example.com" class="w-full bg-slate-900 border border-slate-700 focus:border-accent rounded-lg px-4 py-2.5 text-white text-sm placeholder-slate-600 outline-none transition-colors" autocomplete="off" />\n'
-        '          <p class="text-xs text-slate-500 mt-2" data-en="&lt;b&gt;Site URL only&lt;/b&gt; &mdash; Instantly assess a product\'s innovation, tech depth, and credibility from its website alone.&lt;br/&gt;&lt;b&gt;Site URL + GitHub repo&lt;/b&gt; &mdash; Cross-validate: does the site\'s technology narrative match the actual codebase? Detect gaps between marketing claims and real implementation." data-ja="&lt;b&gt;\u30b5\u30a4\u30c8URL\u306e\u307f&lt;/b&gt; &mdash; \u30d7\u30ed\u30c0\u30af\u30c8\u306e\u9769\u65b0\u6027\u30fb\u6280\u8853\u6df1\u5ea6\u30fb\u4fe1\u983c\u6027\u3092Web\u30b5\u30a4\u30c8\u3060\u3051\u3067\u5373\u5ea7\u306b\u8a55\u4fa1\u3002&lt;br/&gt;&lt;b&gt;\u30b5\u30a4\u30c8URL + GitHub\u30ea\u30dd&lt;/b&gt; &mdash; \u30b5\u30a4\u30c8\u306e\u6280\u8853\u4e3b\u5f35\u3068\u5b9f\u969b\u306e\u30bd\u30fc\u30b9\u30b3\u30fc\u30c9\u3092\u7167\u5408\u3002\u8b33\u308f\u308c\u3066\u3044\u308b\u6280\u8853\u304c\u5b9f\u5728\u3059\u308b\u304b\u3001\u4f4e\u30ec\u30d9\u30eb\u3067\u306f\u306a\u3044\u304b\u3092\u691c\u8a3c\u3002">\u30b5\u30a4\u30c8URL\u3060\u3051\u3067\u9769\u65b0\u6027\u3092\u8a55\u4fa1\u3002\u30ea\u30dd\u4f75\u7528\u3067\u4e3b\u5f35\u3068\u5b9f\u614b\u306e\u4e56\u96e2\u3092\u691c\u51fa\u3002</p>\n'
-        '        </div>\n'
         '      </div>\n'
         '      <div class="w-full">\n'
         '        <button id="private-toggle" class="flex items-center gap-2 text-sm text-slate-500 hover:text-accent transition-all cursor-pointer pl-2">\n'
@@ -438,7 +437,7 @@ def _build_landing_html() -> str:
         '        <button id="byok-toggle" class="w-full flex items-center justify-between cursor-pointer">\n'
         '          <div class="flex items-center gap-3">\n'
         '            <div class="text-green-400 font-bold text-sm tracking-wider">BYOK</div>\n'
-        '            <div class="text-white font-bold" data-en="Bring Your Own Key" data-ja="&#33258;&#31038;API&#12461;&#12540;&#12391;&#20998;&#26512;">Bring Your Own Key</div>\n'
+        '            <div class="text-white font-bold" data-en="Bring Your Own Key &mdash; Claude, Gemini, or ChatGPT" data-ja="&#33258;&#31038;API&#12461;&#12540;&#12391;&#20998;&#26512;&#65288;Claude / Gemini / ChatGPT&#65289;">Bring Your Own Key &mdash; Claude, Gemini, or ChatGPT</div>\n'
         '          </div>\n'
         '          <svg id="byok-chevron" class="w-5 h-5 text-slate-500 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>\n'
         '        </button>\n'
@@ -475,12 +474,13 @@ def _build_landing_html() -> str:
         '      <div class="bg-surface rounded-xl p-6 border border-accent/30">\n'
         '        <div class="flex items-center gap-3 mb-3">\n'
         '          <div class="bg-accent/20 text-accent font-bold text-xs tracking-wider px-3 py-1 rounded-full">PRO</div>\n'
-        '          <div class="text-white font-bold">Pro\u5206\u6790 \u2014 \u00a53,000 / \u793e\uff08\u65e5\u672c\u306e\u307f\uff09</div>\n'
+        '          <div class="text-white font-bold">Pro\u5206\u6790 \u2014 \u00a520,000 / \u793e\uff08\u65e5\u672c\u306e\u307f\uff09</div>\n'
         '        </div>\n'
-        '        <p class="text-slate-400 text-sm mb-2">\u5f53\u793e\u306eClaude + Gemini API\u3092\u4f7f\u7528\u3057\u3001\u6295\u8cc7\u5bb6\u5411\u3051\u306e\u672c\u683cDD\u30ec\u30dd\u30fc\u30c8\u3092\u4ee3\u884c\u4f5c\u6210\u3002API\u30ad\u30fc\u4e0d\u8981\u3002</p>\n'
-        '        <p class="text-slate-500 text-xs mb-4">\u30b5\u30a4\u30c8\u306e\u6280\u8853\u4e3b\u5f35\u3068\u5b9f\u969b\u306e\u30bd\u30fc\u30b9\u30b3\u30fc\u30c9\u3092\u7167\u5408\u3002\u8b33\u308f\u308c\u3066\u3044\u308b\u6280\u8853\u304c\u5b9f\u5728\u3059\u308b\u304b\u3001\u4f4e\u30ec\u30d9\u30eb\u3067\u306f\u306a\u3044\u304b\u3092\u691c\u8a3c\u3057\u307e\u3059\u3002</p>\n'
+        '        <p class="text-slate-400 text-sm mb-2">\u5f53\u793e\u306e<b class="text-orange-300">Claude API (Anthropic)</b> \u3068 <b class="text-blue-300">Gemini API (Google)</b> \u306e2\u793e\u30af\u30ed\u30b9\u691c\u8a3c\u3067\u3001\u6295\u8cc7\u5bb6\u5411\u3051\u306e\u672c\u683cDD\u30ec\u30dd\u30fc\u30c8\u3092\u4ee3\u884c\u4f5c\u6210\u3002API\u30ad\u30fc\u4e0d\u8981\u3002</p>\n'
+        '        <p class="text-slate-500 text-xs mb-4">\u30bd\u30fc\u30b9\u30b3\u30fc\u30c9\u3092Claude\u3068Gemini\u306e2\u793e\u304c\u72ec\u7acb\u306b\u5206\u6790\u30fb\u30af\u30ed\u30b9\u691c\u8a3c\u3002\u8b73\u308f\u308c\u3066\u3044\u308b\u6280\u8853\u304c\u5b9f\u5728\u3059\u308b\u304b\u3001\u4f4e\u30ec\u30d9\u30eb\u3067\u306f\u306a\u3044\u304b\u3092\u691c\u8a3c\u3057\u307e\u3059\u3002</p>\n'
         '        <div class="flex flex-wrap gap-2 mb-4">\n'
-        '          <span class="bg-orange-950/30 text-orange-400 text-xs px-3 py-1 rounded-lg">Claude + Gemini AI\u5206\u6790</span>\n'
+        '          <span class="bg-orange-950/30 text-orange-400 text-xs px-3 py-1 rounded-lg">Claude API (Anthropic)</span>\n'
+        '          <span class="bg-blue-950/30 text-blue-400 text-xs px-3 py-1 rounded-lg">Gemini API (Google)</span>\n'
         '          <span class="bg-slate-800 text-slate-400 text-xs px-3 py-1 rounded-lg">\u30ec\u30dd\u30fc\u30c8\u81ea\u52d5\u751f\u6210</span>\n'
         '          <span class="bg-slate-800 text-slate-400 text-xs px-3 py-1 rounded-lg">\u30aa\u30f3\u30e9\u30a4\u30f3\u4f1a\u8b70\u30b5\u30dd\u30fc\u30c8</span>\n'
         '        </div>\n'
@@ -646,37 +646,9 @@ def _build_landing_html() -> str:
         'form.addEventListener("submit", function(e) {\n'
         '  e.preventDefault();\n'
         '  var repo = parseUrl(inp.value);\n'
-        '  var siteEl = document.getElementById("site-url");\n'
-        '  var siteUrl = siteEl ? siteEl.value.trim() : "";\n'
-        '  // GitHub URLもサイトURLもない場合はエラー\n'
-        '  if (!repo && !siteUrl) {\n'
-        '    document.getElementById("url-hint").textContent = currentLang === "ja" ? "GitHub URL\\u307e\\u305f\\u306f\\u30b5\\u30a4\\u30c8URL\\u3092\\u5165\\u529b\\u3057\\u3066\\u304f\\u3060\\u3055\\u3044" : "Please enter a GitHub URL or Site URL";\n'
+        '  if (!repo) {\n'
+        '    document.getElementById("url-hint").textContent = currentLang === "ja" ? "GitHub URL\\u3092\\u5165\\u529b\\u3057\\u3066\\u304f\\u3060\\u3055\\u3044" : "Please enter a GitHub URL";\n'
         '    document.getElementById("url-hint").style.color = "#f87171";\n'
-        '    return;\n'
-        '  }\n'
-        '  // サイトURLのみ → サイト単体分析\n'
-        '  if (!repo && siteUrl) {\n'
-        '    btn.disabled = true;\n'
-        '    btn.textContent = currentLang === "ja" ? "\\u30b5\\u30a4\\u30c8\\u5206\\u6790\\u4e2d..." : "Analyzing site...";\n'
-        '    inp.disabled = true;\n'
-        '    statusArea.style.display = "block";\n'
-        '    statusArea.classList.remove("hidden");\n'
-        '    statusText.textContent = currentLang === "ja" ? "\\u30b5\\u30a4\\u30c8\\u3092\\u30af\\u30ed\\u30fc\\u30eb\\u4e2d..." : "Crawling site...";\n'
-        '    fetch("/api/v1/analyze/site", {\n'
-        '      method: "POST",\n'
-        '      headers: {"Content-Type": "application/json"},\n'
-        '      body: JSON.stringify({site_url: siteUrl, lang: currentLang})\n'
-        '    }).then(function(resp) {\n'
-        '      if (resp.ok) return resp.json();\n'
-        '      return resp.json().then(function(err) { throw new Error(err.detail || "Analysis failed"); });\n'
-        '    }).then(function(data) {\n'
-        '      window.location.href = "/dashboard/analysis/" + data.analysis_id + "?lang=" + currentLang;\n'
-        '    }).catch(function(err) {\n'
-        '      statusText.textContent = "Error: " + err.message;\n'
-        '      btn.disabled = false;\n'
-        '      btn.textContent = currentLang === "ja" ? "\\u5206\\u6790" : "Analyze";\n'
-        '      inp.disabled = false;\n'
-        '    });\n'
         '    return;\n'
         '  }\n'
         '  btn.disabled = true;\n'
@@ -687,8 +659,6 @@ def _build_landing_html() -> str:
         '  statusText.textContent = currentLang === "ja" ? "\\u30ea\\u30dd\\u30b8\\u30c8\\u30ea\\u3092\\u30af\\u30ed\\u30fc\\u30f3\\u4e2d..." : "Cloning repository...";\n'
         '\n'
         '  var body = {repo_url: repo};\n'
-        '  var siteEl = document.getElementById("site-url");\n'
-        '  if (siteEl && siteEl.value.trim()) { body.site_url = siteEl.value.trim(); }\n'
         '  var patEl = document.getElementById("pat-input");\n'
         '  if (patEl && patEl.value.trim()) { body.pat_token = patEl.value.trim(); }\n'
         '\n'
@@ -780,47 +750,13 @@ async def pricing_page() -> HTMLResponse:
         '    <p class="text-slate-400 text-lg">\u30ec\u30dd\u30fc\u30c8\u5358\u4f4d\u306e\u8ab2\u91d1\u3002\u30b5\u30d6\u30b9\u30af\u30ea\u30d7\u30b7\u30e7\u30f3\u4e0d\u8981\u3002</p>\n'
         '    <p class="text-slate-500 text-sm mt-2">Claude + Gemini \u306b\u3088\u308bAI\u5206\u6790\u30ec\u30dd\u30fc\u30c8\u3092\u4ee3\u884c\u4f5c\u6210\u3057\u307e\u3059\u3002</p>\n'
         '  </div>\n'
-        '  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">\n'
-        # --- Tier 1: 1件 ---
-        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
-        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">STARTER</div>\n'
-        '      <div class="text-white text-3xl font-bold mb-1">1\u30ec\u30dd\u30fc\u30c8</div>\n'
-        '      <div class="text-white text-2xl font-bold mb-1">&yen;3,000</div>\n'
-        '      <div class="text-slate-500 text-sm mb-4">&yen;3,000 / \u4ef6</div>\n'
+        '  <div class="max-w-md mx-auto">\n'
+        '    <div class="bg-surface rounded-2xl border border-accent/50 p-8 flex flex-col hover:border-accent transition-all">\n'
+        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">PRO\u5206\u6790\u4ee3\u884c</div>\n'
+        '      <div class="text-white text-2xl font-bold mb-1">&yen;20,000 / \u793e</div>\n'
+        '      <div class="text-slate-400 text-sm mb-4">\u5206\u6790\u8abf\u67fb + \u8aac\u660e + \u30ec\u30dd\u30fc\u30c8\uff08\u65e5\u672c\u9650\u5b9a\uff09</div>\n'
         '      <div class="flex-1"></div>\n'
-        '      <div class="text-slate-500 text-xs mb-4">\u30a2\u30ab\u30a6\u30f3\u30c8\u4e0d\u8981</div>\n'
-        '      <button onclick="purchaseTier(\'single\', 3000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" onclick="window.location.href=\'mailto:support@atlasassociates.io?subject=DDE%E3%83%81%E3%82%B1%E3%83%83%E3%83%88%E8%B3%BC%E5%85%A5\'">\u304a\u554f\u3044\u5408\u308f\u305b</button>\n'
-        '    </div>\n'
-        # --- Tier 2: 10件 ---
-        '    <div class="bg-surface rounded-2xl border border-accent/50 p-6 flex flex-col relative hover:border-accent transition-all">\n'
-        '      <div class="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-white text-xs font-bold px-3 py-1 rounded-full">\u4eba\u6c17</div>\n'
-        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">TEAM</div>\n'
-        '      <div class="text-white text-3xl font-bold mb-1">10\u30ec\u30dd\u30fc\u30c8</div>\n'
-        '      <div class="text-white text-2xl font-bold mb-1">&yen;28,000</div>\n'
-        '      <div class="text-slate-500 text-sm mb-4">&yen;2,800 / \u4ef6</div>\n'
-        '      <div class="flex-1"></div>\n'
-        '      <div class="text-slate-500 text-xs mb-4">\u8981\u30ed\u30b0\u30a4\u30f3</div>\n'
-        '      <button onclick="purchaseTier(\'pack_10\', 28000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" onclick="window.location.href=\'mailto:support@atlasassociates.io?subject=DDE%E3%83%81%E3%82%B1%E3%83%83%E3%83%88%E8%B3%BC%E5%85%A5\'">\u304a\u554f\u3044\u5408\u308f\u305b</button>\n'
-        '    </div>\n'
-        # --- Tier 3: 50件 ---
-        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
-        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">BUSINESS</div>\n'
-        '      <div class="text-white text-3xl font-bold mb-1">50\u30ec\u30dd\u30fc\u30c8</div>\n'
-        '      <div class="text-white text-2xl font-bold mb-1">&yen;120,000</div>\n'
-        '      <div class="text-slate-500 text-sm mb-4">&yen;2,400 / \u4ef6</div>\n'
-        '      <div class="flex-1"></div>\n'
-        '      <div class="text-slate-500 text-xs mb-4">\u8981\u30ed\u30b0\u30a4\u30f3</div>\n'
-        '      <button onclick="purchaseTier(\'pack_50\', 120000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" onclick="window.location.href=\'mailto:support@atlasassociates.io?subject=DDE%E3%83%81%E3%82%B1%E3%83%83%E3%83%88%E8%B3%BC%E5%85%A5\'">\u304a\u554f\u3044\u5408\u308f\u305b</button>\n'
-        '    </div>\n'
-        # --- Tier 4: 100件 ---
-        '    <div class="bg-surface rounded-2xl border border-slate-800 p-6 flex flex-col hover:border-accent/50 transition-all">\n'
-        '      <div class="text-accent text-sm font-bold tracking-wider mb-2">ENTERPRISE</div>\n'
-        '      <div class="text-white text-3xl font-bold mb-1">100\u30ec\u30dd\u30fc\u30c8</div>\n'
-        '      <div class="text-white text-2xl font-bold mb-1">&yen;220,000</div>\n'
-        '      <div class="text-slate-500 text-sm mb-4">&yen;2,200 / \u4ef6</div>\n'
-        '      <div class="flex-1"></div>\n'
-        '      <div class="text-slate-500 text-xs mb-4">\u8981\u30ed\u30b0\u30a4\u30f3</div>\n'
-        '      <button onclick="purchaseTier(\'pack_100\', 220000)" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors" onclick="window.location.href=\'mailto:support@atlasassociates.io?subject=DDE%E3%83%81%E3%82%B1%E3%83%83%E3%83%88%E8%B3%BC%E5%85%A5\'">\u304a\u554f\u3044\u5408\u308f\u305b</button>\n'
+        '      <a href="mailto:support@atlasassociates.io?subject=DDE%20Pro%E5%88%86%E6%9E%90%E4%BB%A3%E8%A1%8C%E3%81%AE%E3%81%8A%E5%95%8F%E3%81%84%E5%90%88%E3%82%8F%E3%81%9B" class="w-full bg-accent hover:bg-blue-500 text-white font-semibold py-3 rounded-xl transition-colors text-center block">\u304a\u554f\u3044\u5408\u308f\u305b</a>\n'
         '    </div>\n'
         '  </div>\n'
         '  <div class="mt-8 bg-surface rounded-2xl border border-slate-800 p-6">\n'
@@ -1441,8 +1377,6 @@ async def analysis_page(
 
     if status == "running":
         return _render_progress_page(analysis_id, lang)
-    elif status == "completed" and data.get("mode") == "site_only":
-        return _render_site_only_results(analysis_id, data, lang)
     elif status == "completed":
         return _render_results_page(analysis_id, data, lang)
     elif status == "purged":
@@ -1493,152 +1427,6 @@ def _render_progress_page(analysis_id: str, lang: str = "en") -> HTMLResponse:
     """
 
     return _render_page("Analyzing...", content, scripts)
-
-
-def _render_site_only_results(analysis_id: str, data: dict[str, Any], lang: str = "en") -> HTMLResponse:
-    """サイト単体分析の結果ページ（8軸バーチャート）。"""
-    t = _I18N.get(lang, _I18N["en"])
-    site_data = data.get("site_analysis", {})
-    score_data = data.get("site_score", {})
-
-    site_url = site_data.get("site_url", "")
-    pages = site_data.get("pages_analyzed", 0)
-    techs = site_data.get("technologies_mentioned", [])
-    overall = score_data.get("overall_score", 0)
-    grade = score_data.get("grade", "?")
-    recommendation = score_data.get("recommendation", "")
-    dims = score_data.get("dimensions", [])
-    red_flags = score_data.get("red_flags", [])
-
-    # グレード色
-    grade_colors = {
-        "A": "text-green-400 border-green-500",
-        "B": "text-blue-400 border-blue-500",
-        "C": "text-yellow-400 border-yellow-500",
-        "D": "text-orange-400 border-orange-500",
-        "F": "text-red-400 border-red-500",
-    }
-    gc = grade_colors.get(grade, "text-slate-400 border-slate-500")
-
-    # 軸名翻訳
-    dim_name_ja = {
-        "Tech Stack Depth": "技術スタック深度",
-        "Product Maturity": "プロダクト成熟度",
-        "Security Posture": "セキュリティ態勢",
-        "Transparency": "透明性・文書化",
-        "Market Traction": "市場トラクション",
-        "Innovation Score": "イノベーション度",
-        "Credibility Signals": "信頼性シグナル",
-    }
-
-    # バーの色
-    def bar_color(s: float) -> str:
-        if s >= 80:
-            return "#22c55e"
-        if s >= 60:
-            return "#5271FF"
-        if s >= 40:
-            return "#eab308"
-        return "#ef4444"
-
-    # 8軸バーチャートHTML
-    bars_html = ""
-    for d in dims:
-        name = d.get("name", "")
-        score_val = d.get("score", 0)
-        weight = d.get("weight", 0)
-        disp_name = dim_name_ja.get(name, name) if lang == "ja" else name
-        color = bar_color(score_val)
-        bars_html += (
-            f'<div class="mb-4">'
-            f'  <div class="flex justify-between items-center mb-1">'
-            f'    <span class="text-sm text-slate-300">{disp_name}</span>'
-            f'    <span class="text-sm font-bold" style="color:{color}">{score_val:.0f}</span>'
-            f'  </div>'
-            f'  <div class="w-full bg-slate-800 rounded-full h-3">'
-            f'    <div class="h-3 rounded-full transition-all" style="width:{score_val}%;background:{color}"></div>'
-            f'  </div>'
-            f'  <div class="text-xs text-slate-600 mt-0.5">weight: {weight:.0%}</div>'
-            f'</div>'
-        )
-
-    # 技術一覧
-    tech_chips = ""
-    for tech in techs[:20]:
-        tech_chips += f'<span class="bg-slate-800 text-slate-300 text-xs px-2 py-1 rounded">{tech}</span> '
-
-    # レッドフラグ
-    flags_html = ""
-    if red_flags:
-        flags_html += '<div class="mt-6"><h3 class="text-lg font-bold text-red-400 mb-3">⚠ Red Flags</h3>'
-        for f in red_flags:
-            sev = f.get("severity", "info")
-            sev_color = {"critical": "red", "high": "orange", "medium": "yellow", "low": "slate"}.get(sev, "slate")
-            flags_html += (
-                f'<div class="bg-{sev_color}-950/30 border border-{sev_color}-800/50 rounded-lg p-3 mb-2">'
-                f'  <div class="text-{sev_color}-300 font-semibold text-sm">{f.get("title", "")}</div>'
-                f'  <div class="text-slate-400 text-xs mt-1">{f.get("description", "")}</div>'
-                f'</div>'
-            )
-        flags_html += '</div>'
-
-    rec_text = _GRADE_REC.get(lang, _GRADE_REC["en"]).get(grade, recommendation)
-    title_text = "サイト分析レポート" if lang == "ja" else "Site Analysis Report"
-    score_label = "総合スコア" if lang == "ja" else "Overall Score"
-    tech_label = "検出された技術" if lang == "ja" else "Technologies Detected"
-    pages_label = "分析ページ数" if lang == "ja" else "Pages Analyzed"
-
-    content = f"""
-    <div class="max-w-3xl mx-auto">
-      <div class="mb-6">
-        <a href="/dashboard/?lang={lang}" class="text-accent hover:underline text-sm">&larr; {t['return_home']}</a>
-      </div>
-      <h1 class="text-3xl font-bold text-white mb-2">{title_text}</h1>
-      <p class="text-slate-400 mb-8">{site_url}</p>
-
-      <!-- スコアカード -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div class="bg-surface rounded-xl p-6 border border-slate-800 text-center">
-          <div class="text-sm text-slate-500 mb-2">{score_label}</div>
-          <div class="text-5xl font-bold text-white">{overall:.0f}</div>
-          <div class="text-slate-500 text-sm">/100</div>
-        </div>
-        <div class="bg-surface rounded-xl p-6 border border-slate-800 text-center">
-          <div class="text-sm text-slate-500 mb-2">Grade</div>
-          <div class="text-5xl font-bold {gc} border-4 rounded-full w-20 h-20 flex items-center justify-center mx-auto">{grade}</div>
-        </div>
-        <div class="bg-surface rounded-xl p-6 border border-slate-800 text-center">
-          <div class="text-sm text-slate-500 mb-2">{pages_label}</div>
-          <div class="text-5xl font-bold text-white">{pages}</div>
-        </div>
-      </div>
-
-      <!-- 推奨事項 -->
-      <div class="bg-surface rounded-xl p-6 border border-slate-800 mb-8">
-        <p class="text-slate-300">{rec_text}</p>
-      </div>
-
-      <!-- 8軸バーチャート -->
-      <div class="bg-surface rounded-xl p-6 border border-slate-800 mb-8">
-        <h2 class="text-xl font-bold text-white mb-6">{"7軸評価" if lang == "ja" else "7-Dimension Assessment"}</h2>
-        {bars_html}
-      </div>
-
-      <!-- 技術一覧 -->
-      <div class="bg-surface rounded-xl p-6 border border-slate-800 mb-8">
-        <h2 class="text-lg font-bold text-white mb-4">{tech_label}</h2>
-        <div class="flex flex-wrap gap-2">{tech_chips if tech_chips else '<span class="text-slate-500">None detected</span>'}</div>
-      </div>
-
-      <!-- レッドフラグ -->
-      {flags_html}
-
-      <div class="text-center mt-8 text-xs text-slate-600">
-        Analysis ID: {analysis_id}
-      </div>
-    </div>
-    """
-    return _render_page(f"Site Report — {grade} ({overall:.0f})", content)
 
 
 def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en") -> HTMLResponse:
@@ -1992,89 +1780,8 @@ def _render_results_page(analysis_id: str, data: dict[str, Any], lang: str = "en
         else:
             red_flags_html = ""
 
-    # Site Cross-Validation section
+    # Site Cross-Validation section removed (feature deprecated — use dde prompt for site claim verification)
     site_cross_html = ""
-    cross_val = getattr(result, "cross_validation", None)
-    site_info = getattr(result, "site_analysis", None)
-    if cross_val is not None:
-        cv_title = "Site vs Code Cross-Validation" if lang == "en" else "サイト vs コード クロス検証"
-        cred_score = cross_val.credibility_score if isinstance(cross_val, dict) is False else cross_val.get("credibility_score", 50)
-        cred_score_val = cred_score if not isinstance(cross_val, dict) else cross_val.get("credibility_score", 50)
-
-        # credibility_scoreに応じた色
-        if hasattr(cross_val, "credibility_score"):
-            cred_score_val = cross_val.credibility_score
-        elif isinstance(cross_val, dict):
-            cred_score_val = cross_val.get("credibility_score", 50)
-        else:
-            cred_score_val = 50
-
-        cred_color = "green" if cred_score_val >= 70 else "yellow" if cred_score_val >= 40 else "red"
-
-        verified = cross_val.verified_claims if hasattr(cross_val, "verified_claims") else cross_val.get("verified_claims", [])
-        unverified = cross_val.unverified_claims if hasattr(cross_val, "unverified_claims") else cross_val.get("unverified_claims", [])
-        contradictions = cross_val.contradictions if hasattr(cross_val, "contradictions") else cross_val.get("contradictions", [])
-        exaggerations = cross_val.exaggerations if hasattr(cross_val, "exaggerations") else cross_val.get("exaggerations", [])
-        cv_summary = cross_val.summary if hasattr(cross_val, "summary") else cross_val.get("summary", "")
-
-        site_url_display = ""
-        if site_info:
-            su = site_info.site_url if hasattr(site_info, "site_url") else site_info.get("site_url", "")
-            if su:
-                site_url_display = f'<p class="text-xs text-slate-500 mb-4">Site: <a href="{su}" target="_blank" class="text-accent hover:underline">{su}</a></p>'
-
-        verified_html = ""
-        for v in verified:
-            claim = v.get("claim", "") if isinstance(v, dict) else str(v)
-            verified_html += f'<div class="flex items-center gap-2 text-green-400 text-sm"><span>✅</span><span>{claim}</span></div>'
-
-        unverified_html = ""
-        for u in unverified:
-            claim = u.get("claim", "") if isinstance(u, dict) else str(u)
-            unverified_html += f'<div class="flex items-center gap-2 text-yellow-400 text-sm"><span>❓</span><span>{claim}</span></div>'
-
-        contradiction_html = ""
-        for c in contradictions:
-            claim = c.get("claim", "") if isinstance(c, dict) else str(c)
-            note = c.get("note", "") if isinstance(c, dict) else ""
-            contradiction_html += f'<div class="flex items-start gap-2 text-red-400 text-sm"><span>❌</span><div><span class="font-semibold">{claim}</span><br/><span class="text-xs text-red-400/70">{note}</span></div></div>'
-
-        exag_html = ""
-        for e in exaggerations:
-            claim = e.get("claim", "") if isinstance(e, dict) else str(e)
-            exag_html += f'<div class="flex items-center gap-2 text-orange-400 text-sm"><span>⚠️</span><span>{claim}</span></div>'
-
-        site_cross_html = f"""
-        <div class="bg-surface rounded-xl p-6 border border-{cred_color}-800/50 mb-6">
-          <h2 class="text-lg font-semibold text-accent mb-2">{cv_title}</h2>
-          {site_url_display}
-          <div class="flex items-center gap-4 mb-4">
-            <div class="text-3xl font-bold text-{cred_color}-400">{cred_score_val:.0f}</div>
-            <div>
-              <div class="text-sm text-white">{"Credibility Score" if lang == "en" else "信頼性スコア"}</div>
-              <div class="text-xs text-slate-500">{cv_summary}</div>
-            </div>
-          </div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <h4 class="text-xs text-green-400 uppercase tracking-wider mb-2 font-bold">{"Verified" if lang == "en" else "検証済み"} ({len(verified)})</h4>
-              <div class="space-y-1">{verified_html if verified_html else '<span class="text-xs text-slate-600">—</span>'}</div>
-            </div>
-            <div>
-              <h4 class="text-xs text-yellow-400 uppercase tracking-wider mb-2 font-bold">{"Unverified" if lang == "en" else "未検証"} ({len(unverified)})</h4>
-              <div class="space-y-1">{unverified_html if unverified_html else '<span class="text-xs text-slate-600">—</span>'}</div>
-            </div>
-            <div>
-              <h4 class="text-xs text-red-400 uppercase tracking-wider mb-2 font-bold">{"Contradictions" if lang == "en" else "矛盾"} ({len(contradictions)})</h4>
-              <div class="space-y-1">{contradiction_html if contradiction_html else '<span class="text-xs text-slate-600">—</span>'}</div>
-            </div>
-            <div>
-              <h4 class="text-xs text-orange-400 uppercase tracking-wider mb-2 font-bold">{"Exaggerations" if lang == "en" else "誇張の可能性"} ({len(exaggerations)})</h4>
-              <div class="space-y-1">{exag_html if exag_html else '<span class="text-xs text-slate-600">—</span>'}</div>
-            </div>
-          </div>
-        </div>
-        """
 
     # Determine purge action URL based on whether we have a GitHub connection
     if connection_id:

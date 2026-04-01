@@ -477,10 +477,8 @@ class TicketUseRequest(BaseModel):
     """チケット消費リクエスト。
 
     repo_url: 分析対象のGitHubリポジトリURL
-    site_url: （任意）プロダクトWebサイトURL
     """
     repo_url: str
-    site_url: str | None = None
 
 
 @app.post("/api/v1/tickets/use")
@@ -544,50 +542,6 @@ async def use_ticket_and_analyze(
         repo_path = loader.cloned_repo_path
         result = engine.run(project_name=owner_repo, repo_path=repo_path)
         result.analysis_id = analysis_id
-
-        # サイト分析（オプション）
-        if request.site_url and request.site_url.strip():
-            try:
-                from src.analyze.site_analyzer import SiteAnalyzer, cross_validate_site_vs_code
-                from src.models import SiteAnalysisModel, SiteClaimModel, CrossValidationModel
-
-                site_analyzer = SiteAnalyzer()
-                site_result = site_analyzer.analyze(request.site_url.strip())
-
-                result.site_analysis = SiteAnalysisModel(
-                    site_url=site_result.site_url,
-                    pages_analyzed=site_result.pages_analyzed,
-                    claims=[SiteClaimModel(
-                        category=c.category, claim=c.claim,
-                        source_url=c.source_url, confidence=c.confidence,
-                    ) for c in site_result.claims],
-                    technologies_mentioned=site_result.technologies_mentioned,
-                    team_info=site_result.team_info,
-                    traction_claims=site_result.traction_claims,
-                    red_flags=site_result.red_flags,
-                    findings=site_result.findings,
-                )
-
-                cross_result = cross_validate_site_vs_code(
-                    site_result=site_result,
-                    code_languages=result.code_analysis.languages,
-                    code_findings=result.code_analysis.findings,
-                    has_tests=result.code_analysis.has_tests,
-                    has_ci_cd=result.code_analysis.has_ci_cd,
-                    dependency_count=result.code_analysis.dependency_count,
-                    doc_claims=result.doc_analysis.technical_claims,
-                )
-                result.cross_validation = CrossValidationModel(
-                    verified_claims=cross_result.verified_claims,
-                    unverified_claims=cross_result.unverified_claims,
-                    contradictions=cross_result.contradictions,
-                    exaggerations=cross_result.exaggerations,
-                    credibility_score=cross_result.credibility_score,
-                    red_flags=cross_result.red_flags,
-                    summary=cross_result.summary,
-                )
-            except Exception as site_err:
-                logger.warning(f"Site analysis failed (non-fatal): {site_err}")
 
         # レポート生成・保存
         report_gen = ReportGenerator()
@@ -1091,9 +1045,8 @@ async def analyze_github_repo(
 class AnalyzeUrlRequest(BaseModel):
     repo_url: str
     pat_token: str | None = None
-    site_url: str | None = None  # プロダクト/サービスのWebサイトURL（クロス検証用）
     api_keys: dict[str, str] | None = None  # {"claude": "sk-...", "gemini": "...", "chatgpt": "sk-..."}
-    pro_analysis: bool = False  # True: 有料プラン（$20/回、サーバー側Claude+Geminiで分析）
+    pro_analysis: bool = False  # True: 有料プラン（サーバー側Claude+Geminiで分析）
     stripe_session_id: str | None = None  # Stripe Checkout Session ID（Pro分析時に必須）
 
 
@@ -1223,55 +1176,6 @@ async def analyze_url(
         )
         result.analysis_id = analysis_id
 
-        # サイト分析 + クロス検証（site_urlが指定されている場合）
-        if request.site_url and request.site_url.strip():
-            try:
-                from src.analyze.site_analyzer import SiteAnalyzer, cross_validate_site_vs_code
-                from src.models import SiteAnalysisModel, SiteClaimModel, CrossValidationModel
-
-                logger.info(f"Running site analysis: {request.site_url}")
-                site_analyzer = SiteAnalyzer()
-                site_result = site_analyzer.analyze(request.site_url.strip())
-
-                # AnalysisResultに格納
-                result.site_analysis = SiteAnalysisModel(
-                    site_url=site_result.site_url,
-                    pages_analyzed=site_result.pages_analyzed,
-                    claims=[SiteClaimModel(
-                        category=c.category, claim=c.claim,
-                        source_url=c.source_url, confidence=c.confidence,
-                    ) for c in site_result.claims],
-                    technologies_mentioned=site_result.technologies_mentioned,
-                    team_info=site_result.team_info,
-                    traction_claims=site_result.traction_claims,
-                    red_flags=site_result.red_flags,
-                    findings=site_result.findings,
-                )
-
-                # クロス検証: サイト主張 vs コード実態
-                cross_result = cross_validate_site_vs_code(
-                    site_result=site_result,
-                    code_languages=result.code_analysis.languages,
-                    code_findings=result.code_analysis.findings,
-                    has_tests=result.code_analysis.has_tests,
-                    has_ci_cd=result.code_analysis.has_ci_cd,
-                    dependency_count=result.code_analysis.dependency_count,
-                    doc_claims=result.doc_analysis.technical_claims,
-                )
-                result.cross_validation = CrossValidationModel(
-                    verified_claims=cross_result.verified_claims,
-                    unverified_claims=cross_result.unverified_claims,
-                    contradictions=cross_result.contradictions,
-                    exaggerations=cross_result.exaggerations,
-                    credibility_score=cross_result.credibility_score,
-                    red_flags=cross_result.red_flags,
-                    summary=cross_result.summary,
-                )
-                logger.info(f"Site cross-validation complete: credibility={cross_result.credibility_score}")
-
-            except Exception as site_err:
-                logger.warning(f"Site analysis failed (non-fatal): {site_err}")
-
         # Generate reports
         report_gen = ReportGenerator()
         report_gen.save_report(result, config.output_dir)
@@ -1303,88 +1207,6 @@ async def analyze_url(
         raise HTTPException(status_code=500, detail=f"Analysis failed: {error_msg}")
     finally:
         loader.destroy()
-
-
-class AnalyzeSiteRequest(BaseModel):
-    """サイト単体分析リクエスト。GitHubリポ不要。"""
-    site_url: str
-    lang: str = "en"
-
-
-@app.post("/api/v1/analyze/site")
-async def analyze_site_only(request: AnalyzeSiteRequest) -> dict:
-    """サイト単体分析 — GitHubリポなしで100点満点の技術レポートを生成。
-
-    プロダクト/サービスのWebサイトURLだけで8軸評価を実行。
-    """
-    import uuid
-
-    site_url = request.site_url.strip()
-    if not site_url:
-        raise HTTPException(status_code=400, detail="site_url is required")
-
-    analysis_id = uuid.uuid4().hex[:16]
-
-    store_analysis(analysis_id, {
-        "status": "running",
-        "connection_id": "",
-        "result": None,
-        "purge_cert": None,
-        "mode": "site_only",
-    })
-
-    try:
-        from src.analyze.site_analyzer import SiteAnalyzer
-        from src.score.site_scorer import SiteScorer
-        from src.models import SiteAnalysisModel, SiteClaimModel
-
-        logger.info(f"Site-only analysis: {site_url}")
-        analyzer = SiteAnalyzer()
-        site_result = analyzer.analyze(site_url)
-
-        # 8軸スコアリング
-        scorer = SiteScorer()
-        score = scorer.score(site_result)
-
-        # AnalysisResult互換オブジェクトを作成
-        site_model = SiteAnalysisModel(
-            site_url=site_result.site_url,
-            pages_analyzed=site_result.pages_analyzed,
-            claims=[SiteClaimModel(
-                category=c.category, claim=c.claim,
-                source_url=c.source_url, confidence=c.confidence,
-            ) for c in site_result.claims],
-            technologies_mentioned=site_result.technologies_mentioned,
-            team_info=site_result.team_info,
-            traction_claims=site_result.traction_claims,
-            red_flags=site_result.red_flags,
-            findings=site_result.findings,
-        )
-
-        # 結果を格納（site_only用の軽量形式）
-        store_analysis(analysis_id, {
-            "status": "completed",
-            "connection_id": "",
-            "result": None,
-            "purge_cert": None,
-            "mode": "site_only",
-            "site_analysis": site_model.model_dump(),
-            "site_score": score.model_dump(),
-        })
-
-        return {"analysis_id": analysis_id, "status": "completed", "mode": "site_only"}
-
-    except Exception as e:
-        logger.error(f"Site-only analysis failed for {site_url}: {e}")
-        store_analysis(analysis_id, {
-            "status": "error",
-            "connection_id": "",
-            "result": None,
-            "purge_cert": None,
-            "mode": "site_only",
-            "error": str(e),
-        })
-        raise HTTPException(status_code=500, detail=f"Analysis failed: {e}")
 
 
 @app.get("/api/report/{analysis_id}/pdf")

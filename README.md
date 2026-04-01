@@ -2,17 +2,31 @@
 
 # Due Diligence Engine
 
-**3 AIs Cross-Validate. One Verdict You Can Trust.**
+**Your IDE's AI Becomes a Due Diligence Analyst.**
 
-Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in parallel** — each evaluates independently, then cross-verifies to produce a unified, bias-resistant investment score.
+Run `dde prompt` in your terminal — Claude Code, Cursor, or Copilot reads the codebase and generates a full investment-grade evaluation. Zero API keys. Zero extra cost.
+
+For deeper analysis, DDE also runs Claude, Gemini, and ChatGPT **in parallel** — cross-verifying to produce a bias-resistant score.
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 [![AI](https://img.shields.io/badge/AI-Claude_%7C_Gemini_%7C_ChatGPT-orange.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
+[![IDE](https://img.shields.io/badge/IDE_AI-Claude_Code_%7C_Cursor_%7C_Copilot-blueviolet.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
 
 [English](README.md) | [日本語](README.ja.md)
 
 </div>
+
+---
+
+## Two Ways to Use DDE
+
+| | Method | What It Does | Cost |
+|---|--------|-------------|------|
+| 🖥️ | **From your AI terminal** (Claude Code / Cursor / Copilot) | Run `dde prompt` → your IDE's AI reads the code and generates a full evaluation | Free (no API keys) |
+| 🌐 | **From the Web dashboard** | Paste a GitHub URL → Multi-AI (Claude + Gemini + ChatGPT) cross-verification | Free with BYOK |
+
+> **Which should I use?** If you already have an AI-powered IDE, `dde prompt` is the fastest path — zero setup, zero cost. The Web dashboard is ideal when you want multi-provider cross-verification or a shareable report.
 
 ---
 
@@ -27,11 +41,10 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
                 └────────┬────────┴────────┬────────┘
                    ┌─────▼─────────────────▼─────┐
                    │   Cross-Verification Engine  │
-                   │   + Site Credibility Check   │
                    └──────────────┬───────────────┘
                          ┌────────▼────────┐
                          │  Unified Score   │
-                         │  + Credibility   │
+                         │  6-Dimension     │
                          └─────────────────┘
 ```
 
@@ -39,22 +52,15 @@ Why rely on a single AI's opinion? DDE runs Claude, Gemini, and ChatGPT **in par
 
 ## Try It Now
 
-**https://due-diligence-engine.web.app/dashboard/**
+**Fastest way** — in your AI terminal:
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+dde prompt owner/repo
+```
 
-Paste any public GitHub URL and click Analyze.
+**Web dashboard**: https://due-diligence-engine.web.app/dashboard/
 
-> Basic analysis (local code scan) is free. For AI-powered analysis, configure your own API keys — **BYOK (Bring Your Own Key)**.
-
----
-
-## Pricing
-
-| Plan | Cost | AI Providers | Features |
-|------|------|-------------|----------|
-| **Free (Local Only)** | Free | None | Code structure, git forensics, dependency scan |
-| **BYOK** | Free (API costs billed to you) | Claude / Gemini / ChatGPT (1–3 providers) | Full AI analysis + cross-verification |
-
-> **BYOK (Bring Your Own Key):** One API key is enough to start. Claude, Gemini, and ChatGPT are all supported. Add more providers for cross-verification. Typical cost: ~$10–15/analysis depending on codebase size.
+> `dde prompt` is free (no API keys). For AI-powered cross-verification, use `dde analyze` with your own API keys — **BYOK (Bring Your Own Key)**: Claude, Gemini, and/or ChatGPT.
 
 ---
 
@@ -63,14 +69,18 @@ Paste any public GitHub URL and click Analyze.
 | Feature | Description |
 |---------|-------------|
 | **Multi-AI Cross-Verification** | Claude + Gemini + ChatGPT evaluate independently, then cross-verify |
+| **`dde prompt` — IDE AI Integration** | Generate structured prompts for Claude Code / Cursor / Copilot. Zero API keys needed |
 | **BYOK (Bring Your Own Key)** | Use your own API keys — Claude, Gemini, or ChatGPT. 1 provider or all 3. No vendor lock-in |
+| **Plain-Language Glossary** | All technical terms annotated for non-technical investors ("Translation Device" mode) |
+| **Match Rate Visualization** | Claims vs. code reality — status bar shows how honest the team is |
 | **GitHub Private Repo Access** | PAT-based access — startups grant temporary read-only access |
 | **AI-Washing Detection** | Detect thin API wrappers disguised as "proprietary AI" |
 | **Git Forensics** | Analyze commit history for suspicious patterns (rush commits before DD) |
 | **10-Level Tech Rating** | Each dimension rated Lv.1–10 with clear criteria |
+| **Stage-Aware Evaluation** | Seed / Series A / Series B / Growth — criteria adjust to startup stage |
 | **PDF Export** | Professional investment committee-ready PDF reports |
 | **Disconnect & Purge** | One-click data erasure + purge certificate |
-| **Bilingual Dashboard** | English / 日本語 toggle |
+| **Bilingual** | English / 日本語 — CLI (`--lang`) and dashboard |
 
 ---
 
@@ -235,10 +245,14 @@ export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 ### CLI Usage
 
 ```bash
-# Analyze from GitHub URL
+# Generate evaluation prompt for your IDE AI (no API keys needed)
+dde prompt .
+dde prompt owner/repo --lang ja --stage seed
+
+# Full analysis with AI APIs (BYOK)
 dde analyze https://github.com/some-startup/their-product
 
-# Local-only (free, no AI)
+# Local-only heuristic analysis (free, no AI)
 dde analyze some-startup/repo --skip-ai
 ```
 
@@ -253,53 +267,69 @@ dde serve
 
 ## Use from Your AI Terminal (Claude Code, Cursor, etc.)
 
-Already using AI in your IDE? You can run DDE analysis on your own project by pasting a single prompt into your AI terminal.
+Already using AI in your IDE? Run `dde prompt` to generate a structured evaluation prompt — then let **your IDE's AI** analyze it. No API keys needed.
 
 ### 1. Setup (one-time)
 
-Paste this into your AI terminal:
-
-```
-Clone https://github.com/taka-avantgarde/Due-diligence-engine and install it with `pip install -e .`
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
 ```
 
-### 2. Analyze Your Project
+### 2. Generate Prompt & Evaluate
 
-Then, from your project directory, paste:
+```bash
+# Generate an evaluation prompt for your project
+dde prompt .
 
-```
-Run `dde analyze .` to perform a technical due diligence analysis on this project.
+# Or for any public GitHub repo
+dde prompt owner/repo
+
+# Japanese output with startup stage context
+dde prompt owner/repo --lang ja --stage seed
+
+# Save to file or copy to clipboard
+dde prompt . -o prompt.md
+dde prompt . --copy
 ```
 
-Or analyze any public GitHub repo:
+### 3. Paste into Your AI Terminal
 
-```
-Run `dde analyze owner/repo` to perform a due diligence analysis.
-```
+Just paste the generated prompt into Claude Code, Cursor, Copilot, or any AI terminal.
+The AI will read your codebase, evaluate all 6 dimensions, and generate a full report with:
+
+- **Status bar scoring** — visual 100-point evaluation per dimension
+- **Plain-language explanations** — no engineering jargon, readable by non-technical investors
+- **Strengths & what they enable** — "Because of X, users can do Y"
+- **Improvements** — "If you do X, Y becomes possible"
+- **Service site cross-validation** — paste a URL to check if claims match code
+- **Investor questions** — ready-to-use questions for startup meetings
 
 ### How It Works
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  Your IDE (VS Code / JetBrains / etc.)                  │
-│                                                         │
-│  ┌─────────────────────────────────┐                    │
-│  │  AI Terminal                    │                    │
-│  │  (Claude Code / Cursor / etc.)  │                    │
-│  │                                 │                    │
-│  │  > "Analyze this project        │                    │
-│  │     with DDE"                   │                    │
-│  │                                 │  ┌──────────────┐  │
-│  │  AI reads your codebase ────────┼─▶│ DDE Engine   │  │
-│  │  and runs dde analyze .         │  │ (local CLI)  │  │
-│  │                                 │  └──────┬───────┘  │
-│  │  ◀── Scores, red flags, ────────┼─────────┘          │
-│  │      recommendations            │                    │
-│  └─────────────────────────────────┘                    │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  Your IDE (VS Code / JetBrains / etc.)                   │
+│                                                          │
+│  ┌──────────────────────────────────┐                    │
+│  │  AI Terminal                     │                    │
+│  │  (Claude Code / Cursor / etc.)   │                    │
+│  │                                  │                    │
+│  │  $ dde prompt .                  │  ┌──────────────┐  │
+│  │      ↓                           │  │ DDE Engine   │  │
+│  │  Heuristic data collected ───────┼─▶│ (local, no   │  │
+│  │  + evaluation instructions       │  │  AI API)     │  │
+│  │      ↓                           │  └──────────────┘  │
+│  │  AI reads prompt + codebase      │                    │
+│  │      ↓                           │                    │
+│  │  Full evaluation report with     │                    │
+│  │  scores, strengths, questions    │                    │
+│  └──────────────────────────────────┘                    │
+│                                                          │
+│  Cost: $0 extra — uses your existing AI subscription     │
+└──────────────────────────────────────────────────────────┘
 ```
 
-> **Your API keys are used directly** — BYOK (Bring Your Own Key). DDE uses whichever AI provider keys you have set (`ANTHROPIC_API_KEY`, `GOOGLE_AI_API_KEY`, `OPENAI_API_KEY`). No additional cost beyond your existing API usage. Use `--skip-ai` for free local-only analysis.
+> **Zero additional cost** — `dde prompt` runs entirely locally (no AI API calls). The evaluation is performed by your IDE's existing AI subscription. BYOK (Bring Your Own Key) is also supported via `dde analyze` for direct API-based analysis.
 
 ---
 
@@ -331,6 +361,7 @@ For private repos, provide a **GitHub Personal Access Token**:
 
 | Option | Cost | Description |
 |--------|------|-------------|
+| `dde prompt` | Free | IDE AI evaluates — zero API keys needed |
 | Local CLI | Free | `dde analyze owner/repo --skip-ai` |
 | BYOK CLI | Free + API costs | Your own API keys, full AI analysis |
 | BYOK Dashboard | Free + API costs | Web UI with GitHub PAT support |
@@ -345,6 +376,11 @@ For private repos, provide a **GitHub Personal Access Token**:
 - [x] Bilingual dashboard (English / 日本語)
 - [x] PDF report export
 - [x] Disconnect & Purge with certificate
+- [x] `dde prompt` — IDE AI integration (Claude Code / Cursor / Copilot)
+- [x] Plain-language glossary for non-technical readers
+- [x] Match rate visualization (claims vs. code)
+- [x] Stage-aware evaluation (seed / series_a / series_b / growth)
+- [x] Investor question auto-generation
 - [ ] Technical Debt + Maintainability axes
 - [ ] Batch analysis mode (portfolio-wide DD)
 - [ ] Historical tracking (re-analyze over time)

@@ -2,17 +2,31 @@
 
 # Due Diligence Engine
 
-**3社のAIがクロス検証。信頼できるひとつの判定を。**
+**IDEのAIが、デューデリジェンスアナリストになる。**
 
-1社のAIだけでは盲点がある。DDEはClaude、Gemini、ChatGPTを**同時並列実行** — 各社が独立評価し、クロス検証でバイアスのない投資スコアを生成。
+`dde prompt` をターミナルで実行 — Claude Code、Cursor、Copilotがコードベースを読み、投資判断レベルの評価レポートを生成。APIキー不要。追加コスト¥0。
+
+より深い分析には、Claude・Gemini・ChatGPTの**3社並列クロス検証**も対応。
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.11+-green.svg)](https://python.org)
 [![AI](https://img.shields.io/badge/AI-Claude_%7C_Gemini_%7C_ChatGPT-orange.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
+[![IDE](https://img.shields.io/badge/IDE_AI-Claude_Code_%7C_Cursor_%7C_Copilot-blueviolet.svg)](https://github.com/taka-avantgarde/due-diligence-engine)
 
 [English](README.md) | [日本語](README.ja.md)
 
 </div>
+
+---
+
+## 2つの使い方
+
+| | 方法 | 内容 | 費用 |
+|---|------|------|------|
+| 🖥️ | **AIターミナルから使う**（Claude Code / Cursor / Copilot） | `dde prompt` を実行 → IDEのAIがコードを読み、評価レポートを生成 | 無料（APIキー不要） |
+| 🌐 | **Webダッシュボードから使う** | GitHub URLを貼るだけ → マルチAI（Claude + Gemini + ChatGPT）クロス検証 | 無料（BYOK） |
+
+> **どちらを使うべき？** AI搭載IDEをお使いなら `dde prompt` が最速 — セットアップ不要、追加コスト¥0。Webダッシュボードは複数AIによるクロス検証や、共有可能なレポートが必要な場合に最適です。
 
 ---
 
@@ -27,11 +41,10 @@
                 └────────┬────────┴────────┬────────┘
                    ┌─────▼─────────────────▼─────┐
                    │   クロス検証エンジン          │
-                   │   + サイト信頼性チェック       │
                    └──────────────┬───────────────┘
                          ┌────────▼────────┐
                          │  統合スコア       │
-                         │  + 信頼性指標     │
+                         │  6次元評価        │
                          └─────────────────┘
 ```
 
@@ -39,11 +52,15 @@
 
 ## まず試してみる
 
-**https://due-diligence-engine.web.app/dashboard/**
+**最速の方法** — AIターミナルで:
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+dde prompt owner/repo --lang ja
+```
 
-公開GitHubリポジトリのURLを貼って「分析」をクリック。
+**Webダッシュボード**: https://due-diligence-engine.web.app/dashboard/
 
-> 基本分析（ローカルコードスキャン）は無料。AI分析には自分のAPIキー — **BYOK（Bring Your Own Key）** をご利用ください。
+> `dde prompt` は無料（APIキー不要）。AIクロス検証には `dde analyze` + 自分のAPIキー — **BYOK（Bring Your Own Key）**: Claude・Gemini・ChatGPT対応。
 
 ---
 
@@ -53,11 +70,11 @@
 |--------|------|---------------|------|
 | **無料（ローカルのみ）** | 無料 | なし | コード構造、Git履歴、依存関係スキャン |
 | **BYOK** | 無料（API費用は自己負担） | Claude / Gemini / ChatGPT（1〜3社） | フルAI分析 + クロス検証 |
-| **Pro分析（日本のみ）** | **¥3,000 / 社** | Claude + Gemini（当社管理） | AI自動レポート + オンライン会議サポート |
+| **Pro分析（日本のみ）** | **¥20,000 / 社** | Claude + Gemini（当社管理） | AI自動レポート + オンライン会議サポート |
 
 > **BYOK:** APIキー1つから始められます。プロバイダーを追加するとクロス検証が自動有効化。
 
-> **Pro分析:** 1社¥3,000で自動レポート生成 + オンライン会議でリアルタイムサポート。お気軽にお問い合わせください。
+> **Pro分析:** 1社¥20,000で自動レポート生成 + オンライン会議でリアルタイムサポート。お気軽にお問い合わせください。
 >
 > **[Atlas Associates](https://www.atlasassociates.io/)** — support@atlasassociates.io
 
@@ -68,14 +85,18 @@
 | 機能 | 説明 |
 |------|------|
 | **マルチAIクロス検証** | Claude + Gemini + ChatGPTが独立評価→クロス検証 |
-| **BYOK（Bring Your Own Key）** | 自分のAPIキーで分析。Claude・Gemini・ChatGPT対応。1社でも3社でも。ベンダーロックインなし |
+| **`dde prompt` — IDE AI連携** | Claude Code / Cursor / Copilot向け構造化プロンプト生成。APIキー不要 |
+| **BYOK（Bring Your Own Key）** | 自分のAPIキーで分析。Claude・Gemini・ChatGPT対応。1社でも3社でも |
+| **ほんやくコンニャク（用語集）** | 全技術用語に比喩付き注釈。IT業界外の投資家・事業会社でもレポートが読める |
+| **マッチ率表示** | 主張 vs コード実態 — ステータスバーでチームの誠実さを可視化 |
 | **GitHub Privateリポ対応** | PATベースの一時アクセス |
 | **AIウォッシュ検出** | 「独自AI」と偽るAPIラッパーを検出 |
 | **Git履歴フォレンジック** | コミット履歴の不審パターン（DD直前の急造など）を分析 |
 | **10段階技術レベル評価** | 各軸Lv.1〜10で明確な基準付き |
+| **ステージ別評価基準** | シード / シリーズA / シリーズB / グロース — ステージに合わせた基準 |
 | **PDF出力** | 投資委員会向けプロフェッショナルPDF |
 | **切断 & 破棄** | ワンクリックでデータ消去 + 破棄証明書 |
-| **バイリンガルUI** | English / 日本語 切替 |
+| **バイリンガル** | English / 日本語 — CLI（`--lang`）& ダッシュボード |
 
 ---
 
@@ -208,7 +229,7 @@ Lv.1 ──── Lv.2 ──── Lv.3 ──── Lv.4 ──── Lv.5 ─
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
   ✅ B — 条件付きで投資可能
-  技術スタックとコアMLモデルは genuinely 独自実装。
+  技術スタックとコアMLモデルは正真正銘の独自実装。
   SOC2主張の不一致を解消し、テストカバレッジを改善した上で
   タームシートに進むことを推奨。
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -236,7 +257,11 @@ export OPENAI_API_KEY="sk-..."            # ChatGPT
 ### CLI
 
 ```bash
-# GitHub URLで分析
+# IDE AI向け評価プロンプト生成（APIキー不要）
+dde prompt .
+dde prompt owner/repo --lang ja --stage seed
+
+# AI API使用のフル分析（BYOK）
 dde analyze https://github.com/some-startup/their-product
 
 # ローカルのみ（無料、AIなし）
@@ -247,53 +272,69 @@ dde analyze some-startup/repo --skip-ai
 
 ## AIターミナルから使う（Claude Code / Cursor 等）
 
-すでにIDEでAIを使っていますか？ AIターミナルにプロンプトを**コピペするだけ**で自分のプロジェクトを分析できます。
+`dde prompt` コマンドで構造化プロンプトを生成 → **IDEのAIに貼り付けるだけ**で分析完了。APIキー不要。
 
 ### 1. セットアップ（初回のみ）
 
-AIターミナルに貼り付けてください：
-
-```
-https://github.com/taka-avantgarde/Due-diligence-engine をcloneして `pip install -e .` でインストールして
+```bash
+pip install git+https://github.com/taka-avantgarde/Due-diligence-engine.git
 ```
 
-### 2. プロジェクトを分析
+### 2. プロンプト生成 & 評価
 
-開発中のプロジェクトディレクトリで：
+```bash
+# 自分のプロジェクトを分析
+dde prompt .
 
-```
-`dde analyze .` でこのプロジェクトの技術デューデリジェンスを実行して
+# 公開GitHubリポを分析
+dde prompt owner/repo
+
+# 日本語出力 + ステージ指定
+dde prompt owner/repo --lang ja --stage seed
+
+# ファイル保存 / クリップボードにコピー
+dde prompt . -o prompt.md
+dde prompt . --copy
 ```
 
-任意の公開GitHubリポを分析：
+### 3. AIターミナルに貼り付け
 
-```
-`dde analyze owner/repo` でデューデリジェンス分析を実行して
-```
+生成されたプロンプトをClaude Code、Cursor、Copilot等のAIターミナルに貼り付けるだけ。
+AIがコードベースを読み、6次元の評価レポートを生成します：
+
+- **ステータスバー付きスコア** — 100点満点の視覚的評価
+- **ほんやくコンニャク** — 技術用語を平易な日本語に翻訳。IT業界外の方でも読めるレポート
+- **強みと「何ができるか」** — 「この技術のおかげで○○が可能」
+- **改善提案** — 「こうすればもっと△△もできるかもしれません」
+- **サービスサイトクロス検証** — URLを貼るとWebの主張とコードの乖離を分析
+- **投資家向け質問リスト** — スタートアップミーティングですぐ使える質問
 
 ### 仕組み
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│  あなたのIDE（VS Code / JetBrains 等）                  │
-│                                                         │
-│  ┌─────────────────────────────────┐                    │
-│  │  AIターミナル                    │                    │
-│  │  (Claude Code / Cursor 等)      │                    │
-│  │                                 │                    │
-│  │  > 「このプロジェクトを          │                    │
-│  │     DDEで分析して」             │                    │
-│  │                                 │  ┌──────────────┐  │
-│  │  AIがコードを読み取り ──────────┼─▶│ DDE Engine   │  │
-│  │  dde analyze . を実行           │  │ (ローカルCLI) │  │
-│  │                                 │  └──────┬───────┘  │
-│  │  ◀── スコア、レッドフラグ、 ────┼─────────┘          │
-│  │      推奨アクション             │                    │
-│  └─────────────────────────────────┘                    │
-└─────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│  あなたのIDE（VS Code / JetBrains 等）                   │
+│                                                          │
+│  ┌──────────────────────────────────┐                    │
+│  │  AIターミナル                     │                    │
+│  │  (Claude Code / Cursor 等)       │                    │
+│  │                                  │                    │
+│  │  $ dde prompt .                  │  ┌──────────────┐  │
+│  │      ↓                           │  │ DDE Engine   │  │
+│  │  データ収集（ローカル） ──────────┼─▶│（AI API不使用 │  │
+│  │  + 評価指示書を生成              │  │  ローカルのみ）│  │
+│  │      ↓                           │  └──────────────┘  │
+│  │  AIがプロンプト + コードを読解    │                    │
+│  │      ↓                           │                    │
+│  │  完全な評価レポート               │                    │
+│  │  スコア、強み/弱み、質問リスト    │                    │
+│  └──────────────────────────────────┘                    │
+│                                                          │
+│  追加コスト: ¥0 — 既存のAIサブスクで分析                  │
+└──────────────────────────────────────────────────────────┘
 ```
 
-> **あなたのAPIキーをそのまま使用** — BYOK（Bring Your Own Key）。設定済みのAIプロバイダーキー（`ANTHROPIC_API_KEY`、`GOOGLE_AI_API_KEY`、`OPENAI_API_KEY`）をDDEが直接利用します。追加コストなし。`--skip-ai` でAI不使用の無料分析も可能。
+> **追加コスト¥0** — `dde prompt` は完全ローカル実行（AI APIを呼びません）。評価はIDEの既存AIサブスクリプションが行います。直接API呼び出しが必要な場合は `dde analyze`（BYOK対応）も利用可能。
 
 ---
 
@@ -316,6 +357,36 @@ https://github.com/taka-avantgarde/Due-diligence-engine をcloneして `pip inst
 | レポートにコードなし | PDFには所見のみ |
 | 暗号消去 | 3パスランダム上書き + 破棄証明書 |
 | API 0-day保持 | Anthropic / Google / OpenAI — データ保持なし |
+
+---
+
+## デプロイ
+
+| 方式 | 費用 | 説明 |
+|------|------|------|
+| `dde prompt` | 無料 | IDE AIが評価 — APIキー不要 |
+| ローカルCLI | 無料 | `dde analyze owner/repo --skip-ai` |
+| BYOK CLI | 無料 + API費用 | 自分のAPIキーでフルAI分析 |
+| BYOKダッシュボード | 無料 + API費用 | Web UI + GitHub PAT対応 |
+
+---
+
+## ロードマップ
+
+- [x] マルチAI分析エンジン（Claude / Gemini / ChatGPT BYOK）
+- [x] BYOKダッシュボード
+- [x] プロバイダー別スコア比較
+- [x] バイリンガルUI（English / 日本語）
+- [x] PDFレポート出力
+- [x] 切断 & 破棄 + 証明書
+- [x] `dde prompt` — IDE AI連携（Claude Code / Cursor / Copilot）
+- [x] ほんやくコンニャク（非技術者向け用語集）
+- [x] マッチ率表示（主張 vs コード）
+- [x] ステージ別評価基準（seed / series_a / series_b / growth）
+- [x] 投資家向け質問自動生成
+- [ ] 技術的負債 + 保守性の評価軸追加
+- [ ] バッチ分析（ポートフォリオ全体DD）
+- [ ] 時系列トラッキング（再分析による推移確認）
 
 ---
 

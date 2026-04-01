@@ -2,6 +2,7 @@
 
 Commands:
   analyze     - Run due diligence on a project directory or zip
+  prompt      - Generate AI evaluation prompt for IDE terminals
   report      - Generate report from a previous analysis
   purge       - Securely delete analysis data
   leaderboard - Show scoring leaderboard across analyses
@@ -170,6 +171,142 @@ def analyze(
 
     if result.total_cost_usd > 0:
         console.print(f"\n[dim]API cost: ${result.total_cost_usd:.4f}[/dim]")
+
+
+@cli.command()
+@click.argument("target")
+@click.option("--name", "-n", default=None, help="Project name (auto-detected if omitted)")
+@click.option("--lang", "-l", default="en", type=click.Choice(["en", "ja"]),
+              help="Output language (en: English, ja: Japanese)")
+@click.option("--stage", "-s", default="unknown",
+              type=click.Choice(["seed", "series_a", "series_b", "growth", "unknown"]),
+              help="Startup development stage (adjusts evaluation criteria)")
+@click.option("--output", "-o", type=click.Path(), default=None,
+              help="Save prompt to file instead of stdout")
+@click.option("--copy", "-c", is_flag=True, help="Copy prompt to clipboard")
+@click.option("--skip-git", is_flag=True, help="Skip git forensics analysis")
+def prompt(
+    target: str,
+    name: str | None,
+    lang: str,
+    stage: str,
+    output: str | None,
+    copy: bool,
+    skip_git: bool,
+) -> None:
+    """Generate an AI evaluation prompt for IDE terminals.
+
+    Runs heuristic analysis (no AI API needed), then outputs a structured
+    prompt that you can paste into Claude Code, Cursor, GitHub Copilot, etc.
+
+    \b
+    TARGET can be:
+      GitHub URL:  https://github.com/owner/repo
+      Short form:  owner/repo
+      Local path:  /path/to/project
+      Zip archive: /path/to/project.zip
+
+    \b
+    Examples:
+      dde prompt .                           # Analyze current directory
+      dde prompt owner/repo --lang ja        # Japanese output
+      dde prompt ./my-startup -s seed -c     # Seed stage, copy to clipboard
+      dde prompt owner/repo -o prompt.md     # Save to file
+
+    \b
+    Then paste into your AI terminal:
+      Claude Code:  Just paste the output
+      Cursor:       Paste into Composer
+      Copilot:      Paste into Chat
+    """
+    from src.analyze.engine import AnalysisEngine
+    from src.ingest.secure_loader import SecureLoader
+    from src.prompt.generator import generate_prompt
+
+    config = get_config()
+    # Force skip AI — prompt mode never calls AI APIs
+    config.anthropic_api_key = ""
+    config.ensure_dirs()
+
+    is_url = _is_github_url(target)
+    if name is None:
+        name = _extract_project_name(target)
+
+    loader = SecureLoader(config)
+
+    with Progress(
+        SpinnerColumn(),
+        TextColumn("[progress.description]{task.description}"),
+        console=console,
+    ) as progress:
+        task = progress.add_task("Collecting project data...", total=None)
+
+        try:
+            if is_url:
+                progress.update(task, description=f"Cloning {target} ...")
+                loader.load_from_url(target)
+                repo_path = loader.cloned_repo_path
+            else:
+                source = Path(target)
+                if not source.exists():
+                    console.print(f"[red]Path not found: {target}[/red]")
+                    sys.exit(1)
+                if source.suffix == ".zip":
+                    loader.load_archive(source)
+                    repo_path = None
+                else:
+                    loader.load_directory(source)
+                    repo_path = source if source.is_dir() else None
+        except (FileNotFoundError, ValueError, RuntimeError) as e:
+            console.print(f"[red]Ingestion error: {e}[/red]")
+            sys.exit(1)
+
+        progress.update(task, description="Running heuristic analysis...")
+        engine = AnalysisEngine(config, loader)
+        result = engine.run(
+            project_name=name,
+            repo_path=repo_path,
+            skip_git=skip_git,
+        )
+        progress.update(task, description="Generating prompt...")
+
+    # Cleanup
+    loader.destroy()
+
+    # Generate the structured prompt
+    prompt_text = generate_prompt(result, lang=lang, stage=stage)
+
+    # Output
+    if output:
+        out_path = Path(output)
+        out_path.write_text(prompt_text, encoding="utf-8")
+        console.print(f"[green]Prompt saved to: {out_path}[/green]")
+    else:
+        # Print to stdout (use print, not console, to avoid Rich markup)
+        print(prompt_text)
+
+    if copy:
+        try:
+            import subprocess
+            process = subprocess.Popen(
+                ["pbcopy"] if sys.platform == "darwin" else ["xclip", "-selection", "clipboard"],
+                stdin=subprocess.PIPE,
+            )
+            process.communicate(prompt_text.encode("utf-8"))
+            console.print("[green]Prompt copied to clipboard![/green]")
+        except (FileNotFoundError, OSError):
+            console.print("[yellow]Could not copy to clipboard (pbcopy/xclip not found)[/yellow]")
+
+    console.print(
+        Panel(
+            f"[bold]Next step[/bold]: Paste the prompt into your AI terminal\n"
+            f"(Claude Code, Cursor, GitHub Copilot, etc.)\n\n"
+            f"The AI will read the data and generate a full evaluation report.\n"
+            f"[dim]No API keys needed — your IDE's AI handles the analysis.[/dim]",
+            title="DDE Prompt Generated",
+            border_style="green",
+        )
+    )
 
 
 @cli.command()

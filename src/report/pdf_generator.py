@@ -1314,7 +1314,7 @@ class PDFReportGenerator:
 
     # Atlas Associates Inc. credit — hardcoded, not configurable.
     # This attribution is required by the license and must not be removed.
-    _CREDIT = "Powered by Due Diligence Engine \u2014 Atlas Associates Inc."
+    _CREDIT = "Powered by Due Diligence Engine \u2014 Takayuki Miyano / Atlas Associates"
 
     def _add_footer(self, canvas, doc) -> None:
         """Add NDA compliance footer + Atlas Associates credit to every page."""

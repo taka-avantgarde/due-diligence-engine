@@ -731,6 +731,18 @@ class PDFReportGenerator:
 
         elements.append(Spacer(1, 2 * cm))
 
+        # AI model attribution (consulting mode — show which IDE AI was used)
+        cr = result.consulting_report
+        if cr and cr.ai_model_used:
+            elements.append(
+                Paragraph(
+                    f'<font color="{COLOR_ACCENT.hexval()}" size="11">'
+                    f'<b>{t["ai_model"]}: {cr.ai_model_used}</b></font>',
+                    s["center"],
+                )
+            )
+            elements.append(Spacer(1, 8 * mm))
+
         # Metadata
         elements.append(
             Paragraph(

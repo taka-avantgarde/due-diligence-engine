@@ -58,7 +58,7 @@ pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-
 dde prompt --pdf --lang ja
 ```
 
-これだけです。カレントディレクトリを自動で分析。AIがコードを読み、評価し、PDFを生成します。全自動。
+これだけです。言語選択（1: English, 2: 日本語）が最初に表示されます。カレントディレクトリを自動で分析。AIがコードを読み、評価し、PDFを生成します。全自動。
 
 ```bash
 # GitHubリポを指定する場合
@@ -301,7 +301,7 @@ AIが自律的に:
 2. 世界トップクラスのテクノロジーコンサルタントとして評価
 3. コンサルティンググレードPDFを `~/Downloads/` に生成
 
-APIキー不要。質問なし。IDEのツール同意プロンプトのみ。
+APIキー不要。言語選択（1/2）が最初に表示され、あとはIDEのツール同意プロンプトのみ。
 
 **出力先:** `~/Downloads/dde_consulting_<プロジェクト名>_<日付>.pdf`
 - 日本語: `dde_consulting_NeuralPay_2026年04月02日.pdf`
@@ -312,11 +312,11 @@ APIキー不要。質問なし。IDEのツール同意プロンプトのみ。
 | ページ | セクション | 内容 |
 |--------|-----------|------|
 | 1 | **表紙** | プロジェクト名、総合スコア、グレードバッジ |
-| 2 | **スコアダッシュボード** | 総合スコア（大型表示）+ 6次元の横棒グラフ（色分けステータスバー）+ スコアバロメーター（F→A） |
+| 2 | **スコアダッシュボード** | 総合スコア（大型表示）+ 6次元の横棒グラフ（各軸の評価基準説明付き）+ スコアバロメーター（F→A） |
 | 3 | **ビジネスサマリー** | 非エンジニアにも読める要約 + 投資評価バッジ + 使用AIモデル |
 | 4 | **SWOT分析** | 強み・弱み・機会・脅威 — エビデンスベース、ビジネスアナロジー付き |
 | 5 | **スコア内訳** | 6次元の詳細テーブル。根拠・ビジネス説明・可能になること付き |
-| 6 | **テクレベル評価** | 視覚的ゲージ（Lv.1-10）+ 平易な解説 |
+| 6 | **テクレベル評価** | 視覚的ゲージバー（Lv.1-10）+ 平易な解説 |
 | 7 | **将来性評価** | プロダクトビジョン + 1/3/5年予測（信頼度・マイルストーン付き） |
 | 8 | **戦略アドバイス** | 即座のアクション、中期優先事項、長期ビジョン |
 | 9 | **投資判断** | 推奨度 + リスク/アップサイド + 類似企業 |
@@ -413,6 +413,10 @@ dde prompt . --copy
 - [x] スコアダッシュボード（横棒グラフ + スコアバロメーター）
 - [x] PDF出力先 `~/Downloads/` + 日付付きファイル名（日英対応）
 - [x] EN/JA PDF自動生成テスト（13テスト）
+- [x] プロフェッショナルなグレー/ダークブルーカラー + Atlas Associatesクレジット
+- [x] 数字選択式の言語選択（1: English, 2: 日本語）— 分析開始前に必ず表示
+- [x] 各評価軸バーに評価基準の説明を追加
+- [x] 日本語テーブル・ゲージのCIDフォントレンダリング修正
 - [x] ほんやくコンニャク（非技術者向け用語集）
 - [x] マッチ率表示（主張 vs コード）
 - [x] ステージ別評価基準（seed / series_a / series_b / growth）
@@ -431,12 +435,14 @@ dde prompt . --copy
 
 ## ライセンス
 
-[Apache License 2.0](LICENSE)
+[Apache License 2.0](LICENSE) — Copyright 2026 Takayuki Miyano / Atlas Associates
 
 ---
 
 <div align="center">
 
-**Powered by Claude (Anthropic) + Gemini (Google) + ChatGPT (OpenAI)**
+**Powered by Due Diligence Engine — Takayuki Miyano / Atlas Associates**
+
+Built with Claude (Anthropic) + Gemini (Google) + ChatGPT (OpenAI)
 
 </div>

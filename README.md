@@ -58,7 +58,7 @@ pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-
 dde prompt --pdf
 ```
 
-That's it. Analyzes the current directory by default. The AI reads your codebase, evaluates it as a world-class consultant, and generates a PDF — all automatically.
+That's it. You'll be prompted to select a language (1: English, 2: 日本語) before analysis begins. The AI reads your codebase, evaluates it as a world-class consultant, and generates a PDF — all automatically.
 
 ```bash
 # Or specify a GitHub repo
@@ -297,7 +297,7 @@ The AI autonomously:
 2. Evaluates as a world-class technology consultant
 3. Generates a consulting-grade PDF to `~/Downloads/`
 
-No API keys. No questions asked. Just tool-consent prompts from your IDE.
+No API keys. Language selection prompted first (1/2). Then tool-consent prompts from your IDE — that's all.
 
 **Output:** `~/Downloads/dde_consulting_<project>_<date>.pdf`
 - English: `dde_consulting_NeuralPay_2026-04-02.pdf`
@@ -308,11 +308,11 @@ No API keys. No questions asked. Just tool-consent prompts from your IDE.
 | Page | Section | Content |
 |------|---------|---------|
 | 1 | **Cover** | Project name, overall score, grade badge |
-| 2 | **Score Dashboard** | Overall score (large) + 6-dimension horizontal bar chart with color-coded status bars + score barometer (F→A) |
+| 2 | **Score Dashboard** | Overall score (large) + 6-dimension horizontal bar chart with evaluation criteria descriptions + score barometer (F→A) |
 | 3 | **Business Summary** | Executive summary readable by non-engineers, with investment grade badge + AI model attribution |
 | 4 | **SWOT Analysis** | Strengths, Weaknesses, Opportunities, Threats — evidence-based, with business analogies |
 | 5 | **Score Breakdown** | Detailed 6-dimension table with rationale, business explanation, and what each score enables |
-| 6 | **Tech Level Assessment** | Visual gauge (Lv.1-10) with plain-language explanation |
+| 6 | **Tech Level Assessment** | Visual gauge bar (Lv.1-10) with plain-language explanation |
 | 7 | **Future Outlook** | Product vision + 1/3/5-year projections with confidence levels and milestones |
 | 8 | **Strategic Advice** | Immediate actions, medium-term priorities, long-term vision |
 | 9 | **Investment Thesis** | Recommendation with risks, upside potential, and comparable companies |
@@ -411,6 +411,10 @@ For private repos, provide a **GitHub Personal Access Token**:
 - [x] Score dashboard with horizontal bar charts and score barometer
 - [x] PDF saved to `~/Downloads/` with localized date stamps (EN/JA)
 - [x] Automated EN/JA PDF generation tests (13 tests)
+- [x] Professional gray/dark blue color palette with Atlas Associates credit
+- [x] Language selection by number (1: English, 2: 日本語) — forced before analysis
+- [x] Evaluation criteria descriptions on each score bar
+- [x] CID font rendering fix for Japanese tables and gauges
 - [x] Plain-language glossary for non-technical readers
 - [x] Match rate visualization (claims vs. code)
 - [x] Stage-aware evaluation (seed / series_a / series_b / growth)
@@ -429,12 +433,14 @@ This tool provides **technical analysis to assist investment decisions**. It is 
 
 ## License
 
-[Apache License 2.0](LICENSE)
+[Apache License 2.0](LICENSE) — Copyright 2026 Takayuki Miyano / Atlas Associates
 
 ---
 
 <div align="center">
 
-**Powered by Claude (Anthropic) + Gemini (Google) + ChatGPT (OpenAI)**
+**Powered by Due Diligence Engine — Takayuki Miyano / Atlas Associates**
+
+Built with Claude (Anthropic) + Gemini (Google) + ChatGPT (OpenAI)
 
 </div>

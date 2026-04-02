@@ -1404,6 +1404,23 @@ class PDFReportGenerator:
             "claim_consistency": "Claim Consistency",
             "security_posture": "Security Posture",
         }
+        # Short description of what each dimension evaluates
+        _dim_desc_en = {
+            "technical_originality": "Novelty of algorithms, patents, and proprietary tech",
+            "technology_advancement": "Modernity of stack, frameworks, and tooling",
+            "implementation_depth": "Test coverage, error handling, production readiness",
+            "architecture_quality": "Code structure, modularity, and maintainability",
+            "claim_consistency": "Alignment between marketing claims and actual code",
+            "security_posture": "Encryption, auth, vulnerability management",
+        }
+        _dim_desc_ja = {
+            "technical_originality": "アルゴリズム・特許・独自技術の新規性",
+            "technology_advancement": "技術スタック・フレームワークの先進性",
+            "implementation_depth": "テストカバレッジ・エラー処理・本番運用品質",
+            "architecture_quality": "コード構造・モジュール性・保守性",
+            "claim_consistency": "マーケティング主張と実装コードの整合性",
+            "security_posture": "暗号化・認証・脆弱性管理の成熟度",
+        }
         weights = {
             "technical_originality": 0.25,
             "technology_advancement": 0.20,
@@ -1420,28 +1437,34 @@ class PDFReportGenerator:
             if not dim:
                 continue
             name = _DIM_NAME_JA.get(en_name, en_name) if self._lang == "ja" else en_name
+            desc = _dim_desc_ja.get(key, "") if self._lang == "ja" else _dim_desc_en.get(key, "")
             w = weights.get(key, 0)
-            dims.append((name, dim.score, dim.level, w))
+            dims.append((name, dim.score, dim.level, w, desc))
 
         if not dims:
             return elements
 
         # Drawing dimensions
         bar_max_w = 280  # max bar width in points
-        row_h = 32       # height per row
+        row_h = 44       # height per row (increased for description line)
         label_w = 140    # label area width
         chart_w = label_w + bar_max_w + 80  # total width
         chart_h = len(dims) * row_h + 10
 
         d = Drawing(chart_w, chart_h)
 
-        for i, (name, score, level, weight) in enumerate(dims):
-            y = chart_h - (i + 1) * row_h + 6
+        for i, (name, score, level, weight, desc) in enumerate(dims):
+            y = chart_h - (i + 1) * row_h + 14
 
-            # Dimension label (left)
-            font_name = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica"
+            # Dimension label (left, bold)
+            font_name = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
             d.add(String(0, y + 4, name, fontName=font_name, fontSize=9,
                          fillColor=COLOR_TEXT))
+
+            # Dimension description (below label, small gray text)
+            desc_font = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
+            d.add(String(0, y - 8, desc, fontName=desc_font, fontSize=6.5,
+                         fillColor=COLOR_TEXT_DIM))
 
             # Background bar (gray track)
             d.add(Rect(label_w, y, bar_max_w, 16,
@@ -1472,7 +1495,7 @@ class PDFReportGenerator:
         elements.append(Spacer(1, 8 * mm))
 
         # Weighted total line
-        weighted_total = sum(sc * w for _, sc, _, w in dims)
+        weighted_total = sum(sc * w for _, sc, _, w, _ in dims)
         if self._lang == "ja":
             total_text = f"加重合計スコア: <b>{weighted_total:.1f}</b> / 100"
         else:

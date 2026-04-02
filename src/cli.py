@@ -222,6 +222,17 @@ def prompt(
     from src.ingest.secure_loader import SecureLoader
     from src.prompt.generator import generate_prompt
 
+    # --pdf mode requires explicit --lang selection
+    if pdf and lang == "en":
+        # Check if --lang was actually passed by the user
+        ctx = click.get_current_context()
+        if "lang" not in ctx.params or ctx.get_parameter_source("lang") != click.core.ParameterSource.COMMANDLINE:
+            lang = click.prompt(
+                "PDF language / PDF言語を選択",
+                type=click.Choice(["en", "ja"]),
+                default="en",
+            )
+
     config = get_config()
     # Force skip AI — prompt mode never calls AI APIs
     config.anthropic_api_key = ""

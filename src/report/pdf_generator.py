@@ -52,19 +52,19 @@ logger = logging.getLogger(__name__)
 pdfmetrics.registerFont(UnicodeCIDFont("HeiseiMin-W3"))
 pdfmetrics.registerFont(UnicodeCIDFont("HeiseiKakuGo-W5"))
 
-# Color palette (matching the dark theme of the web dashboard)
-COLOR_BG_DARK = colors.HexColor("#0f172a")
-COLOR_SURFACE = colors.HexColor("#1e293b")
-COLOR_ACCENT = colors.HexColor("#38bdf8")
-COLOR_GREEN = colors.HexColor("#22c55e")
-COLOR_YELLOW = colors.HexColor("#eab308")
-COLOR_ORANGE = colors.HexColor("#f97316")
-COLOR_RED = colors.HexColor("#ef4444")
-COLOR_TEXT = colors.HexColor("#1e293b")
-COLOR_TEXT_DIM = colors.HexColor("#64748b")
-COLOR_BORDER = colors.HexColor("#cbd5e1")
+# Color palette — professional gray / dark blue tone
+COLOR_BG_DARK = colors.HexColor("#1a1a2e")
+COLOR_SURFACE = colors.HexColor("#2d2d44")
+COLOR_ACCENT = colors.HexColor("#1e3a5f")       # dark blue
+COLOR_GREEN = colors.HexColor("#4a6741")         # muted green
+COLOR_YELLOW = colors.HexColor("#8a7a3a")        # muted gold
+COLOR_ORANGE = colors.HexColor("#7a5a3a")        # muted brown
+COLOR_RED = colors.HexColor("#8b3a3a")           # muted dark red
+COLOR_TEXT = colors.HexColor("#1a1a2e")          # near-black
+COLOR_TEXT_DIM = colors.HexColor("#6b7280")      # gray-500
+COLOR_BORDER = colors.HexColor("#d1d5db")        # gray-300
 COLOR_WHITE = colors.white
-COLOR_LIGHT_BG = colors.HexColor("#f8fafc")
+COLOR_LIGHT_BG = colors.HexColor("#f3f4f6")      # gray-100
 
 # Severity color mapping
 SEVERITY_COLORS = {
@@ -77,11 +77,11 @@ SEVERITY_COLORS = {
 
 # Grade color mapping
 GRADE_COLORS = {
-    "A": COLOR_GREEN,
-    "B": colors.HexColor("#84cc16"),
-    "C": COLOR_YELLOW,
-    "D": COLOR_ORANGE,
-    "F": COLOR_RED,
+    "A": colors.HexColor("#2d5a3d"),     # dark green
+    "B": colors.HexColor("#1e3a5f"),     # dark blue
+    "C": colors.HexColor("#5a5a3a"),     # dark gold
+    "D": colors.HexColor("#6b4a2a"),     # dark brown
+    "F": colors.HexColor("#6b2a2a"),     # dark red
 }
 
 # i18n strings for PDF
@@ -684,7 +684,7 @@ class PDFReportGenerator:
         # Logo placeholder
         elements.append(
             Paragraph(
-                f'<font color="#38bdf8" size="12">{t["title_prefix"]}</font>',
+                f'<font color="#1e3a5f" size="12">{t["title_prefix"]}</font>',
                 s["center"],
             )
         )
@@ -733,6 +733,14 @@ class PDFReportGenerator:
             Paragraph(
                 f"{t['date']}: {result.timestamp.strftime('%Y-%m-%d %H:%M UTC')}",
                 s["body_small"],
+            )
+        )
+
+        elements.append(Spacer(1, 2 * cm))
+        elements.append(
+            Paragraph(
+                f'<font color="{COLOR_TEXT_DIM.hexval()}" size="8">{self._CREDIT}</font>',
+                s["center"],
             )
         )
 
@@ -1304,10 +1312,23 @@ class PDFReportGenerator:
 
         return elements
 
+    # Atlas Associates Inc. credit — hardcoded, not configurable.
+    # This attribution is required by the license and must not be removed.
+    _CREDIT = "Powered by Due Diligence Engine \u2014 Atlas Associates Inc."
+
     def _add_footer(self, canvas, doc) -> None:
-        """Add NDA compliance footer to every page."""
+        """Add NDA compliance footer + Atlas Associates credit to every page."""
         canvas.saveState()
         page_width, page_height = A4
+
+        # Atlas Associates credit (left side, every page)
+        canvas.setFont("Helvetica", 6)
+        canvas.setFillColor(COLOR_TEXT_DIM)
+        canvas.drawString(
+            2 * cm,
+            0.8 * cm,
+            self._CREDIT,
+        )
 
         # NDA notice
         font_name = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
@@ -1427,16 +1448,16 @@ class PDFReportGenerator:
                         fillColor=colors.HexColor("#e2e8f0"),
                         strokeColor=None, strokeWidth=0))
 
-            # Score bar (colored by score range)
+            # Score bar (gray/dark blue tone by score range)
             bar_w = max(2, (score / 100) * bar_max_w)
             if score >= 80:
-                bar_color = COLOR_GREEN
+                bar_color = colors.HexColor("#1e3a5f")    # dark blue
             elif score >= 60:
-                bar_color = COLOR_ACCENT
+                bar_color = colors.HexColor("#4a5568")    # dark gray
             elif score >= 40:
-                bar_color = COLOR_YELLOW
+                bar_color = colors.HexColor("#9ca3af")    # medium gray
             else:
-                bar_color = COLOR_RED
+                bar_color = colors.HexColor("#6b2a2a")    # muted dark red
             d.add(Rect(label_w, y, bar_w, 16,
                         fillColor=bar_color,
                         strokeColor=None, strokeWidth=0))
@@ -1467,9 +1488,11 @@ class PDFReportGenerator:
                            strokeColor=None, strokeWidth=0))
         # Colored segments  (F: 0-40, D: 40-60, C: 60-75, B: 75-90, A: 90-100)
         segments = [
-            (0, 40, COLOR_RED), (40, 60, COLOR_ORANGE),
-            (60, 75, COLOR_YELLOW), (75, 90, colors.HexColor("#84cc16")),
-            (90, 100, COLOR_GREEN),
+            (0, 40, colors.HexColor("#6b2a2a")),      # dark red
+            (40, 60, colors.HexColor("#7a5a3a")),      # dark brown
+            (60, 75, colors.HexColor("#9ca3af")),      # medium gray
+            (75, 90, colors.HexColor("#4a5568")),      # dark gray
+            (90, 100, colors.HexColor("#1e3a5f")),     # dark blue
         ]
         for lo, hi, clr in segments:
             x = label_w + (lo / 100) * bar_max_w
@@ -1557,10 +1580,10 @@ class PDFReportGenerator:
 
         swot = cr.swot
         quadrants = [
-            (t["strengths"], swot.strengths, colors.HexColor("#166534"), colors.HexColor("#f0fdf4")),
-            (t["weaknesses"], swot.weaknesses, colors.HexColor("#9a3412"), colors.HexColor("#fff7ed")),
-            (t["opportunities"], swot.opportunities, colors.HexColor("#1e40af"), colors.HexColor("#eff6ff")),
-            (t["threats"], swot.threats, colors.HexColor("#991b1b"), colors.HexColor("#fef2f2")),
+            (t["strengths"], swot.strengths, colors.HexColor("#2d5a3d"), colors.HexColor("#f3f4f6")),
+            (t["weaknesses"], swot.weaknesses, colors.HexColor("#4a4a4a"), colors.HexColor("#f3f4f6")),
+            (t["opportunities"], swot.opportunities, colors.HexColor("#1e3a5f"), colors.HexColor("#f3f4f6")),
+            (t["threats"], swot.threats, colors.HexColor("#6b2a2a"), colors.HexColor("#f3f4f6")),
         ]
 
         for title, items, title_color, bg_color in quadrants:

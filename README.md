@@ -55,10 +55,15 @@ For deeper analysis, DDE also runs Claude, Gemini, and ChatGPT **in parallel** �
 **Fastest way** — in your AI terminal (Claude Code, Cursor, etc.):
 ```bash
 pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
-dde prompt owner/repo --pdf
+dde prompt --pdf
 ```
 
-That's it. The AI reads your codebase, evaluates it as a world-class consultant, and generates a PDF — all automatically.
+That's it. Analyzes the current directory by default. The AI reads your codebase, evaluates it as a world-class consultant, and generates a PDF — all automatically.
+
+```bash
+# Or specify a GitHub repo
+dde prompt owner/repo --pdf --lang ja
+```
 
 **Web dashboard**: https://due-diligence-engine.web.app/dashboard/
 
@@ -249,11 +254,12 @@ export GITHUB_CLIENT_SECRET="your-github-oauth-app-secret"
 
 ```bash
 # Generate consulting-grade PDF (in AI terminal — Claude Code, Cursor, etc.)
-dde prompt owner/repo --pdf
-dde prompt owner/repo --pdf --lang ja --stage seed
+dde prompt --pdf                                    # Current directory
+dde prompt --pdf --lang ja                          # Japanese PDF
+dde prompt owner/repo --pdf --lang ja --stage seed  # GitHub repo
 
 # Generate evaluation prompt only (no PDF)
-dde prompt .
+dde prompt
 dde prompt owner/repo --lang ja --stage seed
 
 # Full analysis with AI APIs (BYOK)
@@ -281,10 +287,12 @@ dde serve
 
 ```bash
 pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
-dde prompt owner/repo --pdf --lang ja
+dde prompt --pdf --lang ja
 ```
 
-That's all you need. The AI autonomously:
+Analyzes the current directory by default. Or specify a repo: `dde prompt owner/repo --pdf`
+
+The AI autonomously:
 1. Reads the codebase
 2. Evaluates as a world-class technology consultant
 3. Generates a consulting-grade PDF locally
@@ -327,7 +335,7 @@ dde prompt . --copy
 │  │  AI Terminal                     │                    │
 │  │  (Claude Code / Cursor / etc.)   │                    │
 │  │                                  │                    │
-│  │  $ dde prompt owner/repo --pdf   │  ┌──────────────┐  │
+│  │  $ dde prompt --pdf              │  ┌──────────────┐  │
 │  │      ↓                           │  │ DDE Engine   │  │
 │  │  1. Heuristic data collected ────┼─▶│ (local, no   │  │
 │  │     + JSON schema + instructions │  │  AI API)     │  │

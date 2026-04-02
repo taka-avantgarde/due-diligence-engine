@@ -55,10 +55,15 @@
 **最速の方法** — AIターミナル（Claude Code、Cursor等）で:
 ```bash
 pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
-dde prompt owner/repo --pdf --lang ja
+dde prompt --pdf --lang ja
 ```
 
-これだけです。AIがコードベースを読み、世界トップクラスのコンサルタントとして評価し、PDFを生成します。全自動。
+これだけです。カレントディレクトリを自動で分析。AIがコードを読み、評価し、PDFを生成します。全自動。
+
+```bash
+# GitHubリポを指定する場合
+dde prompt owner/repo --pdf --lang ja
+```
 
 **Webダッシュボード**: https://due-diligence-engine.web.app/dashboard/
 
@@ -261,11 +266,11 @@ export OPENAI_API_KEY="sk-..."            # ChatGPT
 
 ```bash
 # コンサルティンググレードPDF生成（AIターミナル内 — Claude Code、Cursor等）
-dde prompt owner/repo --pdf --lang ja
-dde prompt owner/repo --pdf --lang ja --stage seed
+dde prompt --pdf --lang ja                          # カレントディレクトリ
+dde prompt owner/repo --pdf --lang ja --stage seed  # GitHubリポ
 
 # 評価プロンプトのみ生成（PDF不要の場合）
-dde prompt .
+dde prompt
 dde prompt owner/repo --lang ja --stage seed
 
 # AI API使用のフル分析（BYOK）
@@ -286,10 +291,12 @@ dde report --consulting result.json --pdf --lang ja
 
 ```bash
 pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
-dde prompt owner/repo --pdf --lang ja
+dde prompt --pdf --lang ja
 ```
 
-これだけです。AIが自律的に:
+カレントディレクトリを自動で分析。リポ指定も可: `dde prompt owner/repo --pdf`
+
+AIが自律的に:
 1. コードベースを読み取り
 2. 世界トップクラスのテクノロジーコンサルタントとして評価
 3. コンサルティンググレードPDFをローカルに生成
@@ -332,7 +339,7 @@ dde prompt . --copy
 │  │  AIターミナル                     │                    │
 │  │  (Claude Code / Cursor 等)       │                    │
 │  │                                  │                    │
-│  │  $ dde prompt owner/repo --pdf   │  ┌──────────────┐  │
+│  │  $ dde prompt --pdf              │  ┌──────────────┐  │
 │  │      ↓                           │  │ DDE Engine   │  │
 │  │  1. データ収集（ローカル）────────┼─▶│（AI API不使用 │  │
 │  │     + JSONスキーマ + 実行指示    │  │  ローカルのみ）│  │

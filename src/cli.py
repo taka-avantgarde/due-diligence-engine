@@ -174,7 +174,7 @@ def analyze(
 
 
 @cli.command()
-@click.argument("target")
+@click.argument("target", default=".")
 @click.option("--name", "-n", default=None, help="Project name (auto-detected if omitted)")
 @click.option("--lang", "-l", default="en", type=click.Choice(["en", "ja"]),
               help="Output language (en: English, ja: Japanese)")
@@ -203,24 +203,19 @@ def prompt(
     prompt that you can paste into Claude Code, Cursor, GitHub Copilot, etc.
 
     \b
-    TARGET can be:
+    TARGET can be (defaults to current directory if omitted):
       GitHub URL:  https://github.com/owner/repo
       Short form:  owner/repo
-      Local path:  /path/to/project
+      Local path:  /path/to/project (default: .)
       Zip archive: /path/to/project.zip
 
     \b
     Examples:
-      dde prompt .                           # Analyze current directory
-      dde prompt owner/repo --lang ja        # Japanese output
+      dde prompt --pdf --lang ja             # Current dir → consulting PDF
+      dde prompt owner/repo --pdf            # GitHub repo → consulting PDF
+      dde prompt . --lang ja                 # Current dir, Japanese output
+      dde prompt owner/repo --lang ja        # GitHub repo, Japanese output
       dde prompt ./my-startup -s seed -c     # Seed stage, copy to clipboard
-      dde prompt owner/repo -o prompt.md     # Save to file
-
-    \b
-    Then paste into your AI terminal:
-      Claude Code:  Just paste the output
-      Cursor:       Paste into Composer
-      Copilot:      Paste into Chat
     """
     from src.analyze.engine import AnalysisEngine
     from src.ingest.secure_loader import SecureLoader

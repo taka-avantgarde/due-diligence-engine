@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
 import click
@@ -389,11 +390,18 @@ def report(
         pdf_gen = PDFReportGenerator()
         safe_name = result.project_name.replace("/", "_").replace("\\", "_")
 
+        # Date stamp in filename (ja: 2026年04月02日, en: 2026-04-02)
+        now = datetime.now()
+        if lang == "ja":
+            date_str = now.strftime("%Y年%m月%d日")
+        else:
+            date_str = now.strftime("%Y-%m-%d")
+
         # Use ~/Downloads as default output for consulting PDFs
         downloads_dir = Path.home() / "Downloads"
         consulting_output = Path(output) if output else downloads_dir
         consulting_output.mkdir(parents=True, exist_ok=True)
-        pdf_path = consulting_output / f"dde_consulting_{safe_name}_{result.analysis_id}.pdf"
+        pdf_path = consulting_output / f"dde_consulting_{safe_name}_{date_str}.pdf"
         pdf_gen.generate_to_file(result, pdf_path, lang=lang)
 
         console.print(

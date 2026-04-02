@@ -1170,8 +1170,11 @@ Do not add markdown formatting around it — output raw JSON only.
 
 def _consulting_pdf_command(result: AnalysisResult, lang: str) -> str:
     """Generate the final instruction to save JSON and produce PDF."""
+    from datetime import datetime
+
     project_safe = result.project_name.replace("/", "_").replace("\\", "_")
-    filename = f"dde_consulting_{project_safe}_{result.analysis_id}.json"
+    date_stamp = datetime.now().strftime("%Y%m%d")
+    filename = f"dde_consulting_{project_safe}_{date_stamp}.json"
 
     if lang == "ja":
         return f"""## 実行手順（質問せずに全て実行すること）

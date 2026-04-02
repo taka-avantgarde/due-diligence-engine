@@ -295,23 +295,29 @@ Analyzes the current directory by default. Or specify a repo: `dde prompt owner/
 The AI autonomously:
 1. Reads the codebase
 2. Evaluates as a world-class technology consultant
-3. Generates a consulting-grade PDF locally
+3. Generates a consulting-grade PDF to `~/Downloads/`
 
 No API keys. No questions asked. Just tool-consent prompts from your IDE.
 
+**Output:** `~/Downloads/dde_consulting_<project>_<date>.pdf`
+- English: `dde_consulting_NeuralPay_2026-04-02.pdf`
+- Japanese: `dde_consulting_NeuralPay_2026年04月02日.pdf`
+
 ### What's in the PDF
 
-| Section | Content |
-|---------|---------|
-| **Business Summary** | Executive summary readable by non-engineers, with investment grade badge |
-| **6-Dimension Scoring** | 1-10 scale per dimension with rationale, business explanation, and what it enables |
-| **SWOT Analysis** | Strengths, Weaknesses, Opportunities, Threats — evidence-based, with business analogies |
-| **Tech Level Assessment** | Visual gauge (Lv.1-10) with plain-language explanation per dimension |
-| **Future Outlook** | Product vision + 1/3/5-year projections with confidence levels and milestones |
-| **Strategic Advice** | Immediate actions, medium-term priorities, long-term vision |
-| **Investment Thesis** | Recommendation with risks, upside potential, and comparable companies |
-| **Red Flags** | Severity-rated issues with business impact |
-| **Glossary** | All technical terms annotated for non-technical readers |
+| Page | Section | Content |
+|------|---------|---------|
+| 1 | **Cover** | Project name, overall score, grade badge |
+| 2 | **Score Dashboard** | Overall score (large) + 6-dimension horizontal bar chart with color-coded status bars + score barometer (F→A) |
+| 3 | **Business Summary** | Executive summary readable by non-engineers, with investment grade badge + AI model attribution |
+| 4 | **SWOT Analysis** | Strengths, Weaknesses, Opportunities, Threats — evidence-based, with business analogies |
+| 5 | **Score Breakdown** | Detailed 6-dimension table with rationale, business explanation, and what each score enables |
+| 6 | **Tech Level Assessment** | Visual gauge (Lv.1-10) with plain-language explanation |
+| 7 | **Future Outlook** | Product vision + 1/3/5-year projections with confidence levels and milestones |
+| 8 | **Strategic Advice** | Immediate actions, medium-term priorities, long-term vision |
+| 9 | **Investment Thesis** | Recommendation with risks, upside potential, and comparable companies |
+| 10 | **Red Flags** | Severity-rated issues with business impact |
+| 11 | **Glossary** | All technical terms annotated for non-technical readers |
 
 ### Prompt-Only Mode (no PDF)
 
@@ -402,6 +408,9 @@ For private repos, provide a **GitHub Personal Access Token**:
 - [x] Disconnect & Purge with certificate
 - [x] `dde prompt` — IDE AI integration (Claude Code / Cursor / Copilot)
 - [x] `dde prompt --pdf` — Consulting-grade PDF (SWOT, future outlook, investment thesis)
+- [x] Score dashboard with horizontal bar charts and score barometer
+- [x] PDF saved to `~/Downloads/` with localized date stamps (EN/JA)
+- [x] Automated EN/JA PDF generation tests (13 tests)
 - [x] Plain-language glossary for non-technical readers
 - [x] Match rate visualization (claims vs. code)
 - [x] Stage-aware evaluation (seed / series_a / series_b / growth)

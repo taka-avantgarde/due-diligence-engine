@@ -322,19 +322,7 @@ def prompt(
         except (FileNotFoundError, OSError):
             console.print("[yellow]Could not copy to clipboard (pbcopy/xclip not found)[/yellow]")
 
-    if pdf:
-        console.print(
-            Panel(
-                "[bold]The AI will now:[/bold]\n"
-                "1. Read the heuristic data above\n"
-                "2. Evaluate the project (SWOT, scoring, future outlook)\n"
-                "3. Save JSON and run [cyan]dde report --consulting[/cyan] to generate PDF\n\n"
-                "[dim]The PDF will be saved to the current directory.[/dim]",
-                title="DDE Consulting PDF Mode",
-                border_style="cyan",
-            )
-        )
-    else:
+    if not pdf:
         console.print(
             Panel(
                 f"[bold]Next step[/bold]: Paste the prompt into your AI terminal\n"
@@ -345,6 +333,7 @@ def prompt(
                 border_style="green",
             )
         )
+    # --pdf mode: no trailing panel — the prompt itself contains all instructions for the AI
 
 
 @cli.command()

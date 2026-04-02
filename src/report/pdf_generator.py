@@ -644,8 +644,8 @@ class PDFReportGenerator:
             story.append(PageBreak())
             story.extend(self._build_purge_certificate(purge_cert))
 
-        # Build PDF with footer
-        doc.build(story, onFirstPage=self._add_footer, onLaterPages=self._add_footer)
+        # Build PDF with footer (dark cover on first page)
+        doc.build(story, onFirstPage=self._add_cover_bg, onLaterPages=self._add_footer)
 
         pdf_bytes = buffer.getvalue()
         buffer.close()
@@ -682,86 +682,136 @@ class PDFReportGenerator:
         return name
 
     def _build_cover_page(self, result: AnalysisResult) -> list:
-        """Build the cover page with logo placeholder, score, and grade."""
+        """Build the cover page — dark theme with Atlas Associates branding."""
         s = self._styles
         t = self._t
         elements: list = []
 
-        # Spacer for visual balance
-        elements.append(Spacer(1, 4 * cm))
+        # White/light styles for dark background
+        cover_title = ParagraphStyle(
+            "CoverTitle",
+            fontName="HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold",
+            fontSize=28,
+            textColor=colors.white,
+            alignment=1,
+            spaceAfter=4 * mm,
+        )
+        cover_subtitle = ParagraphStyle(
+            "CoverSubtitle",
+            fontName="HeiseiMin-W3" if self._lang == "ja" else "Helvetica",
+            fontSize=16,
+            textColor=colors.HexColor("#9ca3af"),
+            alignment=1,
+            spaceAfter=2 * mm,
+        )
+        cover_center = ParagraphStyle(
+            "CoverCenter",
+            fontName="HeiseiMin-W3" if self._lang == "ja" else "Helvetica",
+            fontSize=10,
+            textColor=colors.HexColor("#d1d5db"),
+            alignment=1,
+            spaceAfter=2 * mm,
+        )
+        cover_small = ParagraphStyle(
+            "CoverSmall",
+            fontName="HeiseiMin-W3" if self._lang == "ja" else "Helvetica",
+            fontSize=8,
+            textColor=colors.HexColor("#6b7280"),
+            alignment=0,
+            spaceAfter=1 * mm,
+        )
 
-        # Logo placeholder
+        # Spacer (below logo area drawn by canvas)
+        elements.append(Spacer(1, 4.5 * cm))
+
+        # Title prefix
         elements.append(
             Paragraph(
-                f'<font color="#1e3a5f" size="12">{t["title_prefix"]}</font>',
-                s["center"],
+                f'<font color="#38bdf8" size="12">{t["title_prefix"]}</font>',
+                cover_center,
             )
         )
-        elements.append(Spacer(1, 1 * cm))
+        elements.append(Spacer(1, 8 * mm))
 
         # Title
-        elements.append(
-            Paragraph(t["report_title"], s["title"])
-        )
+        elements.append(Paragraph(t["report_title"], cover_title))
 
         # Project name
-        elements.append(
-            Paragraph(result.project_name, s["subtitle"])
-        )
+        elements.append(Paragraph(result.project_name, cover_subtitle))
 
         elements.append(Spacer(1, 1.5 * cm))
 
-        # Score display
-        score = result.score
-        if score is not None:
-            grade_color = GRADE_COLORS.get(score.grade, COLOR_TEXT)
-
-            score_text = f'<font color="{grade_color.hexval()}" size="60">{score.overall_score:.0f}</font>'
-            elements.append(Paragraph(score_text, s["score_large"]))
-
-            grade_text = f'<font color="{grade_color.hexval()}">{t["grade_prefix"]}: {score.grade}</font> / 100'
-            elements.append(Paragraph(grade_text, s["grade_label"]))
-
-            elements.append(Spacer(1, 8 * mm))
-
-            # Recommendation
-            rec = _PDF_GRADE_REC.get(self._lang, _PDF_GRADE_REC["en"])
-            recommendation = rec.get(score.grade, score.recommendation)
-            elements.append(Paragraph(recommendation, s["center"]))
-
-        elements.append(Spacer(1, 2 * cm))
-
-        # AI model attribution (consulting mode — show which IDE AI was used)
+        # Score display (consulting report)
         cr = result.consulting_report
-        if cr and cr.ai_model_used:
+        if cr and cr.overall_score > 0:
+            grade = cr.grade or "?"
+            grade_color = GRADE_COLORS.get(grade, colors.HexColor("#9ca3af"))
+
+            score_style = ParagraphStyle(
+                "CoverScore", fontName="Helvetica-Bold", fontSize=48,
+                alignment=1, textColor=colors.white,
+            )
+            score_text = (
+                f'<font color="{colors.white.hexval()}" size="56">{cr.overall_score:.0f}</font>'
+                f'<font color="#6b7280" size="18"> / 100</font>'
+            )
+            elements.append(Paragraph(score_text, score_style))
+
+            grade_label = f'{t["grade_prefix"]}: {grade}'
+            rec = _PDF_GRADE_REC.get(self._lang, _PDF_GRADE_REC["en"])
+            recommendation = rec.get(grade, "")
             elements.append(
                 Paragraph(
-                    f'<font color="{COLOR_ACCENT.hexval()}" size="11">'
-                    f'<b>{t["ai_model"]}: {cr.ai_model_used}</b></font>',
-                    s["center"],
+                    f'<font color="#38bdf8" size="14"><b>{grade_label}</b></font>'
+                    f'  <font color="#9ca3af" size="10">{recommendation}</font>',
+                    cover_center,
                 )
             )
             elements.append(Spacer(1, 8 * mm))
+        elif result.score is not None:
+            # Fallback to heuristic score
+            score = result.score
+            grade_color = GRADE_COLORS.get(score.grade, COLOR_TEXT_DIM)
+            score_style = ParagraphStyle(
+                "CoverScore", fontName="Helvetica-Bold", fontSize=48,
+                alignment=1, textColor=colors.white,
+            )
+            score_text = (
+                f'<font color="{colors.white.hexval()}" size="56">{score.overall_score:.0f}</font>'
+                f'<font color="#6b7280" size="18"> / 100</font>'
+            )
+            elements.append(Paragraph(score_text, score_style))
+            grade_text = f'{t["grade_prefix"]}: {score.grade}'
+            elements.append(
+                Paragraph(
+                    f'<font color="#38bdf8" size="14"><b>{grade_text}</b></font>',
+                    cover_center,
+                )
+            )
+            elements.append(Spacer(1, 8 * mm))
+
+        # AI model attribution
+        if cr and cr.ai_model_used:
+            elements.append(
+                Paragraph(
+                    f'<font color="#38bdf8" size="11">'
+                    f'<b>{t["ai_model"]}: {cr.ai_model_used}</b></font>',
+                    cover_center,
+                )
+            )
+            elements.append(Spacer(1, 6 * mm))
 
         # Metadata
         elements.append(
             Paragraph(
                 f"{t['analysis_id']}: {result.analysis_id}",
-                s["body_small"],
+                cover_small,
             )
         )
         elements.append(
             Paragraph(
                 f"{t['date']}: {result.timestamp.strftime('%Y-%m-%d %H:%M UTC')}",
-                s["body_small"],
-            )
-        )
-
-        elements.append(Spacer(1, 2 * cm))
-        elements.append(
-            Paragraph(
-                f'<font color="{COLOR_TEXT_DIM.hexval()}" size="8">{self._CREDIT}</font>',
-                s["center"],
+                cover_small,
             )
         )
 
@@ -1336,6 +1386,47 @@ class PDFReportGenerator:
     # Atlas Associates Inc. credit — hardcoded, not configurable.
     # This attribution is required by the license and must not be removed.
     _CREDIT = "Powered by Due Diligence Engine \u2014 Takayuki Miyano / Atlas Associates"
+
+    def _add_cover_bg(self, canvas, doc) -> None:
+        """Draw dark background + logo on cover page, then add standard footer."""
+        canvas.saveState()
+        page_width, page_height = A4
+
+        # Full-page dark background
+        canvas.setFillColor(COLOR_BG_DARK)
+        canvas.rect(0, 0, page_width, page_height, fill=1, stroke=0)
+
+        # Atlas Associates logo text (top-left)
+        canvas.setFillColor(colors.white)
+        canvas.setFont("Helvetica-Bold", 10)
+        canvas.drawString(2 * cm, page_height - 2 * cm, "ATLAS ASSOCIATES")
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#9ca3af"))
+        canvas.drawString(2 * cm, page_height - 2.5 * cm, "Technology Due Diligence")
+
+        # Decorative accent line
+        canvas.setStrokeColor(COLOR_ACCENT)
+        canvas.setLineWidth(2)
+        canvas.line(2 * cm, page_height - 2.8 * cm, 6 * cm, page_height - 2.8 * cm)
+
+        # Bottom credit
+        canvas.setFont("Helvetica", 7)
+        canvas.setFillColor(colors.HexColor("#6b7280"))
+        canvas.drawCentredString(
+            page_width / 2,
+            1.2 * cm,
+            self._CREDIT,
+        )
+
+        # Page number
+        page_label = self._t.get("page", "Page")
+        canvas.drawRightString(
+            page_width - 2 * cm,
+            1.2 * cm,
+            f"{page_label} {doc.page}",
+        )
+
+        canvas.restoreState()
 
     def _add_footer(self, canvas, doc) -> None:
         """Add NDA compliance footer + Atlas Associates credit to every page."""

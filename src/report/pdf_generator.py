@@ -28,6 +28,8 @@ from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import cm, mm
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.cidfonts import UnicodeCIDFont
+from reportlab.graphics import renderPDF
+from reportlab.graphics.shapes import Drawing, Rect, String
 from reportlab.platypus import (
     BaseDocTemplate,
     Frame,
@@ -201,6 +203,8 @@ _PDF_I18N = {
         "invest_cautious": "Cautious",
         "invest_pass": "Pass",
         "invest_strong_pass": "Strong Pass",
+        "score_dashboard": "Score Dashboard",
+        "score_dashboard_subtitle": "6-Dimension Evaluation at a Glance",
     },
     "ja": {
         "title_prefix": "DUE DILIGENCE ENGINE",
@@ -316,6 +320,8 @@ _PDF_I18N = {
         "invest_cautious": "慎重",
         "invest_pass": "見送り",
         "invest_strong_pass": "強く見送り",
+        "score_dashboard": "スコアダッシュボード",
+        "score_dashboard_subtitle": "6次元評価の概要",
     },
 }
 
@@ -551,6 +557,10 @@ class PDFReportGenerator:
 
         # --- Consulting report sections (if available) ---
         if cr is not None:
+            # Score dashboard (bar chart overview) — first page after cover
+            story.append(PageBreak())
+            story.extend(self._build_score_dashboard(cr))
+
             # Business summary
             story.append(PageBreak())
             story.extend(self._build_business_summary(cr))
@@ -1327,6 +1337,161 @@ class PDFReportGenerator:
     # ===================================================================
     # Consulting Report build methods
     # ===================================================================
+
+    def _build_score_dashboard(self, cr) -> list:
+        """Score dashboard with overall score + 6-dimension horizontal bar chart."""
+        t = self._t
+        s = self._styles
+        elements: list = []
+
+        # Title
+        elements.append(Paragraph(t["score_dashboard"], s["heading1"]))
+        elements.append(
+            HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=4 * mm)
+        )
+        elements.append(
+            Paragraph(t["score_dashboard_subtitle"], s["body_dim"])
+        )
+        elements.append(Spacer(1, 6 * mm))
+
+        # --- Overall score large display ---
+        grade = cr.grade or "?"
+        grade_color = GRADE_COLORS.get(grade, COLOR_TEXT_DIM)
+
+        overall_text = (
+            f'<font color="{grade_color.hexval()}" size="48">{cr.overall_score:.0f}</font>'
+            f'<font color="{COLOR_TEXT_DIM.hexval()}" size="18"> / 100</font>'
+        )
+        elements.append(Paragraph(overall_text, s["score_large"]))
+
+        grade_label = f'{t["grade_prefix"]}: {grade}'
+        rec = _PDF_GRADE_REC.get(self._lang, _PDF_GRADE_REC["en"])
+        recommendation = rec.get(grade, "")
+        grade_line = (
+            f'<font color="{grade_color.hexval()}" size="14"><b>{grade_label}</b></font>'
+            f'  <font color="{COLOR_TEXT_DIM.hexval()}" size="10">{recommendation}</font>'
+        )
+        elements.append(Paragraph(grade_line, s["center"]))
+        elements.append(Spacer(1, 10 * mm))
+
+        # --- 6-Dimension bar chart ---
+        dim_name_map = {
+            "technical_originality": "Technical Originality",
+            "technology_advancement": "Technology Advancement",
+            "implementation_depth": "Implementation Depth",
+            "architecture_quality": "Architecture Quality",
+            "claim_consistency": "Claim Consistency",
+            "security_posture": "Security Posture",
+        }
+        weights = {
+            "technical_originality": 0.25,
+            "technology_advancement": 0.20,
+            "implementation_depth": 0.20,
+            "architecture_quality": 0.15,
+            "claim_consistency": 0.10,
+            "security_posture": 0.10,
+        }
+
+        # Collect dimension data
+        dims = []
+        for key, en_name in dim_name_map.items():
+            dim = cr.dimension_scores.get(key)
+            if not dim:
+                continue
+            name = _DIM_NAME_JA.get(en_name, en_name) if self._lang == "ja" else en_name
+            w = weights.get(key, 0)
+            dims.append((name, dim.score, dim.level, w))
+
+        if not dims:
+            return elements
+
+        # Drawing dimensions
+        bar_max_w = 280  # max bar width in points
+        row_h = 32       # height per row
+        label_w = 140    # label area width
+        chart_w = label_w + bar_max_w + 80  # total width
+        chart_h = len(dims) * row_h + 10
+
+        d = Drawing(chart_w, chart_h)
+
+        for i, (name, score, level, weight) in enumerate(dims):
+            y = chart_h - (i + 1) * row_h + 6
+
+            # Dimension label (left)
+            font_name = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica"
+            d.add(String(0, y + 4, name, fontName=font_name, fontSize=9,
+                         fillColor=COLOR_TEXT))
+
+            # Background bar (gray track)
+            d.add(Rect(label_w, y, bar_max_w, 16,
+                        fillColor=colors.HexColor("#e2e8f0"),
+                        strokeColor=None, strokeWidth=0))
+
+            # Score bar (colored by score range)
+            bar_w = max(2, (score / 100) * bar_max_w)
+            if score >= 80:
+                bar_color = COLOR_GREEN
+            elif score >= 60:
+                bar_color = COLOR_ACCENT
+            elif score >= 40:
+                bar_color = COLOR_YELLOW
+            else:
+                bar_color = COLOR_RED
+            d.add(Rect(label_w, y, bar_w, 16,
+                        fillColor=bar_color,
+                        strokeColor=None, strokeWidth=0))
+
+            # Score text (right of bar)
+            score_str = f"{score:.0f}  Lv.{level}  ({weight:.0%})"
+            d.add(String(label_w + bar_max_w + 6, y + 3, score_str,
+                         fontName="Helvetica", fontSize=8,
+                         fillColor=COLOR_TEXT_DIM))
+
+        elements.append(d)
+        elements.append(Spacer(1, 8 * mm))
+
+        # Weighted total line
+        weighted_total = sum(sc * w for _, sc, _, w in dims)
+        if self._lang == "ja":
+            total_text = f"加重合計スコア: <b>{weighted_total:.1f}</b> / 100"
+        else:
+            total_text = f"Weighted Total Score: <b>{weighted_total:.1f}</b> / 100"
+        elements.append(Paragraph(total_text, s["body"]))
+
+        # Score barometer
+        elements.append(Spacer(1, 6 * mm))
+        barometer = Drawing(chart_w, 40)
+        # Track
+        barometer.add(Rect(label_w, 15, bar_max_w, 10,
+                           fillColor=colors.HexColor("#e2e8f0"),
+                           strokeColor=None, strokeWidth=0))
+        # Colored segments  (F: 0-40, D: 40-60, C: 60-75, B: 75-90, A: 90-100)
+        segments = [
+            (0, 40, COLOR_RED), (40, 60, COLOR_ORANGE),
+            (60, 75, COLOR_YELLOW), (75, 90, colors.HexColor("#84cc16")),
+            (90, 100, COLOR_GREEN),
+        ]
+        for lo, hi, clr in segments:
+            x = label_w + (lo / 100) * bar_max_w
+            w = ((hi - lo) / 100) * bar_max_w
+            barometer.add(Rect(x, 15, w, 10, fillColor=clr,
+                               strokeColor=None, strokeWidth=0))
+
+        # Position marker
+        marker_x = label_w + (cr.overall_score / 100) * bar_max_w
+        barometer.add(Rect(marker_x - 1.5, 12, 3, 16,
+                           fillColor=COLOR_TEXT, strokeColor=None, strokeWidth=0))
+
+        # Grade labels
+        grade_labels = [("F", 20), ("D", 50), ("C", 67.5), ("B", 82.5), ("A", 95)]
+        for g_label, pos in grade_labels:
+            x = label_w + (pos / 100) * bar_max_w
+            barometer.add(String(x - 3, 2, g_label, fontName="Helvetica-Bold",
+                                 fontSize=8, fillColor=COLOR_TEXT_DIM))
+
+        elements.append(barometer)
+
+        return elements
 
     def _build_business_summary(self, cr) -> list:
         """Executive business summary page."""

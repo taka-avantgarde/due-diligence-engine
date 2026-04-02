@@ -175,7 +175,7 @@ def analyze(
 
 
 @cli.command()
-@click.argument("target", default=".")
+@click.argument("target", default=".", required=False)
 @click.option("--name", "-n", default=None, help="Project name (auto-detected if omitted)")
 @click.option("--lang", "-l", default="en", type=click.Choice(["en", "ja"]),
               help="Output language (en: English, ja: Japanese)")

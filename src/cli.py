@@ -231,15 +231,18 @@ def prompt(
             console.print(
                 Panel(
                     "[bold]Which language for the PDF report?[/bold]\n"
-                    "PDFレポートの出力言語を選択してください。",
+                    "PDFレポートの出力言語を選択してください。\n\n"
+                    "  [cyan]1[/cyan]  English\n"
+                    "  [cyan]2[/cyan]  日本語",
                     title="DDE — Language / 言語",
                     border_style="cyan",
                 )
             )
-            lang = click.prompt(
-                "  en (English) / ja (日本語)",
-                type=click.Choice(["en", "ja"]),
+            choice = click.prompt(
+                "  Select / 選択 (1-2)",
+                type=click.Choice(["1", "2"]),
             )
+            lang = "en" if choice == "1" else "ja"
             console.print()
 
     config = get_config()

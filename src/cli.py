@@ -188,6 +188,8 @@ def analyze(
 @click.option("--skip-git", is_flag=True, help="Skip git forensics analysis")
 @click.option("--pdf", "-p", is_flag=True,
               help="Generate consulting-grade PDF (requires AI terminal like Claude Code)")
+@click.option("--url", "-u", "urls", multiple=True,
+              help="Product/service URL for site verification (up to 3, repeatable)")
 def prompt(
     target: str,
     name: str | None,
@@ -197,6 +199,7 @@ def prompt(
     copy: bool,
     skip_git: bool,
     pdf: bool,
+    urls: tuple[str, ...],
 ) -> None:
     """Generate an AI evaluation prompt for IDE terminals.
 
@@ -222,47 +225,55 @@ def prompt(
     from src.ingest.secure_loader import SecureLoader
     from src.prompt.generator import generate_prompt
 
-    # --pdf mode: ALWAYS ask language first (unless --lang explicitly given)
+    # --pdf mode: ask language if not explicitly given AND stdin is a TTY
     if pdf:
+        import os
         ctx = click.get_current_context()
         lang_source = ctx.get_parameter_source("lang")
         if lang_source != click.core.ParameterSource.COMMANDLINE:
-            console.print()
+            if os.isatty(sys.stdin.fileno()):
+                console.print()
+                console.print(
+                    Panel(
+                        "[bold]Which language for the PDF report?[/bold]\n"
+                        "PDFレポートの出力言語を選択してください。\n\n"
+                        "  [cyan]1[/cyan]  English\n"
+                        "  [cyan]2[/cyan]  日本語",
+                        title="DDE — Language / 言語",
+                        border_style="cyan",
+                    )
+                )
+                choice = click.prompt(
+                    "  Select / 選択 (1-2)",
+                    type=click.Choice(["1", "2"]),
+                )
+                lang = "en" if choice == "1" else "ja"
+                console.print()
+            # else: non-interactive — use default "en"
+
+    # Site URLs: prefer --url flags; fall back to interactive prompt
+    site_urls: list[str] = [u.strip() for u in urls[:3] if u.strip()]
+    if pdf and not site_urls:
+        # Only prompt interactively when no --url flags were given
+        # AND stdin is a TTY (skip if piped / non-interactive)
+        import os
+        if os.isatty(sys.stdin.fileno()):
             console.print(
                 Panel(
-                    "[bold]Which language for the PDF report?[/bold]\n"
-                    "PDFレポートの出力言語を選択してください。\n\n"
-                    "  [cyan]1[/cyan]  English\n"
-                    "  [cyan]2[/cyan]  日本語",
-                    title="DDE — Language / 言語",
+                    "[bold]Enter product/service URLs for site verification (up to 3)[/bold]\n"
+                    "サイト検証用URLを入力してください（最大3つ、空白でスキップ）",
+                    title="DDE — Site URLs",
                     border_style="cyan",
                 )
             )
-            choice = click.prompt(
-                "  Select / 選択 (1-2)",
-                type=click.Choice(["1", "2"]),
-            )
-            lang = "en" if choice == "1" else "ja"
-            console.print()
-
-    site_urls: list[str] = []
-    if pdf:
-        console.print(
-            Panel(
-                "[bold]Enter product/service URLs for site verification (up to 3)[/bold]\n"
-                "サイト検証用URLを入力してください（最大3つ、空白でスキップ）",
-                title="DDE — Site URLs",
-                border_style="cyan",
-            )
-        )
-        for i in range(1, 4):
-            url = click.prompt(f"  URL {i} (blank to skip / 空白でスキップ)", default="", show_default=False)
-            if url.strip():
-                site_urls.append(url.strip())
-            else:
-                break
-        if site_urls:
-            console.print(f"  [dim]{len(site_urls)} URL(s) registered[/dim]")
+            for i in range(1, 4):
+                url = click.prompt(f"  URL {i} (blank to skip / 空白でスキップ)", default="", show_default=False)
+                if url.strip():
+                    site_urls.append(url.strip())
+                else:
+                    break
+    if site_urls:
+        console.print(f"  [dim]{len(site_urls)} URL(s) registered[/dim]")
         console.print()
 
     config = get_config()

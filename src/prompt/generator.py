@@ -1118,68 +1118,111 @@ _SITE_VERIFICATION_INSTRUCTIONS_JA = """## サイト検証タスク
 
 _COMPETITIVE_ANALYSIS_INSTRUCTIONS_EN = """## Competitive Analysis Task
 
-Produce a comprehensive competitive analysis for the target company across **6 markets**.
-For each market, generate the specified chart data with 5-8 competitors (including the target).
+Produce a comprehensive competitive analysis for the target company across **6 fixed markets**.
+For each of the **5 chart types**, generate data for ALL 6 markets (one mini-chart per market).
+Each chart page renders a 2×3 grid: [Global | US] [EMEA | LATAM] [Japan | SEA].
 
-### Market × Chart Assignments
+### Fixed 6 Markets (always these, in this order)
+1. Global
+2. US
+3. EMEA
+4. Japan
+5. SEA
+6. LATAM
 
-| Market | Charts to Generate |
-|--------|-------------------|
-| Global | Magic Quadrant, Risk-Return, Bubble |
-| Home Country (detect from code/docs) | Magic Quadrant, BCG Matrix, Tech Moat |
-| US | BCG Matrix, Tech Moat, Risk-Return |
-| EMEA | Magic Quadrant, BCG Matrix, Risk-Return |
-| SEA | BCG Matrix, Tech Moat, Risk-Return |
-| LATAM | BCG Matrix, Tech Moat, Risk-Return |
+### 5 Chart Types (each rendered as a 2×3 grid page)
 
-### Chart Types
+1. **magic_quadrant** — Gartner Magic Quadrant
+   - X: "Product Completeness" — Feature breadth × API/SDK maturity × Documentation depth (0-100)
+   - Y: "Go-to-Market Execution" — Revenue trajectory × Enterprise wins × Channel partnerships (0-100)
+   - Quadrants: Leaders / Challengers / Visionaries / Niche Players
 
-1. **magic_quadrant** — X: Completeness of Vision (0-100), Y: Ability to Execute (0-100)
-2. **bcg_matrix** — X: Relative Market Share (0-100), Y: Market Growth Rate (0-100)
-3. **mckinsey_moat** — X: Competitive Strength (0-100), Y: Tech Moat Depth (0-100)
-4. **gs_risk_return** — X: Risk Level (0-100), Y: Expected Return (0-100)
-5. **bubble_3d** — X: Market Presence (0-100), Y: Innovation Score (0-100), Z: Revenue Scale (0-100, bubble size)
+2. **bcg_matrix** — BCG Growth-Share Matrix
+   - X: "Relative Market Share" — Active user base × Revenue vs. #1 player × Brand share-of-voice (0-100)
+   - Y: "Revenue Growth CAGR" — YoY growth × New-customer acquisition × Geographic expansion rate (0-100)
+   - Quadrants: Stars / Question Marks / Cash Cows / Dogs
+
+3. **mckinsey_moat** — McKinsey Tech Moat Matrix
+   - X: "Switching Cost & Lock-in" — Data gravity × Integration depth × Ecosystem stickiness (0-100)
+   - Y: "Core Tech Differentiation" — Algorithm originality × Latency advantage × Accuracy delta vs. competitors (0-100)
+   - Quadrants: Fortress / Innovator / Commodity / Fast Follower
+
+4. **gs_risk_return** — Goldman Sachs Risk-Return Positioning
+   - X: "Investment Risk" — Burn multiple × Regulatory exposure × Customer concentration HHI (0-100, higher = riskier)
+   - Y: "Return Potential" — Revenue multiple × TAM penetration upside × Margin expansion trajectory (0-100)
+   - Zones: Sweet Spot (low risk, high return) / Avoid (high risk, low return)
+
+5. **bubble_3d** — Innovation-Maturity Bubble Chart
+   - X: "R&D Intensity" — R&D spend ratio × Open-source contribution × Patent filing velocity (0-100)
+   - Y: "Time-to-Market Speed" — Release cadence × CI/CD maturity × Feature deployment frequency (0-100)
+   - Z (bubble size): "IP & Data Moat" — Patent portfolio × Proprietary dataset scale × Regulatory certifications (0-100)
+
+### Data Structure
+For EACH of the 6 markets, generate data for ALL 5 chart types.
+Use 5-8 competitors per market-chart (including the target, marked `is_target: true`).
+Competitor names may vary by market (use region-relevant players).
 
 ### Guidelines
-- Use real competitor names (publicly known companies in the same space)
-- Mark the target company with `is_target: true`
-- All axis values must be 0-100
+- Use real, publicly known competitor names relevant to each market
+- Axis values must be 0-100
 - Provide localized titles and axis labels (EN + JA)
-- Base positioning on publicly available data, analyst reports, and code analysis
+- Base positioning on publicly available data, analyst reports, and code/repo analysis
+- The target company's position should be consistent across markets (reflecting its actual strength/weakness)
 
 Include the results in the `competitive_analysis` section of the JSON output.
 """
 
 _COMPETITIVE_ANALYSIS_INSTRUCTIONS_JA = """## 競合分析タスク
 
-対象企業について **6つの市場** にわたる包括的な競合分析を作成してください。
-各市場について、指定されたチャートデータを競合5-8社（対象企業含む）で生成します。
+対象企業について **固定6市場** にわたる包括的な競合分析を作成してください。
+**5つのチャートタイプ** それぞれについて、全6市場のデータを生成します（1ページ = 2×3グリッド表示）。
 
-### 市場 × チャート割り当て
+### 固定6市場（この順番で必ず生成）
+1. グローバル (Global)
+2. 米国 (US)
+3. EMEA
+4. 日本 (Japan)
+5. 東南アジア (SEA)
+6. 中南米 (LATAM)
 
-| 市場 | 生成するチャート |
-|------|-----------------|
-| グローバル | Magic Quadrant, Risk-Return, Bubble |
-| 本国市場（コード/ドキュメントから検出） | Magic Quadrant, BCG Matrix, Tech Moat |
-| 米国 | BCG Matrix, Tech Moat, Risk-Return |
-| EMEA | Magic Quadrant, BCG Matrix, Risk-Return |
-| 東南アジア | BCG Matrix, Tech Moat, Risk-Return |
-| 中南米 | BCG Matrix, Tech Moat, Risk-Return |
+### 5つのチャートタイプ（各タイプが2×3グリッドで1ページ）
 
-### チャートタイプ
+1. **magic_quadrant** — Gartner マジック・クアドラント
+   - X: 「プロダクト完成度」— 機能網羅性 × API/SDK成熟度 × ドキュメント充実度 (0-100)
+   - Y: 「GTM実行力」— 収益成長軌道 × エンタープライズ獲得数 × チャネルパートナーシップ (0-100)
+   - 象限: リーダー / チャレンジャー / ビジョナリー / ニッチプレイヤー
 
-1. **magic_quadrant** — X: ビジョンの完全性 (0-100), Y: 実行能力 (0-100)
-2. **bcg_matrix** — X: 相対市場シェア (0-100), Y: 市場成長率 (0-100)
-3. **mckinsey_moat** — X: 競争力 (0-100), Y: 技術的堀の深さ (0-100)
-4. **gs_risk_return** — X: リスクレベル (0-100), Y: 期待リターン (0-100)
-5. **bubble_3d** — X: 市場プレゼンス (0-100), Y: イノベーションスコア (0-100), Z: 収益規模 (0-100, バブルサイズ)
+2. **bcg_matrix** — BCG 成長・シェアマトリックス
+   - X: 「相対市場シェア」— アクティブユーザー数 × 対#1プレイヤー収益比 × ブランド認知度 (0-100)
+   - Y: 「収益成長CAGR」— 前年比成長率 × 新規顧客獲得速度 × 地域拡大率 (0-100)
+   - 象限: スター / 問題児 / 金のなる木 / 負け犬
+
+3. **mckinsey_moat** — McKinsey 技術モートマトリックス
+   - X: 「スイッチングコスト」— データ重力 × 統合深度 × エコシステム粘着性 (0-100)
+   - Y: 「コア技術差別化」— アルゴリズム独自性 × レイテンシ優位性 × 精度差（対競合） (0-100)
+   - 象限: フォートレス / イノベーター / コモディティ / ファストフォロワー
+
+4. **gs_risk_return** — Goldman Sachs リスク・リターン分析
+   - X: 「投資リスク」— バーンマルチプル × 規制リスク × 顧客集中度HHI (0-100, 高い=リスク大)
+   - Y: 「リターンポテンシャル」— レベニューマルチプル × TAM浸透余地 × マージン拡大軌道 (0-100)
+   - ゾーン: スイートスポット（低リスク・高リターン）/ 回避（高リスク・低リターン）
+
+5. **bubble_3d** — イノベーション・成熟度バブルチャート
+   - X: 「R&D投資強度」— R&D支出比率 × OSS貢献度 × 特許出願速度 (0-100)
+   - Y: 「市場投入速度」— リリース頻度 × CI/CD成熟度 × 機能デプロイ頻度 (0-100)
+   - Z (バブルサイズ): 「IP・データモート」— 特許ポートフォリオ × 独自データ規模 × 規制認証数 (0-100)
+
+### データ構造
+6市場それぞれについて、5つのチャートタイプ全てのデータを生成すること。
+各市場・チャートにつき5-8社の競合（対象企業含む、`is_target: true`）。
+競合企業名は市場ごとに地域の主要プレイヤーを使用。
 
 ### ガイドライン
-- 実在する競合企業名を使用（同じ領域の公開企業）
-- 対象企業には `is_target: true` を設定
+- 実在する競合企業名を使用
 - 全軸の値は0-100の範囲
 - タイトルと軸ラベルは英日両方を提供
-- ポジショニングは公開情報、アナリストレポート、コード分析に基づく
+- ポジショニングは公開情報・アナリストレポート・コード分析に基づく
+- 対象企業のポジションは全市場で一貫性を持たせる
 
 結果はJSON出力の `competitive_analysis` セクションに含めてください。
 """

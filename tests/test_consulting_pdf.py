@@ -36,6 +36,66 @@ from src.models import (
 from src.report.pdf_generator import PDFReportGenerator
 
 
+def _make_chart(chart_type: str, title: str, title_ja: str,
+                x_label: str, x_label_ja: str,
+                y_label: str, y_label_ja: str,
+                market_suffix: str = "") -> MarketChart:
+    """Build a MarketChart with 5 competitors."""
+    return MarketChart(
+        chart_type=chart_type,
+        title=f"{market_suffix} {title}".strip(),
+        title_ja=f"{market_suffix} {title_ja}".strip(),
+        x_axis_label=x_label,
+        x_axis_label_ja=x_label_ja,
+        y_axis_label=y_label,
+        y_axis_label_ja=y_label_ja,
+        data_points=[
+            CompetitorDataPoint(name="NeuralPay", x=65, y=55, z=40, is_target=True),
+            CompetitorDataPoint(name="Stripe", x=90, y=85, z=95),
+            CompetitorDataPoint(name="Adyen", x=75, y=80, z=60),
+            CompetitorDataPoint(name="Square", x=70, y=70, z=50),
+            CompetitorDataPoint(name="Payoneer", x=40, y=45, z=25),
+        ],
+    )
+
+
+def _make_competitive_analysis() -> CompetitiveAnalysis:
+    """Build 6 markets × 5 chart types for 2×3 grid layout."""
+    markets_def = [
+        ("Global", "グローバル"), ("US", "米国"), ("EMEA", "EMEA"),
+        ("LATAM", "中南米"), ("Japan", "日本"), ("SEA", "東南アジア"),
+    ]
+    chart_defs = [
+        ("magic_quadrant", "Magic Quadrant", "マジック・クアドラント",
+         "Product Completeness", "プロダクト完成度",
+         "GTM Execution", "GTM実行力"),
+        ("bcg_matrix", "BCG Matrix", "BCGマトリックス",
+         "Relative Market Share", "相対市場シェア",
+         "Revenue Growth CAGR", "収益成長CAGR"),
+        ("mckinsey_moat", "Tech Moat Matrix", "技術モートマトリックス",
+         "Switching Cost", "スイッチングコスト",
+         "Core Tech Differentiation", "コア技術差別化"),
+        ("gs_risk_return", "Risk-Return", "リスク・リターン",
+         "Investment Risk", "投資リスク",
+         "Return Potential", "リターンポテンシャル"),
+        ("bubble_3d", "Innovation Bubble", "イノベーションバブル",
+         "R&D Intensity", "R&D投資強度",
+         "Time-to-Market", "市場投入速度"),
+    ]
+    markets = []
+    for m_name, m_name_ja in markets_def:
+        charts = [
+            _make_chart(ct, title, title_ja, xl, xlja, yl, ylja, market_suffix=m_name)
+            for ct, title, title_ja, xl, xlja, yl, ylja in chart_defs
+        ]
+        markets.append(MarketPosition(
+            market_name=m_name, market_name_ja=m_name_ja, charts=charts,
+        ))
+    return CompetitiveAnalysis(
+        target_company="NeuralPay", home_country="US", markets=markets,
+    )
+
+
 def _make_consulting_report() -> ConsultingReport:
     """Build a realistic consulting report fixture."""
     return ConsultingReport(
@@ -227,85 +287,7 @@ def _make_consulting_report() -> ConsultingReport:
             overall_credibility=64.0,
             summary="The site mostly reflects the codebase but overstates security and AI capabilities.",
         ),
-        competitive_analysis=CompetitiveAnalysis(
-            target_company="NeuralPay",
-            home_country="US",
-            markets=[
-                MarketPosition(
-                    market_name="Global",
-                    market_name_ja="グローバル",
-                    charts=[
-                        MarketChart(
-                            chart_type="magic_quadrant",
-                            title="Global Magic Quadrant",
-                            title_ja="グローバル マジック・クアドラント",
-                            x_axis_label="Completeness of Vision",
-                            x_axis_label_ja="ビジョンの完全性",
-                            y_axis_label="Ability to Execute",
-                            y_axis_label_ja="実行力",
-                            data_points=[
-                                CompetitorDataPoint(name="NeuralPay", x=65, y=55, is_target=True),
-                                CompetitorDataPoint(name="Stripe", x=90, y=85),
-                                CompetitorDataPoint(name="Adyen", x=75, y=80),
-                                CompetitorDataPoint(name="Square", x=70, y=70),
-                                CompetitorDataPoint(name="Payoneer", x=40, y=45),
-                            ],
-                        ),
-                        MarketChart(
-                            chart_type="gs_risk_return",
-                            title="Global Risk-Return",
-                            title_ja="グローバル リスク・リターン",
-                            x_axis_label="Risk",
-                            x_axis_label_ja="リスク",
-                            y_axis_label="Expected Return",
-                            y_axis_label_ja="期待リターン",
-                            data_points=[
-                                CompetitorDataPoint(name="NeuralPay", x=60, y=72, is_target=True),
-                                CompetitorDataPoint(name="Stripe", x=30, y=80),
-                                CompetitorDataPoint(name="Adyen", x=35, y=75),
-                                CompetitorDataPoint(name="Square", x=45, y=65),
-                            ],
-                        ),
-                    ],
-                ),
-                MarketPosition(
-                    market_name="US",
-                    market_name_ja="米国",
-                    charts=[
-                        MarketChart(
-                            chart_type="bcg_matrix",
-                            title="US BCG Matrix",
-                            title_ja="米国 BCGマトリックス",
-                            x_axis_label="Relative Market Share",
-                            x_axis_label_ja="相対市場シェア",
-                            y_axis_label="Market Growth Rate",
-                            y_axis_label_ja="市場成長率",
-                            data_points=[
-                                CompetitorDataPoint(name="NeuralPay", x=30, y=75, is_target=True),
-                                CompetitorDataPoint(name="Stripe", x=85, y=60),
-                                CompetitorDataPoint(name="Plaid", x=55, y=80),
-                                CompetitorDataPoint(name="Marqeta", x=40, y=70),
-                            ],
-                        ),
-                        MarketChart(
-                            chart_type="bubble_3d",
-                            title="US 3D Bubble",
-                            title_ja="米国 3Dバブル",
-                            x_axis_label="Technology Score",
-                            x_axis_label_ja="技術スコア",
-                            y_axis_label="Market Traction",
-                            y_axis_label_ja="市場トラクション",
-                            data_points=[
-                                CompetitorDataPoint(name="NeuralPay", x=65, y=50, z=40, is_target=True),
-                                CompetitorDataPoint(name="Stripe", x=85, y=90, z=95),
-                                CompetitorDataPoint(name="Plaid", x=70, y=70, z=60),
-                                CompetitorDataPoint(name="Marqeta", x=55, y=55, z=30),
-                            ],
-                        ),
-                    ],
-                ),
-            ],
-        ),
+        competitive_analysis=_make_competitive_analysis(),
     )
 
 

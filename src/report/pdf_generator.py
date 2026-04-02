@@ -611,24 +611,33 @@ class PDFReportGenerator:
                 story.append(PageBreak())
                 story.extend(self._build_red_flags_section(result))
 
-        # Codebase metrics
-        story.append(PageBreak())
-        story.extend(self._build_codebase_metrics(result))
+        # Heuristic sections — only when NOT in consulting-only mode
+        # (consulting PDF gets its data from AI evaluation, not heuristics)
+        has_heuristic_data = (
+            result.code_analysis.total_files > 0
+            or result.git_forensics.total_commits > 0
+        )
 
-        # Git forensics
-        if result.git_forensics.total_commits > 0:
-            story.extend(self._build_git_forensics(result))
+        if has_heuristic_data:
+            # Codebase metrics
+            story.append(PageBreak())
+            story.extend(self._build_codebase_metrics(result))
 
-        # Consistency check
-        story.extend(self._build_consistency_section(result))
+            # Git forensics
+            if result.git_forensics.total_commits > 0:
+                story.extend(self._build_git_forensics(result))
+
+            # Consistency check
+            story.extend(self._build_consistency_section(result))
 
         # Glossary (consulting only)
         if cr is not None:
             story.append(PageBreak())
             story.extend(self._build_glossary_page(cr))
 
-        # Cost breakdown
-        story.extend(self._build_cost_section(result))
+        # Cost breakdown — skip if zero (consulting mode uses no API)
+        if result.total_cost_usd > 0:
+            story.extend(self._build_cost_section(result))
 
         # Purge certificate
         if purge_cert is not None:
@@ -1665,8 +1674,27 @@ class PDFReportGenerator:
             "security_posture": 0.10,
         }
 
-        # Score table
-        header = [t["dimension"], t["score"], "Lv.", t["weight"], t["weighted_score"]]
+        # Score table (use Paragraph cells for proper CID font rendering)
+        cell_style_h = ParagraphStyle(
+            "ScoreH", fontName=s["heading1"].fontName, fontSize=9,
+            textColor=COLOR_WHITE, leading=12, alignment=1,
+        )
+        cell_style_name = ParagraphStyle(
+            "ScoreName", fontName=s["heading1"].fontName, fontSize=9,
+            textColor=COLOR_TEXT, leading=12,
+        )
+        cell_style_val = ParagraphStyle(
+            "ScoreVal", fontName="Helvetica", fontSize=9,
+            textColor=COLOR_TEXT, leading=12, alignment=1,
+        )
+
+        header = [
+            Paragraph(t["dimension"], ParagraphStyle("DimH", parent=cell_style_h, alignment=0)),
+            Paragraph(t["score"], cell_style_h),
+            Paragraph("Lv.", cell_style_h),
+            Paragraph(t["weight"], cell_style_h),
+            Paragraph(t["weighted_score"], cell_style_h),
+        ]
         rows = [header]
 
         for key in dim_name_map:
@@ -1678,22 +1706,18 @@ class PDFReportGenerator:
                 name = _DIM_NAME_JA.get(name, name)
             w = weights.get(key, 0)
             rows.append([
-                name,
-                f"{dim.score:.0f}",
-                f"Lv.{dim.level}",
-                f"{w:.0%}",
-                f"{dim.score * w:.1f}",
+                Paragraph(name, cell_style_name),
+                Paragraph(f"{dim.score:.0f}", cell_style_val),
+                Paragraph(f"Lv.{dim.level}", cell_style_val),
+                Paragraph(f"{w:.0%}", cell_style_val),
+                Paragraph(f"{dim.score * w:.1f}", cell_style_val),
             ])
 
         if len(rows) > 1:
             table = Table(rows, colWidths=[140, 50, 40, 50, 70])
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), COLOR_SURFACE),
-                ("TEXTCOLOR", (0, 0), (-1, 0), COLOR_WHITE),
-                ("FONTNAME", (0, 0), (-1, 0), s["body"].fontName),
-                ("FONTSIZE", (0, 0), (-1, -1), 9),
                 ("GRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
-                ("ALIGN", (1, 0), (-1, -1), "CENTER"),
                 ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_LIGHT_BG, COLOR_WHITE]),
                 ("TOPPADDING", (0, 0), (-1, -1), 4),
@@ -1748,11 +1772,33 @@ class PDFReportGenerator:
         label = tls.get("overall_label", "")
         explanation = tls.get("plain_explanation", "")
 
-        # Visual gauge using text bar
-        filled = "█" * level
-        empty = "░" * (10 - level)
-        gauge_text = f"<font size='14'>{filled}{empty}</font> Lv.{level}/10 — {label}"
-        elements.append(Paragraph(gauge_text, s["body"]))
+        # Visual gauge using Drawing rectangles (avoids CID font issues with █░)
+        gauge_w = 360
+        gauge_h = 28
+        seg_w = 30   # width per segment
+        seg_h = 18
+        gap = 3
+
+        d = Drawing(gauge_w, gauge_h)
+        for i in range(10):
+            x = i * (seg_w + gap)
+            if i < level:
+                fill = COLOR_ACCENT  # dark blue for filled
+            else:
+                fill = colors.HexColor("#e2e8f0")  # gray for empty
+            d.add(Rect(x, 4, seg_w, seg_h,
+                        fillColor=fill, strokeColor=None, strokeWidth=0))
+
+        # Level text to the right
+        text_x = 10 * (seg_w + gap) + 8
+        level_str = f"Lv.{level}/10"
+        d.add(String(text_x, 10, level_str,
+                     fontName="Helvetica-Bold", fontSize=11,
+                     fillColor=COLOR_TEXT))
+        elements.append(d)
+
+        if label:
+            elements.append(Paragraph(f"<b>{label}</b>", s["body"]))
         elements.append(Spacer(1, 4 * mm))
 
         if explanation:
@@ -1835,18 +1881,31 @@ class PDFReportGenerator:
             elements.append(Paragraph(t[section_key], s["heading2"]))
             elements.append(Spacer(1, 3 * mm))
 
-            header = [t["action"], t["rationale"], t["impact"]]
+            cell_style = ParagraphStyle(
+                "CellStyle", fontName=s["body"].fontName, fontSize=8,
+                textColor=COLOR_TEXT, leading=11,
+            )
+            cell_style_h = ParagraphStyle(
+                "CellStyleH", fontName=s["heading1"].fontName, fontSize=8,
+                textColor=COLOR_WHITE, leading=11,
+            )
+            header = [
+                Paragraph(t["action"], cell_style_h),
+                Paragraph(t["rationale"], cell_style_h),
+                Paragraph(t["impact"], cell_style_h),
+            ]
             rows = [header]
             for act in actions:
-                rows.append([act.action, act.rationale, act.expected_impact])
+                rows.append([
+                    Paragraph(act.action, cell_style),
+                    Paragraph(act.rationale, cell_style),
+                    Paragraph(act.expected_impact, cell_style),
+                ])
 
             col_w = 150
             table = Table(rows, colWidths=[col_w, col_w, col_w])
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), COLOR_SURFACE),
-                ("TEXTCOLOR", (0, 0), (-1, 0), COLOR_WHITE),
-                ("FONTNAME", (0, 0), (-1, -1), s["body"].fontName),
-                ("FONTSIZE", (0, 0), (-1, -1), 8),
                 ("GRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_LIGHT_BG, COLOR_WHITE]),
@@ -2001,22 +2060,31 @@ class PDFReportGenerator:
             elements.append(Paragraph("—", s["body_dim"]))
             return elements
 
-        header = [t["term"], t["definition"]]
+        cell_style = ParagraphStyle(
+            "GlossCell", fontName=s["body"].fontName, fontSize=8,
+            textColor=COLOR_TEXT, leading=11,
+        )
+        cell_style_h = ParagraphStyle(
+            "GlossCellH", fontName=s["heading1"].fontName, fontSize=8,
+            textColor=COLOR_WHITE, leading=11,
+        )
+        cell_style_bold = ParagraphStyle(
+            "GlossCellB", fontName=s["heading1"].fontName, fontSize=8,
+            textColor=COLOR_TEXT, leading=11,
+        )
+        header = [Paragraph(t["term"], cell_style_h), Paragraph(t["definition"], cell_style_h)]
         rows = [header]
         for entry in glossary:
             if isinstance(entry, dict):
                 rows.append([
-                    entry.get("term", ""),
-                    entry.get("definition", ""),
+                    Paragraph(entry.get("term", ""), cell_style_bold),
+                    Paragraph(entry.get("definition", ""), cell_style),
                 ])
 
         if len(rows) > 1:
             table = Table(rows, colWidths=[120, 330])
             table.setStyle(TableStyle([
                 ("BACKGROUND", (0, 0), (-1, 0), COLOR_SURFACE),
-                ("TEXTCOLOR", (0, 0), (-1, 0), COLOR_WHITE),
-                ("FONTNAME", (0, 0), (-1, -1), s["body"].fontName),
-                ("FONTSIZE", (0, 0), (-1, -1), 8),
                 ("GRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
                 ("VALIGN", (0, 0), (-1, -1), "TOP"),
                 ("ROWBACKGROUNDS", (0, 1), (-1, -1), [COLOR_LIGHT_BG, COLOR_WHITE]),

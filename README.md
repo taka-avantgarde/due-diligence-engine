@@ -83,7 +83,7 @@ dde prompt owner/repo --pdf --lang ja
 | **Match Rate Visualization** | Claims vs. code reality — status bar shows how honest the team is |
 | **GitHub Private Repo Access** | PAT-based access — startups grant temporary read-only access |
 | **Site Verification (10 items)** | Feature Claim Match, Tech Stack Consistency, Security Claims, Performance Claims, Scale Claims, Team Size, Launch Date, Pricing Feasibility, Compliance Display, AI-Washing Index |
-| **Competitive Analysis Charts** | Gartner Magic Quadrant, BCG Growth-Share Matrix, McKinsey Tech Moat, GS Risk-Return, 3D Bubble — across 6 global markets (Global, Home Country, US, EMEA, SEA, LATAM) |
+| **Competitive Analysis Charts (7 types)** | Forrester Wave, BCG Growth-Share, McKinsey Tech Moat, Security & Privacy Maturity, Data Governance & Transparency, GS Risk-Return, Innovation Bubble — 6-16 competitors × 6 global markets, with axis rationale explanations |
 | **AI-Washing Detection** | Detect thin API wrappers disguised as "proprietary AI" |
 | **Git Forensics** | Analyze commit history for suspicious patterns (rush commits before DD) |
 | **10-Level Tech Rating** | Each dimension rated Lv.1–10 with clear criteria |
@@ -260,6 +260,9 @@ dde prompt --pdf                                    # Current directory
 dde prompt --pdf --lang ja                          # Japanese PDF
 dde prompt owner/repo --pdf --lang ja --stage seed  # GitHub repo
 
+# Non-interactive mode (for AI terminals that can't prompt interactively)
+dde prompt --pdf --lang ja --url https://example.com --url https://docs.example.com
+
 # Generate evaluation prompt only (no PDF)
 dde prompt
 dde prompt owner/repo --lang ja --stage seed
@@ -320,7 +323,7 @@ No API keys. Language selection prompted first (1/2). Then tool-consent prompts 
 | 9 | **Investment Thesis** | Recommendation with risks, upside potential, and comparable companies |
 | 10 | **Red Flags** | Severity-rated issues with business impact |
 | 11 | **Site Verification** | 10-item credibility check against product/service URLs (when URLs provided) |
-| 12 | **Competitive Analysis** | Gartner Magic Quadrant, BCG Matrix, McKinsey Tech Moat, GS Risk-Return, 3D Bubble — across 6 markets |
+| 12-14 | **Competitive Analysis (7 charts)** | Forrester Wave, BCG Matrix, McKinsey Tech Moat, Security & Privacy Maturity, Data Governance & Transparency, GS Risk-Return, Innovation Bubble — 6-16 competitors × 6 markets, with axis rationale captions |
 | 13 | **Glossary** | All technical terms annotated for non-technical readers |
 
 ### Prompt-Only Mode (no PDF)
@@ -424,9 +427,14 @@ For private repos, provide a **GitHub Personal Access Token**:
 - [x] Stage-aware evaluation (seed / series_a / series_b / growth)
 - [x] Investor question auto-generation
 - [x] Site verification — 10-item credibility audit against product/service URLs (up to 3)
-- [x] Competitive analysis charts — 5 consulting-firm-grade chart types × 6 global markets
+- [x] Competitive analysis charts — 7 consulting-firm-grade chart types × 6 global markets (6-16 competitors)
+- [x] Security & Privacy Maturity + Data Governance & Transparency chart types
+- [x] Axis rationale explanations on each competitive chart page
+- [x] `project_name` field in JSON schema (auto-used for PDF title and filename)
+- [x] Non-interactive CLI mode (`--url` flag + `--lang` flag for AI terminal compatibility)
 - [x] AI model attribution on PDF cover page
 - [x] Dark theme cover page with Atlas Associates branding
+- [x] PDF layout fix — no more text overlap on cover and score dashboard
 - [x] 17 automated tests (EN/JA PDF + site verification + competitive analysis)
 - [ ] Technical Debt + Maintainability axes
 - [ ] Batch analysis mode (portfolio-wide DD)

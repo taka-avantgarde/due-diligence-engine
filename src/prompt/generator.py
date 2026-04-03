@@ -1119,7 +1119,7 @@ _SITE_VERIFICATION_INSTRUCTIONS_JA = """## サイト検証タスク
 _COMPETITIVE_ANALYSIS_INSTRUCTIONS_EN = """## Competitive Analysis Task
 
 Produce a comprehensive competitive analysis for the target company across **6 fixed markets**.
-For each of the **5 chart types**, generate data for ALL 6 markets (one mini-chart per market).
+For each of the **7 chart types**, generate data for ALL 6 markets (one mini-chart per market).
 Each chart page renders a 2×3 grid: [Global | US] [EMEA | LATAM] [Japan | SEA].
 
 ### Fixed 6 Markets (always these, in this order)
@@ -1328,6 +1328,7 @@ Do not add markdown formatting around it — output raw JSON only.
 
 ```json
 {
+  "project_name": "Target company or project name (used as report title and filename)",
   "executive_summary": "2-3 paragraph technical summary",
   "executive_summary_business": "2-3 paragraph non-technical summary for board/investors",
   "dimension_scores": {
@@ -1422,13 +1423,17 @@ Do not add markdown formatting around it — output raw JSON only.
         "market_name_ja": "グローバル",
         "charts": [
           {
-            "chart_type": "magic_quadrant|bcg_matrix|mckinsey_moat|gs_risk_return|bubble_3d",
+            "chart_type": "magic_quadrant|bcg_matrix|mckinsey_moat|security_posture|data_governance|gs_risk_return|bubble_3d",
             "title": "Chart Title",
             "title_ja": "チャートタイトル",
             "x_axis_label": "X Axis",
             "x_axis_label_ja": "X軸",
             "y_axis_label": "Y Axis",
             "y_axis_label_ja": "Y軸",
+            "x_axis_rationale": "Why this X axis matters and what it measures (1-2 sentences, EN)",
+            "x_axis_rationale_ja": "X軸の選定理由と測定内容（1-2文、日本語）",
+            "y_axis_rationale": "Why this Y axis matters and what it measures (1-2 sentences, EN)",
+            "y_axis_rationale_ja": "Y軸の選定理由と測定内容（1-2文、日本語）",
             "data_points": [
               { "name": "Company A", "x": 0-100, "y": 0-100, "z": 0-100, "is_target": false },
               { "name": "Target Co", "x": 0-100, "y": 0-100, "z": 0-100, "is_target": true }
@@ -1442,10 +1447,12 @@ Do not add markdown formatting around it — output raw JSON only.
 ```
 
 **IMPORTANT**:
+- `project_name` is **required** — use the target company/project name (e.g. "Arc Messenger", "Stripe", "OpenAI"). This is used as the PDF report title and filename
 - If no URLs were provided for site verification, set `"site_verification": null`
 - The `competitive_analysis` section is **always required** — never set it to null
+- For each chart, `x_axis_rationale` / `y_axis_rationale` (and their `_ja` variants) are **required** — explain why this axis was chosen and what the composite score captures. This helps cross-functional readers (non-engineers, legal, finance) understand the chart
 - For `site_verification.items`, include all 10 items (feature_claim_match, tech_stack_consistency, security_claim_verification, performance_claim_plausibility, scale_claim_consistency, team_size_estimation, launch_date_verification, pricing_feasibility, compliance_display, ai_washing_index)
-- For `competitive_analysis.markets`, include all 6 markets (Global, Home Country, US, EMEA, SEA, LATAM) with the chart types specified in the Competitive Analysis Task section
+- For `competitive_analysis.markets`, include all 6 markets (Global, Home Country, US, EMEA, SEA, LATAM) with all 7 chart types specified in the Competitive Analysis Task section
 """
 
 

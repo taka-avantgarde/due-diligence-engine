@@ -533,9 +533,10 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "ScoreLarge",
             parent=base["Normal"],
             fontSize=48,
+            leading=56,
             textColor=COLOR_BG_DARK,
             alignment=TA_CENTER,
-            spaceAfter=2 * mm,
+            spaceAfter=4 * mm,
             fontName=font_bold,
         ),
         "grade_label": ParagraphStyle(
@@ -799,17 +800,19 @@ class PDFReportGenerator:
             "CoverTitle",
             fontName="HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold",
             fontSize=28,
+            leading=36,
             textColor=colors.white,
             alignment=1,
-            spaceAfter=4 * mm,
+            spaceAfter=6 * mm,
         )
         cover_subtitle = ParagraphStyle(
             "CoverSubtitle",
             fontName="HeiseiMin-W3" if self._lang == "ja" else "Helvetica",
             fontSize=16,
+            leading=22,
             textColor=colors.HexColor("#9ca3af"),
             alignment=1,
-            spaceAfter=2 * mm,
+            spaceAfter=4 * mm,
         )
         cover_center = ParagraphStyle(
             "CoverCenter",
@@ -829,7 +832,7 @@ class PDFReportGenerator:
         )
 
         # Spacer (below logo area drawn by canvas)
-        elements.append(Spacer(1, 4.5 * cm))
+        elements.append(Spacer(1, 5 * cm))
 
         # Title prefix
         elements.append(
@@ -838,15 +841,26 @@ class PDFReportGenerator:
                 cover_center,
             )
         )
-        elements.append(Spacer(1, 8 * mm))
+        elements.append(Spacer(1, 6 * mm))
 
         # Title
         elements.append(Paragraph(t["report_title"], cover_title))
+        elements.append(Spacer(1, 2 * mm))
 
-        # Project name
+        # Project name — with horizontal rule accent
         elements.append(Paragraph(result.project_name, cover_subtitle))
+        elements.append(Spacer(1, 3 * mm))
 
-        elements.append(Spacer(1, 1.5 * cm))
+        # Thin accent line below project name
+        elements.append(
+            HRFlowable(
+                width="30%", thickness=0.5,
+                color=colors.HexColor("#38bdf8"),
+                spaceAfter=8 * mm,
+                hAlign="CENTER",
+            )
+        )
+        elements.append(Spacer(1, 6 * mm))
 
         # Score display (consulting report)
         cr = result.consulting_report
@@ -854,16 +868,7 @@ class PDFReportGenerator:
             grade = cr.grade or "?"
             grade_color = GRADE_COLORS.get(grade, colors.HexColor("#9ca3af"))
 
-            score_style = ParagraphStyle(
-                "CoverScore", fontName="Helvetica-Bold", fontSize=48,
-                alignment=1, textColor=colors.white,
-            )
-            score_text = (
-                f'<font color="{colors.white.hexval()}" size="56">{cr.overall_score:.0f}</font>'
-                f'<font color="#6b7280" size="18"> / 100</font>'
-            )
-            elements.append(Paragraph(score_text, score_style))
-
+            # Grade line first (above score)
             grade_label = f'{t["grade_prefix"]}: {grade}'
             rec = _PDF_GRADE_REC.get(self._lang, _PDF_GRADE_REC["en"])
             recommendation = rec.get(grade, "")
@@ -874,20 +879,24 @@ class PDFReportGenerator:
                     cover_center,
                 )
             )
+            elements.append(Spacer(1, 4 * mm))
+
+            # Large score number — use matching fontSize and leading to prevent overlap
+            score_style = ParagraphStyle(
+                "CoverScore", fontName="Helvetica-Bold", fontSize=56,
+                leading=64, alignment=1, textColor=colors.white,
+            )
+            score_text = (
+                f'<font color="{colors.white.hexval()}">{cr.overall_score:.0f}</font>'
+                f'<font color="#6b7280" size="20"> / 100</font>'
+            )
+            elements.append(Paragraph(score_text, score_style))
             elements.append(Spacer(1, 8 * mm))
         elif result.score is not None:
             # Fallback to heuristic score
             score = result.score
             grade_color = GRADE_COLORS.get(score.grade, COLOR_TEXT_DIM)
-            score_style = ParagraphStyle(
-                "CoverScore", fontName="Helvetica-Bold", fontSize=48,
-                alignment=1, textColor=colors.white,
-            )
-            score_text = (
-                f'<font color="{colors.white.hexval()}" size="56">{score.overall_score:.0f}</font>'
-                f'<font color="#6b7280" size="18"> / 100</font>'
-            )
-            elements.append(Paragraph(score_text, score_style))
+
             grade_text = f'{t["grade_prefix"]}: {score.grade}'
             elements.append(
                 Paragraph(
@@ -895,6 +904,17 @@ class PDFReportGenerator:
                     cover_center,
                 )
             )
+            elements.append(Spacer(1, 4 * mm))
+
+            score_style = ParagraphStyle(
+                "CoverScore", fontName="Helvetica-Bold", fontSize=56,
+                leading=64, alignment=1, textColor=colors.white,
+            )
+            score_text = (
+                f'<font color="{colors.white.hexval()}">{score.overall_score:.0f}</font>'
+                f'<font color="#6b7280" size="20"> / 100</font>'
+            )
+            elements.append(Paragraph(score_text, score_style))
             elements.append(Spacer(1, 8 * mm))
 
         # AI model attribution
@@ -1598,12 +1618,7 @@ class PDFReportGenerator:
         grade = cr.grade or "?"
         grade_color = GRADE_COLORS.get(grade, COLOR_TEXT_DIM)
 
-        overall_text = (
-            f'<font color="{grade_color.hexval()}" size="48">{cr.overall_score:.0f}</font>'
-            f'<font color="{COLOR_TEXT_DIM.hexval()}" size="18"> / 100</font>'
-        )
-        elements.append(Paragraph(overall_text, s["score_large"]))
-
+        # Grade label first (above score to prevent overlap)
         grade_label = f'{t["grade_prefix"]}: {grade}'
         rec = _PDF_GRADE_REC.get(self._lang, _PDF_GRADE_REC["en"])
         recommendation = rec.get(grade, "")
@@ -1612,7 +1627,19 @@ class PDFReportGenerator:
             f'  <font color="{COLOR_TEXT_DIM.hexval()}" size="10">{recommendation}</font>'
         )
         elements.append(Paragraph(grade_line, s["center"]))
-        elements.append(Spacer(1, 10 * mm))
+        elements.append(Spacer(1, 2 * mm))
+
+        # Large score — use explicit leading to match font size
+        score_large_style = ParagraphStyle(
+            "DashboardScoreLarge", fontName="Helvetica-Bold", fontSize=48,
+            leading=56, alignment=1, textColor=grade_color,
+        )
+        overall_text = (
+            f'{cr.overall_score:.0f}'
+            f'<font color="{COLOR_TEXT_DIM.hexval()}" size="18"> / 100</font>'
+        )
+        elements.append(Paragraph(overall_text, score_large_style))
+        elements.append(Spacer(1, 8 * mm))
 
         # --- 6-Dimension bar chart ---
         dim_name_map = {
@@ -2666,9 +2693,47 @@ class PDFReportGenerator:
                 HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=2 * mm)
             )
 
-            # Subtitle with axis description
-            elements.append(Paragraph(t["competitive_subtitle"], s["body_dim"]))
-            elements.append(Spacer(1, 2 * mm))
+            # Extract axis rationale from first available chart of this type
+            sample_chart = None
+            for market in ca.markets:
+                for ch_obj in market.charts:
+                    if ch_obj.chart_type == ctype:
+                        sample_chart = ch_obj
+                        break
+                if sample_chart:
+                    break
+
+            # Axis rationale captions
+            if sample_chart:
+                x_rat = (sample_chart.x_axis_rationale_ja if self._lang == "ja" and sample_chart.x_axis_rationale_ja
+                         else sample_chart.x_axis_rationale)
+                y_rat = (sample_chart.y_axis_rationale_ja if self._lang == "ja" and sample_chart.y_axis_rationale_ja
+                         else sample_chart.y_axis_rationale)
+                x_label = (sample_chart.x_axis_label_ja if self._lang == "ja" and sample_chart.x_axis_label_ja
+                           else sample_chart.x_axis_label)
+                y_label = (sample_chart.y_axis_label_ja if self._lang == "ja" and sample_chart.y_axis_label_ja
+                           else sample_chart.y_axis_label)
+                cap_font = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
+                cap_bold = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
+                if x_rat or y_rat:
+                    cap_parts = []
+                    if x_label and x_rat:
+                        cap_parts.append(
+                            f'<font name="{cap_bold}" size="7" color="#1e3a5f">X: {x_label}</font>'
+                            f'<font name="{cap_font}" size="7" color="#6b7280"> — {x_rat}</font>'
+                        )
+                    if y_label and y_rat:
+                        cap_parts.append(
+                            f'<font name="{cap_bold}" size="7" color="#1e3a5f">Y: {y_label}</font>'
+                            f'<font name="{cap_font}" size="7" color="#6b7280"> — {y_rat}</font>'
+                        )
+                    for cap in cap_parts:
+                        elements.append(Paragraph(cap, s["body"]))
+                else:
+                    elements.append(Paragraph(t["competitive_subtitle"], s["body_dim"]))
+            else:
+                elements.append(Paragraph(t["competitive_subtitle"], s["body_dim"]))
+            elements.append(Spacer(1, 1.5 * mm))
 
             # Build Table data: alternating label-row + chart-row
             table_data = []

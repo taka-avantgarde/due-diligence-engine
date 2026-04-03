@@ -383,13 +383,17 @@ class CompetitorDataPoint(BaseModel):
 class MarketChart(BaseModel):
     """A single chart for a market segment."""
 
-    chart_type: str = ""  # magic_quadrant | bcg_matrix | mckinsey_moat | gs_risk_return | bubble_3d
+    chart_type: str = ""  # magic_quadrant | bcg_matrix | mckinsey_moat | security_posture | data_governance | gs_risk_return | bubble_3d
     title: str = ""
     title_ja: str = ""
     x_axis_label: str = ""
     x_axis_label_ja: str = ""
     y_axis_label: str = ""
     y_axis_label_ja: str = ""
+    x_axis_rationale: str = ""
+    x_axis_rationale_ja: str = ""
+    y_axis_rationale: str = ""
+    y_axis_rationale_ja: str = ""
     data_points: list[CompetitorDataPoint] = Field(default_factory=list)
 
 

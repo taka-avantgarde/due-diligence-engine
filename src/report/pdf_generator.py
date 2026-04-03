@@ -215,16 +215,18 @@ _PDF_I18N = {
         "competitive_analysis": "Competitive Analysis",
         "competitive_subtitle": "Market Positioning Charts",
         # Chart type names
-        "chart_magic_quadrant": "Magic Quadrant",
-        "chart_bcg_matrix": "BCG Matrix",
+        "chart_magic_quadrant": "Forrester Wave / Magic Quadrant",
+        "chart_bcg_matrix": "BCG Growth-Share Matrix",
         "chart_mckinsey_moat": "Tech Moat Analysis",
-        "chart_gs_risk_return": "Risk-Return Analysis",
-        "chart_bubble_3d": "3D Bubble Chart",
-        # Quadrant labels — Magic Quadrant
+        "chart_gs_risk_return": "Risk-Adjusted Return Analysis",
+        "chart_bubble_3d": "Innovation vs. Commercialization",
+        "chart_security_posture": "Security & Privacy Maturity",
+        "chart_data_governance": "Data Governance & Transparency",
+        # Quadrant labels — Magic Quadrant / Forrester Wave
         "leaders": "Leaders",
-        "challengers": "Challengers",
-        "visionaries": "Visionaries",
-        "niche_players": "Niche Players",
+        "challengers": "Strong Performers",
+        "visionaries": "Contenders",
+        "niche_players": "Challengers",
         # Quadrant labels — BCG Matrix
         "stars": "Stars",
         "cash_cows": "Cash Cows",
@@ -235,6 +237,16 @@ _PDF_I18N = {
         "innovator": "Innovator",
         "commodity": "Commodity",
         "fast_follower": "Fast Follower",
+        # Quadrant labels — Security Posture
+        "privacy_leader": "Privacy Leader",
+        "security_fortress": "Security Fortress",
+        "compliance_risk": "Compliance Risk",
+        "exposed": "Exposed",
+        # Quadrant labels — Data Governance
+        "trust_leader": "Trust Leader",
+        "opaque_fortress": "Opaque Fortress",
+        "transparent_vuln": "Transparent / Vuln",
+        "high_risk": "High Risk",
         # Risk-Return / Bubble zones
         "sweet_spot": "Sweet Spot",
         "avoid": "Avoid",
@@ -369,16 +381,18 @@ _PDF_I18N = {
         "competitive_analysis": "競合分析",
         "competitive_subtitle": "市場ポジショニングチャート",
         # Chart type names
-        "chart_magic_quadrant": "マジック・クアドラント",
-        "chart_bcg_matrix": "BCGマトリックス",
+        "chart_magic_quadrant": "Forrester Wave / マジック・クアドラント",
+        "chart_bcg_matrix": "BCG 成長・シェアマトリックス",
         "chart_mckinsey_moat": "テクノロジーモート分析",
-        "chart_gs_risk_return": "リスク・リターン分析",
-        "chart_bubble_3d": "3Dバブルチャート",
-        # Quadrant labels — Magic Quadrant
+        "chart_gs_risk_return": "リスク調整リターン分析",
+        "chart_bubble_3d": "イノベーション vs 商業化",
+        "chart_security_posture": "セキュリティ＆プライバシー成熟度",
+        "chart_data_governance": "データガバナンス＆透明性",
+        # Quadrant labels — Forrester Wave
         "leaders": "リーダー",
-        "challengers": "チャレンジャー",
-        "visionaries": "ビジョナリー",
-        "niche_players": "ニッチプレイヤー",
+        "challengers": "ストロングパフォーマー",
+        "visionaries": "コンテンダー",
+        "niche_players": "チャレンジャー",
         # Quadrant labels — BCG Matrix
         "stars": "花形",
         "cash_cows": "金のなる木",
@@ -389,6 +403,16 @@ _PDF_I18N = {
         "innovator": "イノベーター",
         "commodity": "コモディティ",
         "fast_follower": "ファストフォロワー",
+        # Quadrant labels — Security Posture
+        "privacy_leader": "プライバシーリーダー",
+        "security_fortress": "セキュリティ要塞",
+        "compliance_risk": "コンプライアンスリスク",
+        "exposed": "脆弱",
+        # Quadrant labels — Data Governance
+        "trust_leader": "信頼リーダー",
+        "opaque_fortress": "不透明な要塞",
+        "transparent_vuln": "透明だが脆弱",
+        "high_risk": "高リスク",
         # Risk-Return / Bubble zones
         "sweet_spot": "最適ゾーン",
         "avoid": "回避",
@@ -2591,12 +2615,15 @@ class PDFReportGenerator:
 
         chart_types = [
             "magic_quadrant", "bcg_matrix", "mckinsey_moat",
+            "security_posture", "data_governance",
             "gs_risk_return", "bubble_3d",
         ]
         chart_title_map = {
             "magic_quadrant": "chart_magic_quadrant",
             "bcg_matrix": "chart_bcg_matrix",
             "mckinsey_moat": "chart_mckinsey_moat",
+            "security_posture": "chart_security_posture",
+            "data_governance": "chart_data_governance",
             "gs_risk_return": "chart_gs_risk_return",
             "bubble_3d": "chart_bubble_3d",
         }
@@ -2604,6 +2631,8 @@ class PDFReportGenerator:
             "magic_quadrant": ["challengers", "leaders", "niche_players", "visionaries"],
             "bcg_matrix": ["question_marks", "stars", "dogs", "cash_cows"],
             "mckinsey_moat": ["innovator", "fortress", "fast_follower", "commodity"],
+            "security_posture": ["compliance_risk", "privacy_leader", "exposed", "security_fortress"],
+            "data_governance": ["transparent_vuln", "trust_leader", "high_risk", "opaque_fortress"],
         }
 
         # Grid: 3 rows × 2 cols

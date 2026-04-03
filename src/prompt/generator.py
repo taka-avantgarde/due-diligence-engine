@@ -1130,7 +1130,7 @@ Each chart page renders a 2×3 grid: [Global | US] [EMEA | LATAM] [Japan | SEA].
 5. SEA
 6. LATAM
 
-### 5 Chart Types (each rendered as a 2×3 grid page)
+### 7 Chart Types (each rendered as a 2×3 grid page)
 
 1. **magic_quadrant** — Forrester Wave / Gartner Magic Quadrant
    - X: "Current Offering" — Feature breadth × API coverage × Documentation quality × Enterprise readiness (0-100)
@@ -1144,23 +1144,36 @@ Each chart page renders a 2×3 grid: [Global | US] [EMEA | LATAM] [Japan | SEA].
 
 3. **mckinsey_moat** — McKinsey 9-Box / Tech Moat Matrix
    - X: "Competitive Position" — Switching cost × Data network effects × Integration lock-in × Brand premium (0-100)
-   - Y: "Technical Moat Depth" — Patent density × Algorithm uniqueness × Proprietary data × Latency edge (0-100)
+   - Y: "Technical Moat Depth" — Algorithm uniqueness × Proprietary data × Latency edge × Model architecture originality (0-100)
    - Quadrants: Fortress (high-high) / Innovator (low X, high Y) / Entrenched (high X, low Y) / Commodity (low-low)
 
-4. **gs_risk_return** — Risk-Adjusted Return Analysis
+4. **security_posture** — Security & Privacy Maturity Matrix
+   - X: "Security Implementation Depth" — Encryption at-rest & in-transit strength × Zero-trust architecture adoption × Penetration test cadence × Incident response maturity (0-100)
+   - Y: "Privacy & Compliance Readiness" — GDPR/CCPA/HIPAA compliance level × Data minimization practice × Consent management sophistication × Privacy-by-design adoption (0-100)
+   - Quadrants: Privacy Leader (high-high) / Security Fortress (high X, low Y) / Compliance Risk (low X, high Y) / Exposed (low-low)
+
+5. **data_governance** — Data Governance & Transparency Matrix
+   - X: "Data Protection Capability" — E2E encryption strength × Key management maturity × Data leak prevention (DLP) × Access control granularity × Secure deletion capability (0-100)
+   - Y: "Transparency & Accountability" — Audit trail completeness × Data processing disclosure × Third-party audit frequency × Breach notification speed × Open-source security code ratio (0-100)
+   - Quadrants: Trust Leader (high-high) / Opaque Fortress (high X, low Y) / Transparent but Vulnerable (low X, high Y) / High Risk (low-low)
+
+6. **gs_risk_return** — Risk-Adjusted Return Analysis
    - X: "Downside Risk" — Burn multiple × Single-customer dependency × Regulatory cliff × Tech debt ratio (0-100, right = riskier)
    - Y: "Upside Potential" — Revenue multiple × Margin expansion room × TAM whitespace × Optionality value (0-100)
    - Zones: Sweet Spot (low risk, high return — top-left) / Avoid zone (high risk, low return — bottom-right)
 
-5. **bubble_3d** — Innovation vs. Commercialization Bubble
-   - X: "Innovation Velocity" — R&D-to-revenue ratio × Patent filing rate × OSS contribution × Research publication (0-100)
+7. **bubble_3d** — Innovation vs. Commercialization Bubble
+   - X: "Innovation Velocity" — R&D-to-revenue ratio × OSS contribution × Research publication × Algorithmic breakthrough frequency (0-100)
    - Y: "Commercial Traction" — ARR growth × Net retention × Logo acquisition × Expansion revenue % (0-100)
    - Z (bubble size): "Market Presence" — Total funding raised × Enterprise logos × Geographic reach × Brand awareness (0-100)
 
 ### Data Structure
-For EACH of the 6 markets, generate data for ALL 5 chart types.
-Use 5-8 competitors per market-chart (including the target, marked `is_target: true`).
-Competitor names may vary by market (use region-relevant players).
+For EACH of the 6 markets, generate data for ALL 7 chart types.
+Use **6 to 16 competitors** per market-chart (including the target, marked `is_target: true`).
+- **Minimum 6 companies**: ensures meaningful cross-comparison across enough players
+- **Maximum 16 companies**: prevents visual clutter while capturing the full competitive landscape
+- Include a diverse mix: direct competitors, adjacent-market players, and emerging disruptors
+- Competitor names may vary by market (use region-relevant players)
 
 ### Guidelines
 - Use real, publicly known competitor names relevant to each market
@@ -1168,6 +1181,7 @@ Competitor names may vary by market (use region-relevant players).
 - Provide localized titles and axis labels (EN + JA)
 - Base positioning on publicly available data, analyst reports, and code/repo analysis
 - The target company's position should be consistent across markets (reflecting its actual strength/weakness)
+- This report will be reviewed by cross-functional teams (Engineering, Legal, Finance, Marketing, CISO). Ensure each chart provides insights relevant to multiple departments
 
 Include the results in the `competitive_analysis` section of the JSON output.
 """
@@ -1185,7 +1199,7 @@ _COMPETITIVE_ANALYSIS_INSTRUCTIONS_JA = """## 競合分析タスク
 5. 東南アジア (SEA)
 6. 中南米 (LATAM)
 
-### 5つのチャートタイプ（各タイプが2×3グリッドで1ページ）
+### 7つのチャートタイプ（各タイプが2×3グリッドで1ページ）
 
 1. **magic_quadrant** — Forrester Wave / Gartner マジック・クアドラント
    - X: 「現行プロダクト力」— 機能網羅性 × API充実度 × ドキュメント品質 × エンタープライズ対応度 (0-100)
@@ -1199,23 +1213,36 @@ _COMPETITIVE_ANALYSIS_INSTRUCTIONS_JA = """## 競合分析タスク
 
 3. **mckinsey_moat** — McKinsey 9ボックス / 技術モートマトリックス
    - X: 「競争ポジション」— スイッチングコスト × データネットワーク効果 × 統合ロックイン × ブランドプレミアム (0-100)
-   - Y: 「技術モート深度」— 特許密度 × アルゴリズム独自性 × 独自データ × レイテンシ優位性 (0-100)
+   - Y: 「技術モート深度」— アルゴリズム独自性 × 独自データ × レイテンシ優位性 × モデルアーキテクチャ独自性 (0-100)
    - 象限: フォートレス(右上) / イノベーター(左上) / 既得権(右下) / コモディティ(左下)
 
-4. **gs_risk_return** — リスク調整リターン分析
+4. **security_posture** — セキュリティ＆プライバシー成熟度マトリックス
+   - X: 「セキュリティ実装深度」— 暗号化強度(保存時・通信時) × ゼロトラストアーキテクチャ採用度 × ペネトレーションテスト頻度 × インシデントレスポンス成熟度 (0-100)
+   - Y: 「プライバシー＆コンプライアンス準備度」— GDPR/CCPA/HIPAA準拠レベル × データ最小化実践度 × 同意管理の洗練度 × プライバシーバイデザイン採用度 (0-100)
+   - 象限: プライバシーリーダー(右上) / セキュリティ要塞(右下) / コンプライアンスリスク(左上) / 脆弱(左下)
+
+5. **data_governance** — データガバナンス＆透明性マトリックス
+   - X: 「データ保護能力」— E2E暗号化強度 × 鍵管理成熟度 × 情報漏洩対策(DLP) × アクセス制御粒度 × セキュア削除能力 (0-100)
+   - Y: 「透明性＆説明責任」— 監査証跡の完全性 × データ処理の開示度 × 第三者監査頻度 × 侵害通知速度 × セキュリティコードOSS公開比率 (0-100)
+   - 象限: 信頼リーダー(右上) / 不透明な要塞(右下) / 透明だが脆弱(左上) / 高リスク(左下)
+
+6. **gs_risk_return** — リスク調整リターン分析
    - X: 「下振れリスク」— バーンマルチプル × 単一顧客依存度 × 規制クリフ × 技術的負債比率 (0-100, 右=リスク大)
    - Y: 「上振れポテンシャル」— レベニューマルチプル × マージン拡大余地 × TAM空白地帯 × オプション価値 (0-100)
    - ゾーン: スイートスポット（低リスク・高リターン＝左上）/ 回避ゾーン（高リスク・低リターン＝右下）
 
-5. **bubble_3d** — イノベーション vs 商業化バブルチャート
-   - X: 「イノベーション速度」— R&D対売上比率 × 特許出願率 × OSS貢献度 × 研究発表数 (0-100)
+7. **bubble_3d** — イノベーション vs 商業化バブルチャート
+   - X: 「イノベーション速度」— R&D対売上比率 × OSS貢献度 × 研究発表数 × アルゴリズム突破頻度 (0-100)
    - Y: 「商業トラクション」— ARR成長率 × ネットリテンション率 × ロゴ獲得数 × 拡張収益比率 (0-100)
    - Z (バブルサイズ): 「市場プレゼンス」— 累計調達額 × エンタープライズロゴ数 × 地域展開数 × ブランド認知度 (0-100)
 
 ### データ構造
-6市場それぞれについて、5つのチャートタイプ全てのデータを生成すること。
-各市場・チャートにつき5-8社の競合（対象企業含む、`is_target: true`）。
-競合企業名は市場ごとに地域の主要プレイヤーを使用。
+6市場それぞれについて、**7つのチャートタイプ全て**のデータを生成すること。
+各市場・チャートにつき **6〜16社** の競合（対象企業含む、`is_target: true`）。
+- **最小6社**: 有意義な横断比較に必要な最低数
+- **最大16社**: 視覚的な見やすさを維持しつつ競合全体像を把握
+- 直接競合、隣接市場プレイヤー、新興ディスラプターを多様に含める
+- 競合企業名は市場ごとに地域の主要プレイヤーを使用
 
 ### ガイドライン
 - 実在する競合企業名を使用
@@ -1223,6 +1250,7 @@ _COMPETITIVE_ANALYSIS_INSTRUCTIONS_JA = """## 競合分析タスク
 - タイトルと軸ラベルは英日両方を提供
 - ポジショニングは公開情報・アナリストレポート・コード分析に基づく
 - 対象企業のポジションは全市場で一貫性を持たせる
+- 本レポートはクロスファンクショナルチーム（エンジニアリング、法務、財務、マーケティング、CISO）がレビューする。各チャートが複数部門に有益なインサイトを提供すること
 
 結果はJSON出力の `competitive_analysis` セクションに含めてください。
 """

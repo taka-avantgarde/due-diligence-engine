@@ -31,6 +31,11 @@
 [![CodeQL](https://img.shields.io/badge/Security-CodeQL_·_Dependabot_·_pip--audit-5271FF.svg?style=for-the-badge&logo=github&logoColor=white)](SECURITY.md)
 [![PDF](https://img.shields.io/badge/Output-PDF_First-000000.svg?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](#)
 
+[![GitHub stars](https://img.shields.io/github/stars/taka-avantgarde/Due-diligence-engine?style=flat-square&color=5271FF)](https://github.com/taka-avantgarde/Due-diligence-engine/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/taka-avantgarde/Due-diligence-engine?style=flat-square&color=000000)](https://github.com/taka-avantgarde/Due-diligence-engine/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/taka-avantgarde/Due-diligence-engine?style=flat-square&color=5271FF)](https://github.com/taka-avantgarde/Due-diligence-engine/commits/main)
+[![Version](https://img.shields.io/badge/version-v0.2.0-000000?style=flat-square)](https://github.com/taka-avantgarde/Due-diligence-engine/releases)
+
 [**English**](README.md) · [日本語](README.ja.md)
 
 </div>
@@ -47,6 +52,35 @@ dde prompt --pdf
 Run this in any AI-powered IDE terminal (Claude Code, Cursor, Copilot).
 Your AI reads the codebase, evaluates it as a world-class technology consultant,
 and writes a 22-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
+
+---
+
+## 👥 Who Is This For?
+
+| User | Use Case | Time Saved |
+|------|----------|-----------|
+| **VC Tech Partners** | Pre-investment technical DD on portfolio candidates | 2-5 days → 30 min |
+| **CTOs / Engineering Leads** | Internal tech audit before board meetings | 1 week → 1 hour |
+| **M&A Technical Advisors** | Due diligence on acquisition targets | 1-2 weeks → 1 day |
+| **Independent DD Consultants** | Boutique firm tech evaluations | scale: 1→10 clients/week |
+| **Founders** | Self-assessment before fundraising | objective view of own codebase |
+| **Corporate Innovation** | Vendor / startup partnership evaluation | ad-hoc → systematic |
+
+> Built for engineers and technical decision-makers who already use AI in their daily workflow.
+
+---
+
+## 🆚 vs. Other Tools
+
+|   | DDE | Manual DD | Generic AI Code Review | SaaS DD Platforms |
+|---|:---:|:---:|:---:|:---:|
+| **Cost** | $0 (uses your IDE AI) | $$$$ (consultant fees) | API fees | $$$$ (subscription) |
+| **Privacy** | Local-only | Local | Sends code to vendor | Sends code to vendor |
+| **Output** | 22-page consulting PDF | Custom report | Inline comments | Web dashboard |
+| **Crypto Depth** | PQXDH / Signal Protocol level | Depends on consultant | Generic | Generic |
+| **Competitive Charts** | 7 + Implementation Matrix | Manual research | None | Limited |
+| **Setup Time** | 1 command | Weeks | Minutes | Days (account/onboarding) |
+| **Customization** | Full source access | Yes | Limited | Vendor-locked |
 
 ---
 
@@ -239,6 +273,70 @@ Vulnerability reports: see [SECURITY.md](SECURITY.md) — 48h response SLA.
 
 Open-source means every line is auditable. No hidden backdoors. No black-box scoring.
 This is the same philosophy as Signal and libsignal: **transparency *is* trust**.
+
+---
+
+## ❓ FAQ
+
+**Q: Does DDE send my code anywhere?**
+A: No. `dde prompt` runs entirely locally — it generates a structured prompt that your IDE's AI reads. The AI evaluates the code in-place. The optional `dde analyze` (BYOK) sends to AI providers using their no-retention endpoints only.
+
+**Q: Why is it free? What's the catch?**
+A: There is no catch. DDE is OSS (Apache 2.0) and uses your existing IDE AI subscription (Claude Code / Cursor / Copilot). No telemetry, no upsell.
+
+**Q: Can I use it in CI?**
+A: Yes — see [`action.yml`](action.yml). Add the GitHub Action to PRs for automated DD scoring.
+
+**Q: How accurate are the competitive charts?**
+A: Charts are AI-researched from public sources (whitepapers, GitHub, blogs, SOC2 reports). Confidence depends on competitor transparency. Use `?` (unknown) liberally — false positives damage credibility more than gaps.
+
+**Q: Why "Atlas Engineering Philosophy"?**
+A: DDE is built by Atlas Associates, the company behind Arc Messenger (E2EE messaging with libsignal + PQXDH). The 4-axis evaluation reflects what we actually look for when evaluating tech.
+
+**Q: Can I customize the scoring weights?**
+A: The 6-dimension weights are fixed for v1.x backward compatibility. Atlas 4-axis weights (25/20/5/50) reflect Atlas philosophy and are also fixed. Sub-item weights within Ultra-High Security adjust by industry context.
+
+**Q: What if my project isn't security-critical?**
+A: The 6-dimension score (which has Security at only 10%) is your primary score. The Atlas 4-axis is a parallel reference view — both are shown.
+
+---
+
+## 🗺️ Roadmap
+
+**Recently shipped (v0.2.0)**
+- ✅ Atlas 4-axis Optimization Assessment
+- ✅ Implementation Capability Matrix (8th competitive chart)
+- ✅ Web dashboard fully removed (CLI + PDF only)
+- ✅ Black + Arc sky (#5271FF) brand identity
+- ✅ Typography system overhaul (leading, hierarchy)
+- ✅ SWOT 2×2 visual grid
+- ✅ Security CI hardening (CodeQL, Dependabot, gitleaks)
+
+**Planned (v0.3.0+)**
+- 🚧 Batch mode — analyze a portfolio of repos in one command
+- 🚧 Historical tracking — re-analyze and show score deltas over time
+- 🚧 Slack/Discord notification adapter
+- 🚧 Custom dimension weighting via config file
+- 🚧 Industry-specific evaluation packs (medical, fintech, gaming presets)
+
+Open an [issue](https://github.com/taka-avantgarde/Due-diligence-engine/issues) to suggest features or report bugs.
+
+---
+
+## 🤝 Contributing
+
+Contributions welcome! The codebase is small and well-tested:
+
+```bash
+git clone https://github.com/taka-avantgarde/Due-diligence-engine
+cd Due-diligence-engine
+pip install -e ".[dev]"
+pytest
+```
+
+- **Bug reports**: please include `dde --version` output and a minimal reproduction
+- **Feature requests**: open a GitHub Discussion first to gauge interest
+- **Pull requests**: ensure all tests pass + add new tests for new features
 
 ---
 

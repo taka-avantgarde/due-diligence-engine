@@ -31,6 +31,11 @@
 [![CodeQL](https://img.shields.io/badge/Security-CodeQL_·_Dependabot_·_pip--audit-5271FF.svg?style=for-the-badge&logo=github&logoColor=white)](SECURITY.md)
 [![PDF](https://img.shields.io/badge/Output-PDF_First-000000.svg?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](#)
 
+[![GitHub stars](https://img.shields.io/github/stars/taka-avantgarde/Due-diligence-engine?style=flat-square&color=5271FF)](https://github.com/taka-avantgarde/Due-diligence-engine/stargazers)
+[![GitHub issues](https://img.shields.io/github/issues/taka-avantgarde/Due-diligence-engine?style=flat-square&color=000000)](https://github.com/taka-avantgarde/Due-diligence-engine/issues)
+[![Last Commit](https://img.shields.io/github/last-commit/taka-avantgarde/Due-diligence-engine?style=flat-square&color=5271FF)](https://github.com/taka-avantgarde/Due-diligence-engine/commits/main)
+[![Version](https://img.shields.io/badge/version-v0.2.0-000000?style=flat-square)](https://github.com/taka-avantgarde/Due-diligence-engine/releases)
+
 [English](README.md) · [**日本語**](README.ja.md)
 
 </div>
@@ -47,6 +52,35 @@ dde prompt --pdf --lang ja
 AI 搭載 IDE のターミナル（Claude Code / Cursor / Copilot 等）で実行するだけ。
 AI がコードベースを読み、世界トップクラスのテクノロジーコンサルタントとして評価し、
 22ページの PDF を `~/Downloads/` に書き出します。**APIキー不要・クラウド経由なし・追加コスト¥0。**
+
+---
+
+## 👥 誰のためのツールか
+
+| ユーザー | ユースケース | 短縮時間 |
+|---------|-------------|---------|
+| **VC のテクノロジーパートナー** | 投資前の技術 DD | 2-5日 → 30分 |
+| **CTO・エンジニアリングリード** | 取締役会前の社内技術監査 | 1週間 → 1時間 |
+| **M&A 技術アドバイザー** | 買収対象の DD | 1-2週間 → 1日 |
+| **DD コンサル独立業者** | ブティック級の技術評価 | スケール: 1→10社/週 |
+| **創業者** | 資金調達前の自己評価 | 自社コードを客観視できる |
+| **事業会社のイノベーション部門** | ベンダー・スタートアップ提携評価 | アドホック → 体系的 |
+
+> 日常ワークフローで AI を既に使っているエンジニア・技術系意思決定者向けのツール。
+
+---
+
+## 🆚 他ツールとの比較
+
+|   | DDE | 手動 DD | 一般的な AI コードレビュー | SaaS DD プラットフォーム |
+|---|:---:|:---:|:---:|:---:|
+| **コスト** | ¥0 (IDE AI 流用) | ¥¥¥¥ (コンサル費) | API 課金 | ¥¥¥¥ (サブスク) |
+| **プライバシー** | ローカル完結 | ローカル | ベンダー送信 | ベンダー送信 |
+| **出力** | 22ページ コンサル PDF | 個別レポート | インラインコメント | Web ダッシュボード |
+| **暗号評価深度** | PQXDH / Signal Protocol | コンサル次第 | 一般的 | 一般的 |
+| **競合チャート** | 7種 + 実装マトリックス | 手動調査 | なし | 限定的 |
+| **セットアップ時間** | 1コマンド | 数週間 | 数分 | 数日 (アカウント・オンボーディング) |
+| **カスタマイズ性** | 完全ソース公開 | 可能 | 限定的 | ベンダーロックイン |
 
 ---
 
@@ -235,6 +269,70 @@ dde analyze owner/repo
 
 オープンソースは全コード監査可能。隠しバックドアなし。ブラックボックススコアリングなし。
 これは Signal および libsignal と同じ哲学: **透明性こそ信頼の源泉**。
+
+---
+
+## ❓ FAQ
+
+**Q: DDE は私のコードをどこかに送りますか?**
+A: 送りません。`dde prompt` は完全にローカルで動作 — 構造化プロンプトを生成するだけで、実際のコードは IDE の AI が手元で読みます。オプションの `dde analyze`（BYOK）は AI プロバイダーの「無保持エンドポイント」のみ使用。
+
+**Q: なぜ無料? 何か裏がある?**
+A: 裏はありません。DDE は OSS（Apache 2.0）で、既存の IDE AI サブスク（Claude Code / Cursor / Copilot）を流用するだけ。テレメトリも追加課金もなし。
+
+**Q: CI で使えますか?**
+A: はい — [`action.yml`](action.yml) を参照。GitHub Actions として PR に組み込み、自動 DD スコアリングが可能。
+
+**Q: 競合チャートの精度は?**
+A: チャートは公開情報（whitepaper, GitHub, ブログ, SOC2 報告書）を AI が調査します。信頼度は競合の透明性に依存。`?`（不明）を積極的に使用 — 推測による誤検知の方がレポートの信頼性を損なうため。
+
+**Q: なぜ「Atlas エンジニアリング哲学」?**
+A: DDE は Atlas Associates が開発（Arc Messenger — libsignal + PQXDH の E2EE メッセンジャー）。4軸評価は実際に Atlas が技術評価で見ている観点を反映。
+
+**Q: スコア重みをカスタマイズできますか?**
+A: 6次元の重みは v1.x との後方互換性のため固定。Atlas 4軸の重み（25/20/5/50）も Atlas 哲学を反映したもので固定。Ultra-High Security 内のサブ重みは業界コンテキストにより動的調整。
+
+**Q: セキュリティが重要でないプロジェクトには?**
+A: 6次元スコア（セキュリティはわずか 10%）が主スコアです。Atlas 4軸は並列参考視点 — 両方表示されます。
+
+---
+
+## 🗺️ ロードマップ
+
+**最近リリース (v0.2.0)**
+- ✅ Atlas 4軸最適化評価
+- ✅ 実装能力マトリックス（第8競合チャート）
+- ✅ Web ダッシュボード完全削除（CLI + PDF 一本化）
+- ✅ 黒 + Arc sky (#5271FF) ブランドアイデンティティ
+- ✅ タイポグラフィシステム刷新（leading・階層）
+- ✅ SWOT 2×2 ビジュアルグリッド
+- ✅ セキュリティ CI 強化（CodeQL, Dependabot, gitleaks）
+
+**今後の予定 (v0.3.0+)**
+- 🚧 バッチモード — ポートフォリオ複数リポを 1 コマンドで分析
+- 🚧 履歴トラッキング — 再分析でスコア推移可視化
+- 🚧 Slack/Discord 通知アダプター
+- 🚧 設定ファイルによるカスタム次元重み
+- 🚧 業界別評価パック（医療・フィンテック・ゲーミングプリセット）
+
+機能要望・バグ報告は [Issue](https://github.com/taka-avantgarde/Due-diligence-engine/issues) でお知らせください。
+
+---
+
+## 🤝 コントリビューション
+
+コントリビューション歓迎。コードベースは小さく、テストもしっかり:
+
+```bash
+git clone https://github.com/taka-avantgarde/Due-diligence-engine
+cd Due-diligence-engine
+pip install -e ".[dev]"
+pytest
+```
+
+- **バグ報告**: `dde --version` の出力 + 最小再現手順を含めてください
+- **機能要望**: GitHub Discussions で関心度を測ってからお願いします
+- **PR**: 全テスト pass + 新機能には新テスト追加
 
 ---
 

@@ -138,7 +138,7 @@ A parallel evaluation system added on top of (not replacing) the standard 6-dime
   Performance        25%  ████████████░░░░░░░░░░░░░░░░░░░░
   Stability          20%  ██████████░░░░░░░░░░░░░░░░░░░░░░
   Lightweight         5%  ███░░░░░░░░░░░░░░░░░░░░░░░░░░░░░
-  Ultra-High Security 50% █████████████████████████░░░░░░░  ← THE CORE
+  Security Strength 50% █████████████████████████░░░░░░░  ← THE CORE
 
   Security sub-breakdown (within 50%):
     Cryptographic Sophistication  30%  ← Signal Protocol, PQXDH, libsignal
@@ -252,7 +252,7 @@ Encryption (core differentiator)
 | # | Section | Content |
 |---|---------|---------|
 | 16 | **Atlas 4-Axis Dashboard** | Performance/Stability/Lightweight/Ultra-Security with horizontal bars |
-| 17 | **Ultra-High Security Sub-Breakdown** | 5 sub-items, encryption (30%) visually dominant |
+| 17 | **Security Strength Sub-Breakdown** | 5 sub-items, encryption (30%) visually dominant |
 | 18 | **Implementation Capability Matrix** | 30 items × top competitors, ○△×? marking |
 
 ---
@@ -321,7 +321,7 @@ A: Charts are AI-researched from public sources (whitepapers, GitHub, blogs, SOC
 A: DDE is built by Atlas Associates, the company behind Arc Messenger (E2EE messaging with libsignal + PQXDH). The 4-axis evaluation reflects what we actually look for when evaluating tech.
 
 **Q: Can I customize the scoring weights?**
-A: The 6-dimension weights are fixed for v1.x backward compatibility. Atlas 4-axis weights (25/20/5/50) reflect Atlas philosophy and are also fixed. Sub-item weights within Ultra-High Security adjust by industry context.
+A: The 6-dimension weights are fixed for v1.x backward compatibility. Atlas 4-axis weights (25/20/5/50) reflect Atlas philosophy and are also fixed. Sub-item weights within Security Strength adjust by industry context.
 
 **Q: What if my project isn't security-critical?**
 A: The 6-dimension score (which has Security at only 10%) is your primary score. The Atlas 4-axis is a parallel reference view — both are shown.

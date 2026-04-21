@@ -264,9 +264,9 @@ _PDF_I18N = {
         "axis_performance": "Performance",
         "axis_stability": "Stability",
         "axis_lightweight": "Lightweight",
-        "axis_security": "Ultra-High Security",
+        "axis_security": "Security Strength",
         # Security sub-breakdown
-        "security_breakdown": "Ultra-High Security — Sub-Breakdown",
+        "security_breakdown": "Security Strength — Sub-Breakdown",
         "security_breakdown_subtitle": "Encryption sophistication is the core differentiator (30% of 50%)",
         "subitem_encryption": "Cryptographic Sophistication",
         "subitem_privacy": "Privacy Protection",
@@ -463,9 +463,9 @@ _PDF_I18N = {
         "axis_performance": "高速化",
         "axis_stability": "安定化",
         "axis_lightweight": "軽量化",
-        "axis_security": "超高度セキュリティ",
+        "axis_security": "セキュリティ強度",
         # セキュリティ内訳
-        "security_breakdown": "超高度セキュリティ — サブ内訳",
+        "security_breakdown": "セキュリティ強度 — サブ内訳",
         "security_breakdown_subtitle": "暗号化技術の高度さが核心差別化（50%中30%）",
         "subitem_encryption": "暗号化技術の高度さ",
         "subitem_privacy": "プライバシー保護",
@@ -2909,7 +2909,7 @@ class PDFReportGenerator:
         return elements
 
     def _build_atlas_security_breakdown_page(self, cr, security_axis) -> list:
-        """Ultra-High Security sub-breakdown — emphasizes encryption (30%) as core."""
+        """Security Strength sub-breakdown — emphasizes encryption (30%) as core."""
         t = self._t
         s = self._styles
         elements: list = []

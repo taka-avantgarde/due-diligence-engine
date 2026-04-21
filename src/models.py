@@ -454,7 +454,7 @@ class ConsultingReport(BaseModel):
 
 
 class AtlasAxisSubItem(BaseModel):
-    """Ultra-High Security 軸のサブ項目（非公開重み、業界別動的調整）."""
+    """Security Strength 軸のサブ項目（非公開重み、業界別動的調整）."""
 
     key: str = ""  # "encryption" | "privacy" | "posture" | "comms" | "layers"
     name_en: str = ""

@@ -355,8 +355,8 @@ def _make_atlas_four_axis() -> "AtlasFourAxisEvaluation":
             rationale="Tree-shaking, minimal deps, small container",
         ),
         AtlasAxisScore(
-            axis_key="security", name_en="Ultra-High Security",
-            name_ja="超高度セキュリティ",
+            axis_key="security", name_en="Security Strength",
+            name_ja="セキュリティ強度",
             weight_pct=50, score=82, level=8,
             rationale="Encryption-led security, posture is minimum hygiene only",
             sub_items=security_subs,

@@ -6,7 +6,6 @@ Commands:
   report      - Generate report from a previous analysis
   purge       - Securely delete analysis data
   leaderboard - Show scoring leaderboard across analyses
-  serve       - Start the SaaS API server
 """
 
 from __future__ import annotations
@@ -618,32 +617,6 @@ def leaderboard(data_dir: str | None) -> None:
         )
 
     console.print(table)
-
-
-@cli.command()
-@click.option("--host", default="0.0.0.0", help="Host to bind to")
-@click.option("--port", default=8000, type=int, help="Port to bind to")
-@click.option("--reload", "do_reload", is_flag=True, help="Enable auto-reload for development")
-def serve(host: str, port: int, do_reload: bool) -> None:
-    """Start the SaaS API server."""
-    import uvicorn
-
-    console.print(
-        Panel(
-            f"Starting DDE SaaS API\n"
-            f"Host: {host}:{port}\n"
-            f"Docs: http://{host}:{port}/docs",
-            title="Due Diligence Engine - SaaS Mode",
-            border_style="blue",
-        )
-    )
-
-    uvicorn.run(
-        "src.saas.app:app",
-        host=host,
-        port=port,
-        reload=do_reload,
-    )
 
 
 def _display_score_summary(result, score) -> None:

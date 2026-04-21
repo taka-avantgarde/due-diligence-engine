@@ -532,11 +532,17 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
         font_normal = "Helvetica"
         font_bold = "Helvetica-Bold"
 
+    # ── Typography system (v2.0 — explicit leading, hierarchical sizes) ──
+    # All styles below specify `leading` explicitly to prevent overlap.
+    # Size hierarchy: 28 (title) / 20 (H1) / 14 (H2) / 11 (H3) / 10 (body) /
+    # 9 (body_dim) / 8.5 (small) / 7.5 (caption) / 7 (footer).
+    # Leading: fontSize × 1.3-1.5 generally; body × 1.6 for Japanese readability.
     return {
         "title": ParagraphStyle(
             "CustomTitle",
             parent=base["Title"],
             fontSize=28,
+            leading=36,
             textColor=COLOR_BG_DARK,
             spaceAfter=6 * mm,
             alignment=TA_CENTER,
@@ -546,6 +552,7 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "CustomSubtitle",
             parent=base["Normal"],
             fontSize=14,
+            leading=20,
             textColor=COLOR_TEXT_DIM,
             spaceAfter=4 * mm,
             alignment=TA_CENTER,
@@ -554,10 +561,11 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
         "heading1": ParagraphStyle(
             "CustomH1",
             parent=base["Heading1"],
-            fontSize=18,
+            fontSize=20,                # was 18 — bigger for impact
+            leading=26,
             textColor=COLOR_BG_DARK,
-            spaceBefore=8 * mm,
-            spaceAfter=4 * mm,
+            spaceBefore=10 * mm,        # was 8mm — more breathing room
+            spaceAfter=5 * mm,
             borderWidth=0,
             borderPadding=0,
             fontName=font_bold,
@@ -566,33 +574,54 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "CustomH2",
             parent=base["Heading2"],
             fontSize=14,
-            textColor=COLOR_ACCENT,
+            leading=18,
+            textColor=COLOR_ACCENT,     # Arc sky #5271FF
             spaceBefore=6 * mm,
             spaceAfter=3 * mm,
+            fontName=font_bold,
+        ),
+        "heading3": ParagraphStyle(
+            "CustomH3",
+            parent=base["Normal"],
+            fontSize=11,
+            leading=14,
+            textColor=COLOR_TEXT,
+            spaceBefore=4 * mm,
+            spaceAfter=2 * mm,
             fontName=font_bold,
         ),
         "body": ParagraphStyle(
             "CustomBody",
             parent=base["Normal"],
             fontSize=10,
+            leading=16,                 # was 14 — JA needs more (1.6 ratio)
             textColor=COLOR_TEXT,
             spaceAfter=3 * mm,
-            leading=14,
             fontName=font_normal,
         ),
         "body_small": ParagraphStyle(
             "CustomBodySmall",
             parent=base["Normal"],
-            fontSize=8,
+            fontSize=8.5,               # was 8 — slightly larger for readability
+            leading=12,
             textColor=COLOR_TEXT_DIM,
             spaceAfter=2 * mm,
-            leading=11,
+            fontName=font_normal,
+        ),
+        "caption": ParagraphStyle(
+            "CustomCaption",
+            parent=base["Normal"],
+            fontSize=7.5,
+            leading=10,
+            textColor=COLOR_TEXT_DIM,
+            spaceAfter=1 * mm,
             fontName=font_normal,
         ),
         "footer": ParagraphStyle(
             "CustomFooter",
             parent=base["Normal"],
             fontSize=7,
+            leading=9,
             textColor=COLOR_TEXT_DIM,
             alignment=TA_CENTER,
             fontName=font_normal,
@@ -611,6 +640,7 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "GradeLabel",
             parent=base["Normal"],
             fontSize=16,
+            leading=22,
             textColor=COLOR_TEXT_DIM,
             alignment=TA_CENTER,
             spaceAfter=4 * mm,
@@ -620,6 +650,7 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "FlagTitle",
             parent=base["Normal"],
             fontSize=10,
+            leading=14,
             textColor=COLOR_TEXT,
             spaceAfter=1 * mm,
             fontName=font_bold,
@@ -628,6 +659,7 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "FlagDesc",
             parent=base["Normal"],
             fontSize=9,
+            leading=13,
             textColor=COLOR_TEXT_DIM,
             spaceAfter=3 * mm,
             leftIndent=10,
@@ -637,6 +669,7 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "CenterBody",
             parent=base["Normal"],
             fontSize=10,
+            leading=14,
             textColor=COLOR_TEXT,
             alignment=TA_CENTER,
             spaceAfter=3 * mm,
@@ -646,15 +679,16 @@ def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
             "CustomBodyDim",
             parent=base["Normal"],
             fontSize=9,
+            leading=13,
             textColor=COLOR_TEXT_DIM,
             spaceAfter=2 * mm,
-            leading=12,
             fontName=font_normal,
         ),
         "nda_notice": ParagraphStyle(
             "NDANotice",
             parent=base["Normal"],
             fontSize=7,
+            leading=10,
             textColor=COLOR_RED,
             alignment=TA_CENTER,
             fontName=font_normal,
@@ -1924,35 +1958,62 @@ class PDFReportGenerator:
         return elements
 
     def _build_swot_page(self, cr) -> list:
-        """SWOT analysis 2x2 grid."""
+        """SWOT analysis as visual 2×2 grid (v2.0 typography upgrade).
+
+        Uses ReportLab Table for true 2×2 layout. Each cell:
+        - Colored header bar (Strengths=green, Weaknesses=gray, Opportunities=Arc sky, Threats=red)
+        - White card body with bullet items
+        Cell padding & borders consistent with rest of the report.
+        """
+        from reportlab.platypus import Table as RLTable, TableStyle as RLTableStyle
+
         t = self._t
         s = self._styles
         elements: list = []
 
         elements.append(Paragraph(t["swot_analysis"], s["heading1"]))
-        elements.append(Spacer(1, 6 * mm))
+        elements.append(
+            HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=4 * mm)
+        )
 
         swot = cr.swot
+        # 4 quadrants: (label, items, header color)
         quadrants = [
-            (t["strengths"], swot.strengths, colors.HexColor("#2d5a3d"), colors.HexColor("#f3f4f6")),
-            (t["weaknesses"], swot.weaknesses, colors.HexColor("#4a4a4a"), colors.HexColor("#f3f4f6")),
-            (t["opportunities"], swot.opportunities, colors.HexColor("#5271FF"), colors.HexColor("#f3f4f6")),
-            (t["threats"], swot.threats, colors.HexColor("#6b2a2a"), colors.HexColor("#f3f4f6")),
+            (t["strengths"], swot.strengths, colors.HexColor("#2d5a3d")),       # green
+            (t["weaknesses"], swot.weaknesses, colors.HexColor("#4a4a4a")),     # dark gray
+            (t["opportunities"], swot.opportunities, COLOR_ACCENT),             # Arc sky
+            (t["threats"], swot.threats, colors.HexColor("#6b2a2a")),           # muted red
         ]
 
-        for title, items, title_color, bg_color in quadrants:
-            elements.append(
+        # Style for cell content
+        font_header = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
+        font_body = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
+        cell_header_style = ParagraphStyle(
+            "SWOTHeader", fontName=font_header, fontSize=12,
+            textColor=COLOR_WHITE, leading=15, alignment=TA_LEFT,
+        )
+        cell_item_style = ParagraphStyle(
+            "SWOTItem", fontName=font_body, fontSize=8.5,
+            textColor=COLOR_TEXT, leading=12,
+            spaceAfter=2, leftIndent=4,
+        )
+
+        def _build_cell(title: str, items: list, color_hex) -> list:
+            """Build flowables for one quadrant cell."""
+            cell_flow: list = []
+            # Header row inside cell
+            cell_flow.append(
                 Paragraph(
-                    f'<font color="{title_color.hexval()}">{title}</font>',
-                    s["heading2"],
+                    f'<para backColor="{color_hex.hexval()}" leftIndent="6" rightIndent="6" '
+                    f'spaceBefore="4" spaceAfter="4"><b>{title}</b></para>',
+                    cell_header_style,
                 )
             )
-            elements.append(Spacer(1, 2 * mm))
-
             if not items:
-                elements.append(Paragraph("—", s["body_dim"]))
+                cell_flow.append(Paragraph("—", cell_item_style))
             else:
-                for item in items:
+                # Limit to 4 items per cell for visual balance, truncate long text
+                for item in items[:4]:
                     bullet = f"<b>{item.point}</b>: {item.explanation}"
                     extra = (
                         item.business_analogy
@@ -1961,11 +2022,36 @@ class PDFReportGenerator:
                         or item.mitigation
                     )
                     if extra:
-                        bullet += f"<br/><i>{extra}</i>"
-                    elements.append(Paragraph(f"• {bullet}", s["body"]))
-                    elements.append(Spacer(1, 2 * mm))
+                        bullet += f"<br/><font color=\"{COLOR_TEXT_DIM.hexval()}\"><i>{extra}</i></font>"
+                    cell_flow.append(Paragraph(f"• {bullet}", cell_item_style))
+            return cell_flow
 
-            elements.append(Spacer(1, 4 * mm))
+        # Build 2×2 table data
+        cells = [_build_cell(title, items, color) for title, items, color in quadrants]
+        table_data = [
+            [cells[0], cells[1]],   # Strengths | Weaknesses
+            [cells[2], cells[3]],   # Opportunities | Threats
+        ]
+
+        # Available width on A4 portrait with default margins ~ 165mm = 467pt
+        col_w = 82 * mm  # 2 columns × 82mm = 164mm fits comfortably
+        row_h = 110 * mm  # half page height for each row
+        tbl = RLTable(
+            table_data,
+            colWidths=[col_w, col_w],
+            rowHeights=[row_h, row_h],
+        )
+        tbl.setStyle(RLTableStyle([
+            ("VALIGN", (0, 0), (-1, -1), "TOP"),
+            ("LEFTPADDING", (0, 0), (-1, -1), 0),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ("TOPPADDING", (0, 0), (-1, -1), 0),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 0),
+            ("BACKGROUND", (0, 0), (-1, -1), colors.HexColor("#f9fafb")),
+            ("BOX", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+            ("INNERGRID", (0, 0), (-1, -1), 0.5, COLOR_BORDER),
+        ]))
+        elements.append(tbl)
 
         return elements
 

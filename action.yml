@@ -58,16 +58,28 @@ runs:
 
         dde analyze . $ARGS -o dde_output 2>&1 | tee dde_log.txt
 
-        # Extract score from report
-        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' dde_output/dde_report_*.md 2>/dev/null || echo "0")
-        GRADE=$(grep -oP 'Grade:\s*\K[A-F]' dde_output/dde_report_*.md 2>/dev/null || echo "?")
-        FLAGS=$(grep -c 'RED FLAG\|red_flag' dde_output/dde_report_*.md 2>/dev/null || echo "0")
+        # Extract score from the FIRST report file only (single-line outputs only)
         REPORT=$(ls dde_output/dde_report_*.md 2>/dev/null | head -1)
+        if [ -z "$REPORT" ]; then
+          echo "::warning::No DDE report generated"
+          REPORT="(none)"
+          SCORE="0"
+          GRADE="?"
+          FLAGS="0"
+        else
+          SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1)
+          GRADE=$(grep -oP 'Grade:\s*\K[A-F]' "$REPORT" 2>/dev/null | head -1)
+          FLAGS=$(grep -c 'RED FLAG\|red_flag' "$REPORT" 2>/dev/null | head -1)
+          # Defaults if grep returned empty
+          SCORE="${SCORE:-0}"
+          GRADE="${GRADE:-?}"
+          FLAGS="${FLAGS:-0}"
+        fi
 
-        echo "score=$SCORE" >> $GITHUB_OUTPUT
-        echo "grade=$GRADE" >> $GITHUB_OUTPUT
-        echo "red_flags=$FLAGS" >> $GITHUB_OUTPUT
-        echo "report_path=$REPORT" >> $GITHUB_OUTPUT
+        echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+        echo "grade=$GRADE" >> "$GITHUB_OUTPUT"
+        echo "red_flags=$FLAGS" >> "$GITHUB_OUTPUT"
+        echo "report_path=$REPORT" >> "$GITHUB_OUTPUT"
 
         echo "## Due Diligence Score: $SCORE/100 (Grade: $GRADE)" >> $GITHUB_STEP_SUMMARY
         echo "" >> $GITHUB_STEP_SUMMARY
@@ -83,7 +95,9 @@ runs:
       shell: bash
       if: ${{ inputs.fail_below != '0' }}
       run: |
-        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' dde_output/dde_report_*.md 2>/dev/null || echo "0")
+        REPORT=$(ls dde_output/dde_report_*.md 2>/dev/null | head -1)
+        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1)
+        SCORE="${SCORE:-0}"
         THRESHOLD=${{ inputs.fail_below }}
         if [ "$SCORE" -lt "$THRESHOLD" ]; then
           echo "::error::DDE Score ($SCORE) is below threshold ($THRESHOLD)"

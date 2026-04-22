@@ -13,9 +13,10 @@
 │  $ dde prompt --pdf                                         │
 │                                                             │
 │  Reading codebase...                                        │
-│  Evaluating across 6 dimensions...                          │
+│  Evaluating across 5 dimensions (equal 20% weights)...      │
 │  Building competitive landscape (7 charts × 6 markets)...   │
 │  Researching implementation matrix (30 items × 10 cos.)...  │
+│  Writing competitor selection rationales...                 │
 │                                                             │
 │  Score:  [■■■■■■■■■■■■■■■■■■■■■■■■■■□□□□] 82/100  Lv.8     │
 │  Grade:  B  →  Viable with conditions                       │
@@ -54,7 +55,7 @@ dde prompt --pdf
 
 Run this in any AI-powered IDE terminal (Claude Code, Cursor, Copilot).
 Your AI reads the codebase, evaluates it as a world-class technology consultant,
-and writes a 22-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
+and writes a 24-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
 
 ---
 
@@ -68,7 +69,7 @@ and writes a 22-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra co
 - **Spin up the most capable model available** in your IDE (Claude Opus 4.x, GPT-5, Gemini 2.5 Pro, etc.)
 - **Paste `dde prompt --pdf`** into the terminal
 - **Go grab a coffee** ☕ — the AI will read hundreds of files, evaluate across
-  9+ dimensions, research 5-10 competitors globally, and build a 22-page consulting PDF
+  9+ dimensions, research 5-10 competitors globally, and build a 24-page consulting PDF
 - **Expected time**: **10-20 minutes** (longer for large codebases or deeper models)
 
 **Why this approach?**
@@ -106,7 +107,7 @@ and writes a 22-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra co
 |---|:---:|:---:|:---:|:---:|
 | **Cost** | $0 (uses your IDE AI) | $$$$ (consultant fees) | API fees | $$$$ (subscription) |
 | **Privacy** | Local-only | Local | Sends code to vendor | Sends code to vendor |
-| **Output** | 22-page consulting PDF | Custom report | Inline comments | Web dashboard |
+| **Output** | 24-page consulting PDF | Custom report | Inline comments | Web dashboard |
 | **Crypto Depth** | PQXDH / Signal Protocol level | Depends on consultant | Generic | Generic |
 | **Competitive Charts** | 7 + Implementation Matrix | Manual research | None | Limited |
 | **Setup Time** | 1 command | Weeks | Minutes | Days (account/onboarding) |
@@ -131,9 +132,9 @@ deep technical originality differentiate winners. Checkbox compliance
 
 ---
 
-## 🔒 Atlas Engineering Philosophy (v2.0 — encryption-dominant)
+## 🔒 Atlas Engineering Philosophy (encryption-dominant parallel view)
 
-A parallel evaluation system added on top of (not replacing) the standard 6-dimension scoring.
+A parallel evaluation system added alongside the standard 5-dimension scoring.
 
 ```
 4 axes — weights sum to 100%
@@ -205,7 +206,7 @@ For each of 6 global markets (Global / US / EMEA / Japan / SEA / LATAM):
 
 ---
 
-## 🆕 Implementation Capability Matrix (v2.0)
+## 🆕 Implementation Capability Matrix
 
 The 8th competitive chart — **~30 items × 5-10 top global competitors**:
 
@@ -237,33 +238,27 @@ specific competitor was chosen as a comparison target (HQ, market position, cate
 
 ---
 
-## 📄 What's in the 22-Page PDF
-
-**v1.x core (15 pages — preserved verbatim)**
+## 📄 What's in the 24-Page PDF
 
 | # | Section | Content |
 |---|---------|---------|
 | 1 | Cover | Black + Arc sky (#5271FF) accent, project name, score, grade |
-| 2 | Score Dashboard | 6-dim horizontal bar chart + score barometer |
+| 2 | Score Dashboard | **5-dim** horizontal bar chart (20% each) + score barometer |
 | 3 | Executive Summary | Business + technical summary |
 | 4 | SWOT Analysis | 2×2 visual grid with evidence + business analogies |
 | 5 | Score Breakdown | Per-dimension rationale & enablers |
-| 6 | Tech Level Assessment | Lv.1-10 gauge with plain-language explanation |
+| 6 | Tech Level Assessment | **5-dim** Lv.1-10 bar chart + overall gauge |
 | 7 | Future Outlook | 1/3/5-year projections with confidence |
 | 8 | Strategic Advice | Immediate, medium, long-term |
 | 9 | Investment Thesis | Recommendation, risks, upside, comparables |
 | 10 | Red Flags | Severity-rated (Critical/High/Medium/Low) |
 | 11 | Site Verification | 9-item credibility check (if URLs given) |
 | 12-14 | Competitive Analysis | 7 charts × 6 markets with axis rationale |
-| 15 | Glossary | All jargon annotated for non-engineers |
-
-**v2.0 additions (4 new pages)**
-
-| # | Section | Content |
-|---|---------|---------|
-| 16 | **Atlas 4-Axis Dashboard** | Performance/Stability/Lightweight/Ultra-Security with horizontal bars |
-| 17 | **Security Strength Sub-Breakdown** | 5 sub-items, encryption (30%) visually dominant |
-| 18 | **Implementation Capability Matrix** | 30 items × top competitors, ○△×? marking |
+| 15 | **🆕 Competitor Selection Rationales** | 3-5 line explanation per competitor (why chosen, HQ, position) |
+| 16 | **Implementation Capability Matrix** | ~30 items × top competitors, ○△×? marking |
+| 17 | **Atlas 4-Axis Dashboard** | Performance / Stability / Lightweight / Security Strength |
+| 18 | **Security Sub-Breakdown + Glossary** | 5 sub-items with non-engineer glossary (MFA/SOC2/libsignal/PQXDH…) |
+| 19-24 | Glossary · Consistency · Cost · Purge Cert | Standard appendix sections |
 
 ---
 
@@ -331,30 +326,37 @@ A: Charts are AI-researched from public sources (whitepapers, GitHub, blogs, SOC
 A: DDE is built by Atlas Associates, the company behind Arc Messenger (E2EE messaging with libsignal + PQXDH). The 4-axis evaluation reflects what we actually look for when evaluating tech.
 
 **Q: Can I customize the scoring weights?**
-A: The 6-dimension weights are fixed for v1.x backward compatibility. Atlas 4-axis weights (25/20/5/50) reflect Atlas philosophy and are also fixed. Sub-item weights within Security Strength adjust by industry context.
+A: The 5-dimension weights are equal 20% each (balanced, simple, interpretable). Atlas 4-axis weights (25/20/5/50) reflect Atlas philosophy and are also fixed. Sub-item weights within Security Strength adjust by industry context.
 
 **Q: What if my project isn't security-critical?**
-A: The 6-dimension score (which has Security at only 10%) is your primary score. The Atlas 4-axis is a parallel reference view — both are shown.
+A: The 5-dimension score (Architecture Quality includes Security Posture at a balanced 20%) is your primary score. The Atlas 4-axis is a parallel reference view — both are shown.
 
 ---
 
 ## 🗺️ Roadmap
 
-**Recently shipped (v0.2.0)**
-- ✅ Atlas 4-axis Optimization Assessment
+**Recently shipped (v0.3.0)**
+- ✅ 5-dimension scoring (equal 20% weights, Security merged into Architecture)
+- ✅ Competitor Selection Rationales (3-5 line explanation per competitor)
+- ✅ Non-engineer glossary on Security Sub-Breakdown page (MFA/SOC2/libsignal/PQXDH)
+- ✅ AIDD-era stance: no penalty for AI usage or high-velocity commits
+- ✅ Visitor counter badges (komarev + hits.seeyoufarm)
+- ✅ PDF layout: KeepTogether, 6-dim tech bar chart, SWOT 2×2 grid
+
+**Previously shipped (v0.2.0)**
+- ✅ Atlas 4-axis Optimization Assessment ("Security Strength" 50%)
 - ✅ Implementation Capability Matrix (8th competitive chart)
 - ✅ Web dashboard fully removed (CLI + PDF only)
 - ✅ Black + Arc sky (#5271FF) brand identity
 - ✅ Typography system overhaul (leading, hierarchy)
-- ✅ SWOT 2×2 visual grid
 - ✅ Security CI hardening (CodeQL, Dependabot, gitleaks)
 
-**Planned (v0.3.0+)**
+**Planned (v0.4.0+)**
 - 🚧 Batch mode — analyze a portfolio of repos in one command
 - 🚧 Historical tracking — re-analyze and show score deltas over time
 - 🚧 Slack/Discord notification adapter
-- 🚧 Custom dimension weighting via config file
 - 🚧 Industry-specific evaluation packs (medical, fintech, gaming presets)
+- 🚧 PyPI / Homebrew distribution
 
 Open an [issue](https://github.com/taka-avantgarde/Due-diligence-engine/issues) to suggest features or report bugs.
 
@@ -387,6 +389,6 @@ pytest
 
 **Powered by Due Diligence Engine — Takayuki Miyano / Atlas Associates**
 
-`v0.2.0` — Black + `#5271FF` brand identity · Tech-first aesthetics
+`v0.3.0` — 5-dimension scoring · Competitor rationales · AIDD-era philosophy
 
 </div>

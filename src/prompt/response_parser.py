@@ -277,6 +277,7 @@ def _parse_competitor_rationales(data: Any) -> list[CompetitorRationale]:
                 rationale_ja=str(item.get("rationale_ja", "")),
                 hq_country=str(item.get("hq_country", "")),
                 market_position=str(item.get("market_position", "")),
+                estimated_score=_clamp(float(item.get("estimated_score", 0)), 0, 100),
             )
         )
     return out

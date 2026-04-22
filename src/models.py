@@ -550,3 +550,7 @@ class CompetitorRationale(BaseModel):
     rationale_ja: str = ""       # 3-5 行の日本語散文
     hq_country: str = ""         # 本社所在国（例: "United States", "日本"）
     market_position: str = ""    # 市場でのポジション（1 行）
+    # 推定スコア（0-100、公開情報ベース）— v0.3.2
+    # 注: 公開情報は一般に好意的に書かれるため、実際のスコアはこれより
+    # 低くなる可能性が高い。必ず PDF に注釈を付与すること。
+    estimated_score: float = Field(default=0.0, ge=0, le=100)

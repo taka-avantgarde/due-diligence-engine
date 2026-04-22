@@ -1600,8 +1600,19 @@ _IMPLEMENTATION_MATRIX_INSTRUCTIONS_JA = """## 実装能力マトリックス（
 
 _COMPETITOR_RATIONALES_INSTRUCTIONS_EN = """## Competitor Selection Rationales (v0.3.1)
 
-For EVERY competitor you included in `competitive_analysis` or `implementation_matrix`,
+For EVERY competitor you included in `implementation_matrix.competitors`,
 add an entry explaining **why this competitor was selected** — 3 to 5 lines each.
+
+### CRITICAL — 1:1 Alignment Rule
+
+The set of competitors MUST be **identical** across:
+- `implementation_matrix.competitors` (the list)
+- `implementation_matrix.items[*].statuses[*].company_name`
+- `competitor_rationales[*].name`
+
+**No mismatches allowed.** If a company appears in the matrix, it MUST appear in rationales.
+If a company has a rationale, it MUST be in the matrix. The target company counts once
+as `implementation_matrix.target_company` and does NOT need a rationale entry.
 
 ### Output JSON (top-level array)
 
@@ -1613,10 +1624,22 @@ add an entry explaining **why this competitor was selected** — 3 to 5 lines ea
     "hq_country": "United States",
     "market_position": "Market leader / Challenger / Niche / Disruptor (1 line)",
     "rationale_en": "3-5 line explanation: why this company was chosen as a comparison target. Address: (1) what makes them comparable, (2) what they do differently, (3) why they matter for the target's strategic positioning.",
-    "rationale_ja": "3-5 行で「なぜこの会社を比較対象に選んだか」を日本語で説明。 (1) 比較可能性の理由、(2) 対象との違い、(3) 戦略的ポジショニングへの関連性、を含める。"
+    "rationale_ja": "3-5 行で「なぜこの会社を比較対象に選んだか」を日本語で説明。 (1) 比較可能性の理由、(2) 対象との違い、(3) 戦略的ポジショニングへの関連性、を含める。",
+    "estimated_score": 0-100
   }
 ]
 ```
+
+### `estimated_score` Guidelines (0-100)
+
+Provide a numeric estimate of the competitor's overall DD score based on
+**publicly available information only**. Note:
+
+- Public info (marketing pages, press releases, whitepapers) skews POSITIVE.
+  The real score if we had source code access would likely be **LOWER**.
+- Be conservative. When uncertain, estimate toward the middle (50-70 range).
+- This number is a **rough public-info-based estimate**, not a verified score.
+- The PDF will include a disclaimer to this effect — do not inflate optimism.
 
 Cover every competitor that appears in the charts/matrix. Do NOT invent companies
 you didn't analyze. Categories should be consistent across competitors.
@@ -1624,8 +1647,19 @@ you didn't analyze. Categories should be consistent across competitors.
 
 _COMPETITOR_RATIONALES_INSTRUCTIONS_JA = """## 競合選定理由（v0.3.1）
 
-`competitive_analysis` または `implementation_matrix` に含めた **すべての競合企業**について、
+`implementation_matrix.competitors` に含めた **すべての競合企業**について、
 **「なぜこの比較対象に選んだか」を 3〜5 行で説明**してください。
+
+### 最重要 — 1:1 整合ルール
+
+以下 3 箇所の競合企業セットは **完全一致** させること:
+- `implementation_matrix.competitors`（リスト）
+- `implementation_matrix.items[*].statuses[*].company_name`
+- `competitor_rationales[*].name`
+
+**不一致は禁止**。マトリックスに登場する会社は全て rationales にも記載すること。
+rationale がある会社はマトリックスにも必ず含めること。対象企業本人は
+`implementation_matrix.target_company` に 1 度登場し、rationales には含めない。
 
 ### 出力 JSON（トップレベル配列）
 
@@ -1637,10 +1671,21 @@ _COMPETITOR_RATIONALES_INSTRUCTIONS_JA = """## 競合選定理由（v0.3.1）
     "hq_country": "本社所在国",
     "market_position": "市場でのポジション（1 行）",
     "rationale_en": "3-5 line English explanation of why this competitor was chosen",
-    "rationale_ja": "3〜5 行の日本語説明: (1) 比較可能性の理由、(2) 対象との違い、(3) 戦略的ポジショニングへの関連性"
+    "rationale_ja": "3〜5 行の日本語説明: (1) 比較可能性の理由、(2) 対象との違い、(3) 戦略的ポジショニングへの関連性",
+    "estimated_score": 0-100
   }
 ]
 ```
+
+### `estimated_score` ガイドライン（0-100 点）
+
+各競合企業の DD 総合スコアを **公開情報のみに基づいて** 推定してください。注意事項:
+
+- 公開情報（マーケページ・プレスリリース・ホワイトペーパー）は好意的に書かれがち。
+  ソースコードにアクセスできた場合の実スコアは **より低くなる** 可能性が高い。
+- 保守的に見積もる。不確実な場合は中央値（50-70）寄りに。
+- この数値は **公開情報ベースの粗い推定** であり、検証済みスコアではない。
+- PDF にその旨の注釈が自動で付くため、楽観的数値は避けること。
 
 競合分析 / 実装マトリックスに登場する全企業をカバーすること。分析していない
 企業を捏造しない。カテゴリ表記は全競合で一貫させる。
@@ -1879,7 +1924,8 @@ Do not add markdown formatting around it — output raw JSON only.
       "hq_country": "United States",
       "market_position": "one-line positioning",
       "rationale_en": "3-5 line English explanation",
-      "rationale_ja": "3〜5 行の日本語説明"
+      "rationale_ja": "3〜5 行の日本語説明",
+      "estimated_score": 0-100
     }
   ]
 }
@@ -1891,6 +1937,7 @@ Do not add markdown formatting around it — output raw JSON only.
 - The `competitive_analysis` section is **always required** — never set it to null
 - The `atlas_four_axis` section is **always required** (v2.0) — exactly 4 axes (performance/stability/lightweight/security), `security` axis must include 5 sub_items with the exact keys (encryption/privacy/posture/comms/layers)
 - The `implementation_matrix` section is **always required** (v2.0) — 5-10 competitors + target, ~30 items across 8 categories. Prefer `"unknown"` over guessing
+- The `competitor_rationales` array is **always required** (v0.3.1) — MUST contain one entry per company in `implementation_matrix.competitors` (exact 1:1 match by name). Target company is NOT in rationales. NO mismatches allowed.
 - For each chart, `x_axis_rationale` / `y_axis_rationale` (and their `_ja` variants) are **required** — explain why this axis was chosen and what the composite score captures. This helps cross-functional readers (non-engineers, legal, finance) understand the chart
 - For `site_verification.items`, include all 9 items (feature_claim_match, tech_stack_consistency, security_claim_verification, performance_claim_plausibility, scale_claim_consistency, launch_date_verification, pricing_feasibility, compliance_display, ai_washing_index). **Team size estimation is INTENTIONALLY excluded — AI era = lean teams + AI leverage, headcount is not a quality signal**
 - For `competitive_analysis.markets`, include all 6 markets (Global, Home Country, US, EMEA, SEA, LATAM) with all 7 chart types specified in the Competitive Analysis Task section

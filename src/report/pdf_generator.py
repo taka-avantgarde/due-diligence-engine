@@ -3146,7 +3146,9 @@ class PDFReportGenerator:
     # ────────────────────────────────────────────────────────
 
     def _build_competitor_rationales_page(self, cr) -> list:
-        """Competitor selection rationales (3-5 lines per competitor)."""
+        """Competitor selection rationales (3-5 lines per competitor) + estimated score."""
+        from reportlab.platypus import Table as RLTable, TableStyle as RLTableStyle
+
         t = self._t
         s = self._styles
         elements: list = []
@@ -3160,16 +3162,59 @@ class PDFReportGenerator:
             HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=3 * mm)
         )
         elements.append(Paragraph(t["competitor_rationales_subtitle"], s["body_dim"]))
-        elements.append(Spacer(1, 4 * mm))
+        elements.append(Spacer(1, 3 * mm))
+
+        # Important disclaimer about estimated scores
+        if self._lang == "ja":
+            disclaimer = (
+                "<b>⚠ 推定スコアについて</b><br/>"
+                "各社の推定スコア（0-100 点）は <b>公開情報のみに基づく AI の推定値</b> です。"
+                "公開情報（マーケページ・ホワイトペーパー・プレスリリース等）は概して好意的に"
+                "書かれているため、<b>ソースコードレベルで DD した場合の実スコアはこれ以下になる"
+                "可能性が高い</b>ことに留意してください。参考値としてご活用ください。"
+            )
+        else:
+            disclaimer = (
+                "<b>⚠ About Estimated Scores</b><br/>"
+                "Each competitor's estimated score (0-100) is an <b>AI estimate based ONLY "
+                "on publicly available information</b>. Public materials (marketing pages, "
+                "whitepapers, press releases) skew positive — so the <b>actual score under "
+                "source-code-level DD is likely LOWER</b> than shown. Use as a reference only."
+            )
+        # Rendered in a light blue callout box
+        callout = RLTable(
+            [[Paragraph(disclaimer, s["body_small"])]],
+            colWidths=[160 * mm],
+        )
+        callout.setStyle(RLTableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), COLOR_ACCENT_LIGHT),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LINEABOVE", (0, 0), (-1, 0), 2, COLOR_ACCENT),
+        ]))
+        elements.append(callout)
+        elements.append(Spacer(1, 5 * mm))
 
         for r in rationales:
-            # Header: company name + category badge
+            # Wrap each competitor block in KeepTogether to prevent orphans —
+            # a header on one page with its body bleeding to the next looks broken.
+            block: list = []
+
+            # Header row: company name + category + estimated score
             header_bits: list[str] = [f'<b>{r.name}</b>']
             if r.category:
                 header_bits.append(
                     f'<font color="{COLOR_ACCENT.hexval()}" size="9">[{r.category}]</font>'
                 )
-            elements.append(Paragraph("  ".join(header_bits), s["heading3"]))
+            # Estimated score — always shown (even if 0), clearly labeled as estimate
+            score_label = "推定" if self._lang == "ja" else "est."
+            header_bits.append(
+                f'<font color="{COLOR_TEXT_DIM.hexval()}" size="10">'
+                f'{score_label}: <b>{r.estimated_score:.0f}</b>/100</font>'
+            )
+            block.append(Paragraph("  ".join(header_bits), s["heading3"]))
 
             # Meta line: HQ + market position
             meta_parts: list[str] = []
@@ -3178,16 +3223,16 @@ class PDFReportGenerator:
             if r.market_position:
                 meta_parts.append(f'{t["rationale_position"]}: {r.market_position}')
             if meta_parts:
-                elements.append(Paragraph(" · ".join(meta_parts), s["body_dim"]))
+                block.append(Paragraph(" · ".join(meta_parts), s["body_dim"]))
 
             # Rationale (3-5 line prose, language-appropriate)
             rationale_text = (r.rationale_ja if self._lang == "ja" and r.rationale_ja
                               else r.rationale_en)
             if rationale_text:
-                # Wrap each rationale + header in KeepTogether to prevent orphan headers
-                elements.append(Paragraph(rationale_text, s["body"]))
+                block.append(Paragraph(rationale_text, s["body"]))
 
-            elements.append(Spacer(1, 4 * mm))
+            block.append(Spacer(1, 4 * mm))
+            elements.append(KeepTogether(block))
 
         return elements
 

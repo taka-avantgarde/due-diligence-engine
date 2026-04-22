@@ -298,7 +298,10 @@ def _make_consulting_report() -> ConsultingReport:
 
 
 def _make_competitor_rationales() -> "list":
-    """Competitor selection rationales fixture (v0.3.1)."""
+    """Competitor selection rationales fixture (v0.3.1).
+
+    ⚠ Must align 1:1 with _make_implementation_matrix.competitors.
+    """
     from src.models import CompetitorRationale
     return [
         CompetitorRationale(
@@ -317,6 +320,7 @@ def _make_competitor_rationales() -> "list":
                 "ドキュメント品質・スケール規模を測る基準として採用。対象企業が ML 駆動の不正検知"
                 "レイヤーであるのに対し、Stripe はフルスタック決済プロバイダー。"
             ),
+            estimated_score=82,
         ),
         CompetitorRationale(
             name="Adyen",
@@ -333,6 +337,7 @@ def _make_competitor_rationales() -> "list":
                 "マルチリージョン対応・コンプライアンス網羅性 (PSD2、各国ライセンス)・"
                 "大型エンタープライズ案件対応力の比較対象として重要。"
             ),
+            estimated_score=78,
         ),
         CompetitorRationale(
             name="Payoneer",
@@ -348,6 +353,43 @@ def _make_competitor_rationales() -> "list":
                 "Payoneer は隣接市場のクロスボーダー送金、フリーランサー・中小企業向け。"
                 "対象企業が競合していないセグメントとして含め、ポジショニングのコントラストを提示。"
             ),
+            estimated_score=68,
+        ),
+        CompetitorRationale(
+            name="Square",
+            category="Direct competitor",
+            hq_country="United States",
+            market_position="SMB point-of-sale + payments",
+            rationale_en=(
+                "Square (now Block) is a direct competitor in SMB payment processing. "
+                "Relevant for comparing hardware + software integration strategy, "
+                "fraud/risk ML capabilities, and SMB onboarding UX — areas where "
+                "the target's ML-first approach may differentiate."
+            ),
+            rationale_ja=(
+                "Square (現 Block) は中小企業向け決済処理の直接競合。ハードウェア + ソフトウェア"
+                "統合戦略、不正/リスク ML 能力、中小企業向けオンボーディング UX の比較対象。"
+                "対象企業の ML ファーストアプローチが差別化になり得る領域。"
+            ),
+            estimated_score=74,
+        ),
+        CompetitorRationale(
+            name="Wise",
+            category="Emerging disruptor",
+            hq_country="United Kingdom",
+            market_position="Low-cost international money transfers",
+            rationale_en=(
+                "Wise (formerly TransferWise) disrupts international transfers with "
+                "transparent pricing and peer-to-peer matching. Included as an emerging "
+                "disruptor for comparing pricing transparency, FX engine efficiency, "
+                "and multi-currency account capabilities."
+            ),
+            rationale_ja=(
+                "Wise (旧 TransferWise) は透明な料金体系と P2P マッチングで国際送金を破壊する"
+                "新興企業。価格透明性・FX エンジン効率・マルチ通貨口座機能の比較対象として"
+                "新興ディスラプターカテゴリで採用。"
+            ),
+            estimated_score=72,
         ),
     ]
 
@@ -430,8 +472,10 @@ def _make_implementation_matrix() -> "ImplementationMatrix":
         MatrixItem,
     )
 
+    # Fintech-context competitors (matches _make_competitor_rationales exactly).
+    # Per v0.3.1 alignment rule: matrix.competitors == rationales[].name (1:1).
     target = "NeuralPay"
-    competitors = ["Signal", "WhatsApp", "Telegram", "iMessage", "Wire"]
+    competitors = ["Stripe", "Adyen", "Payoneer", "Square", "Wise"]
     all_companies = [target] + competitors
 
     def _statuses(values: list[str]) -> list[CompanyImplementationStatus]:

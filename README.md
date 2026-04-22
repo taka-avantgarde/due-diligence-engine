@@ -49,7 +49,7 @@
 ## ⚡ Quick Start
 
 ```bash
-pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+python3 -m pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
 dde prompt --pdf
 ```
 
@@ -79,7 +79,7 @@ and writes a 24-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra co
 | 🔐 **Data leakage?** | None. Everything runs inside your IDE's AI sandbox — no 3rd-party servers, no telemetry. DDE itself is 100% local Python |
 | 💰 **Cost?** | $0 extra. Uses your existing IDE AI subscription |
 | 🔑 **API keys?** | Not needed. Your IDE already handles AI auth |
-| ⚙️ **Setup?** | Just `pip install`. No config, no accounts |
+| ⚙️ **Setup?** | Just `python3 -m pip install`. No config, no accounts |
 | 🎁 **Catch?** | There isn't one. DDE is a **hobby project** — built and open-sourced for fun. Use it freely |
 
 > **Made by a solo dev as a hobby.** If it helps you, that's enough reward. Star the repo if you like it ⭐
@@ -369,7 +369,7 @@ Contributions welcome! The codebase is small and well-tested:
 ```bash
 git clone https://github.com/taka-avantgarde/Due-diligence-engine
 cd Due-diligence-engine
-pip install -e ".[dev]"
+python3 -m pip install -e ".[dev]"
 pytest
 ```
 

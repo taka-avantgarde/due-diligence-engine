@@ -535,6 +535,47 @@ _DIM_NAME_JA = {
 }
 
 
+def _wrap_lines(text: str, max_chars_per_line: int, max_lines: int = 2) -> list[str]:
+    """Wrap text into N lines for use with Drawing.String (no auto-wrap).
+
+    CJK-aware approximation:
+    - For Japanese mixed text, count each char as 1 unit (CJK chars are wider but
+      this gives a reasonable visual fit at the calling site's font size).
+    - For pure ASCII, ~70 chars/line is comfortable at 6.5pt.
+    - Caller picks `max_chars_per_line` based on its render width.
+
+    Returns up to `max_lines` lines. If text exceeds capacity, last line ends with "…".
+    """
+    if not text:
+        return []
+    text = text.strip()
+    lines: list[str] = []
+    remaining = text
+    for i in range(max_lines):
+        if not remaining:
+            break
+        if len(remaining) <= max_chars_per_line:
+            lines.append(remaining)
+            remaining = ""
+            break
+        # Try to break at a space near the limit (for ASCII / mixed text)
+        cut = max_chars_per_line
+        space_idx = remaining.rfind(" ", 0, max_chars_per_line)
+        # Use space if it's not too far back (>50% of line)
+        if space_idx > max_chars_per_line // 2:
+            cut = space_idx
+        lines.append(remaining[:cut].rstrip())
+        remaining = remaining[cut:].lstrip()
+
+    if remaining:
+        # Truncate the last line and append ellipsis
+        last = lines[-1]
+        if len(last) >= max_chars_per_line - 1:
+            last = last[: max_chars_per_line - 1]
+        lines[-1] = last.rstrip() + "…"
+    return lines
+
+
 def _build_styles(lang: str = "en") -> dict[str, ParagraphStyle]:
     """Build custom paragraph styles for the PDF report."""
     base = getSampleStyleSheet()
@@ -2947,28 +2988,33 @@ class PDFReportGenerator:
         )
 
         bar_max_w = 280
-        row_h = 44
+        # row_h increased from 44 → 56 to accommodate 2-line wrapped descriptions
+        row_h = 56
         label_w = 140
         chart_w = label_w + bar_max_w + 80
         chart_h = len(axes_ordered) * row_h + 10
 
         d = Drawing(chart_w, chart_h)
 
+        # Per-language max chars per description line at 6.5pt
+        # JA: ~46 (CJK chars wider) / EN: ~80 (ASCII narrower)
+        max_chars = 46 if self._lang == "ja" else 80
+
         for i, axis in enumerate(axes_ordered):
-            y = chart_h - (i + 1) * row_h + 14
+            y = chart_h - (i + 1) * row_h + 22
             name = axis.name_ja if self._lang == "ja" and axis.name_ja else axis.name_en
 
             # Axis label (left, bold)
             font_name = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
             d.add(String(0, y + 4, name, fontName=font_name, fontSize=9, fillColor=COLOR_TEXT))
 
-            # Rationale (below label, small dim text)
+            # Rationale wrapped into up to 2 lines
             desc_font = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
-            rationale_short = (axis.rationale or "")[:64]
-            if len(axis.rationale or "") > 64:
-                rationale_short += "…"
-            d.add(String(0, y - 8, rationale_short, fontName=desc_font, fontSize=6.5,
-                         fillColor=COLOR_TEXT_DIM))
+            desc_lines = _wrap_lines(axis.rationale or "", max_chars, max_lines=2)
+            for li, line in enumerate(desc_lines):
+                d.add(String(0, y - 8 - li * 9, line,
+                             fontName=desc_font, fontSize=6.5,
+                             fillColor=COLOR_TEXT_DIM))
 
             # Background bar (gray track)
             d.add(Rect(label_w, y, bar_max_w, 16,
@@ -3021,7 +3067,8 @@ class PDFReportGenerator:
         sub_items = sorted(security_axis.sub_items, key=lambda si: order.get(si.key, 99))
 
         bar_max_w = 280
-        row_h = 44
+        # row_h increased from 44 → 56 to fit 2-line wrapped descriptions
+        row_h = 56
         label_w = 160
         chart_w = label_w + bar_max_w + 80
         chart_h = len(sub_items) * row_h + 10
@@ -3036,21 +3083,22 @@ class PDFReportGenerator:
             "comms": t.get("subitem_comms", "Comms"),
             "layers": t.get("subitem_layers", "Layers"),
         }
+        max_chars = 44 if self._lang == "ja" else 78  # label_w=160 leaves narrower text width
 
         for i, si in enumerate(sub_items):
-            y = chart_h - (i + 1) * row_h + 14
+            y = chart_h - (i + 1) * row_h + 22
             name = subitem_labels.get(si.key, si.name_ja if self._lang == "ja" else si.name_en)
 
             # Label
             font_name = "HeiseiKakuGo-W5" if self._lang == "ja" else "Helvetica-Bold"
             d.add(String(0, y + 4, name, fontName=font_name, fontSize=9, fillColor=COLOR_TEXT))
 
-            # Rationale
+            # Rationale wrapped into up to 2 lines (no truncation that loses info)
             desc_font = "HeiseiMin-W3" if self._lang == "ja" else "Helvetica"
-            rationale_short = (si.rationale or "")[:60]
-            if len(si.rationale or "") > 60:
-                rationale_short += "…"
-            d.add(String(0, y - 8, rationale_short, fontName=desc_font, fontSize=6.5,
+            desc_lines = _wrap_lines(si.rationale or "", max_chars, max_lines=2)
+            for li, line in enumerate(desc_lines):
+                d.add(String(0, y - 8 - li * 9, line,
+                             fontName=desc_font, fontSize=6.5,
                          fillColor=COLOR_TEXT_DIM))
 
             # Background bar

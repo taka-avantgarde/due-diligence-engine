@@ -49,13 +49,21 @@
 ## ⚡ Quick Start
 
 ```bash
+# Most reliable — works on every platform incl. macOS Homebrew
 python3 -m pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+
+# Or short form (Linux / venv / older macOS):
+# pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+
 dde prompt --pdf
 ```
 
 Run this in any AI-powered IDE terminal (Claude Code, Cursor, Copilot).
 Your AI reads the codebase, evaluates it as a world-class technology consultant,
 and writes a 24-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
+
+> **macOS Homebrew users**: use `python3 -m pip` — the bare `pip` command is no
+> longer installed by Homebrew Python 3.12+.
 
 ---
 
@@ -330,6 +338,12 @@ A: The 5-dimension weights are equal 20% each (balanced, simple, interpretable).
 
 **Q: What if my project isn't security-critical?**
 A: The 5-dimension score (Architecture Quality includes Security Posture at a balanced 20%) is your primary score. The Atlas 4-axis is a parallel reference view — both are shown.
+
+**Q: I get `command not found: pip` — how do I install?**
+A: Use `python3 -m pip install ...` instead. macOS Homebrew Python 3.12+ no longer ships a bare `pip` command. The `python3 -m pip` form works on all platforms (macOS / Linux / Windows / venv / pyenv / conda).
+
+**Q: Why don't third-party certifications (SOC2, ISO, HIPAA) affect the score?**
+A: DDE evaluates the source code, not the badge. A SOC2-certified plaintext-storage service still has plaintext storage. An uncertified libsignal+PQXDH service is still cryptographically strong. Certifications are shown for context but never scored — see the Security Sub-Breakdown page.
 
 ---
 

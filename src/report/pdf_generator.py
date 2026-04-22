@@ -3079,16 +3079,20 @@ class PDFReportGenerator:
         elements.append(d)
         elements.append(Spacer(1, 8 * mm))
 
-        # Weight philosophy callout
+        # Weight philosophy callout + source-code-only disclaimer
         if self._lang == "ja":
             philosophy = (
                 "<b>重み哲学:</b> 暗号化技術の高度さ（30%）が核心。"
-                "MFA・SOC2 等の「誰でもできる」項目は最小重み（2%）に抑制。"
+                "MFA・WebAuthn 等の「誰でもできる」項目は最小重み（2%）に抑制。<br/>"
+                "<b>第三者認証（SOC2・ISO 27001・HIPAA 等）は参考情報のみでスコア対象外。</b>"
+                "DDE は純粋にソースコードから評価する。認証バッジではなくコードを読む。"
             )
         else:
             philosophy = (
                 "<b>Weight Philosophy:</b> Cryptographic sophistication (30%) is the core. "
-                "Checkbox compliance (MFA/SOC2 — \"anyone can do\") is minimum-weighted (2%)."
+                "Checkbox items (MFA/WebAuthn — \"anyone can do\") are minimum-weighted (2%).<br/>"
+                "<b>Third-party certifications (SOC2, ISO 27001, HIPAA, etc.) are REFERENCE ONLY — "
+                "not scored.</b> DDE judges the code, not the badge."
             )
         elements.append(Paragraph(philosophy, s["body"]))
         elements.append(Spacer(1, 4 * mm))
@@ -3108,8 +3112,9 @@ class PDFReportGenerator:
                 ("E2E暗号化", "送信者と受信者だけが読める暗号化。サービス運営者でも中身は見られない。"),
                 ("MFA (多要素認証)", "パスワードに加え、SMS コードや認証アプリで本人確認する仕組み。"
                                       "今や標準。導入していないと論外。"),
-                ("SOC2", "米国 AICPA が定めたセキュリティ監査基準。取得企業は多数あり、"
-                         "差別化要因ではなく衛生項目。"),
+                ("SOC2", "米国 AICPA が定めたセキュリティ監査基準。<b>DDE のスコアには一切反映しない</b>"
+                         "（参考情報のみ）。取得していてもコードが弱い企業はあり、未取得でも暗号実装が"
+                         "強い企業はある。本ツールはコードを読んで判断する。"),
                 ("libsignal", "Signal Foundation が公開している、Signal Protocol の公式実装ライブラリ。"
                               "使うと暗号の自前実装ミスを避けられる。"),
                 ("PQXDH / ML-KEM", "量子コンピュータでも破れない次世代暗号（ポスト量子暗号）。"
@@ -3122,7 +3127,9 @@ class PDFReportGenerator:
                 ("E2E Encryption", "End-to-end: only sender & recipient can decrypt. Even the service provider cannot read it."),
                 ("MFA (Multi-Factor Auth)", "Password + second factor (SMS code / authenticator app). "
                                              "Standard hygiene — missing it is a red flag, having it is not a differentiator."),
-                ("SOC2", "US AICPA security audit standard. Widely held; a hygiene item, not a differentiator."),
+                ("SOC2", "US AICPA security audit standard. <b>Not factored into DDE's score</b> "
+                         "(reference only). Certified companies can still have weak code; "
+                         "uncertified companies can still have strong crypto. DDE reads the code."),
                 ("libsignal", "Official Signal Protocol implementation by Signal Foundation. "
                               "Using it avoids self-rolled crypto mistakes."),
                 ("PQXDH / ML-KEM", "Post-quantum cryptography — safe even against future quantum computers. "

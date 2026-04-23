@@ -48,17 +48,20 @@
 
 ## ⚡ クイックスタート
 
+**1. インストール**（全環境で確実 — macOS Homebrew を含む）
+
 ```bash
-# 全環境で確実（macOS Homebrew を含む）
 python3 -m pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+```
 
-# または短い形式（Linux / venv / 古い macOS）:
-# pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+<sub>Linux / venv / 古い macOS なら短い形式も可: `pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git`</sub>
 
+**2. 実行**（AI 搭載 IDE のターミナル — Claude Code / Cursor / Copilot 等）
+
+```bash
 dde prompt --pdf --lang ja
 ```
 
-AI 搭載 IDE のターミナル（Claude Code / Cursor / Copilot 等）で実行するだけ。
 AI がコードベースを読み、世界トップクラスのテクノロジーコンサルタントとして評価し、
 24ページの PDF を `~/Downloads/` に書き出します。**APIキー不要・クラウド経由なし・追加コスト¥0。**
 

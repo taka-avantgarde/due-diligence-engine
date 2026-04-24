@@ -263,7 +263,7 @@ specific competitor was chosen as a comparison target (HQ, market position, cate
 | 8 | Strategic Advice | Immediate, medium, long-term |
 | 9 | Investment Thesis | Recommendation, risks, upside, comparables |
 | 10 | Red Flags | Severity-rated (Critical/High/Medium/Low) |
-| 11 | Site Verification | 9-item credibility check (if URLs given) |
+| 11 | Site Verification | 10-item technical capability audit (4 claim-vs-code + 6 code-measured) |
 | 12-14 | Competitive Analysis | 7 charts × 6 markets with axis rationale |
 | 15 | **🆕 Competitor Selection Rationales** | 3-5 line explanation per competitor (why chosen, HQ, position) |
 | 16 | **Implementation Capability Matrix** | ~30 items × top competitors, ○△×? marking |
@@ -353,6 +353,7 @@ A: DDE evaluates the source code, not the badge. A SOC2-certified plaintext-stor
 ## 🗺️ Roadmap
 
 **Recently shipped (v0.3.x)**
+- ✅ **Site Verification refocused to pure technical capability** (10 items: 4 claim-vs-code + 6 code-measured — crypto depth, concurrency model, I/O pattern, caching, scalability, ML depth)
 - ✅ Atlas weights rebalanced to **20 / 20 / 5 / 55** (encryption core bumped to 35%)
 - ✅ **Source-code-only evaluation**: third-party certs (SOC2 / ISO / HIPAA) are reference-only, not scored
 - ✅ **Competitor 1:1 alignment** between matrix and rationales (estimated score per competitor + public-info disclaimer)

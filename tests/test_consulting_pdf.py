@@ -277,15 +277,18 @@ def _make_consulting_report() -> ConsultingReport:
                 "https://neuralpay.io/pricing",
             ],
             items=[
+                # Claim-vs-Code (4)
                 SiteVerificationItem(item_key="feature_claim_match", item_name="Feature Claim Match", item_name_ja="機能主張一致度", score=72, confidence="high", rationale="Most features match."),
                 SiteVerificationItem(item_key="tech_stack_consistency", item_name="Tech Stack Consistency", item_name_ja="技術スタック整合性", score=85, confidence="high", rationale="Stack matches documentation."),
                 SiteVerificationItem(item_key="security_claim_verification", item_name="Security Claim Verification", item_name_ja="セキュリティ主張検証", score=45, confidence="medium", rationale="No pen-test evidence."),
-                SiteVerificationItem(item_key="performance_claim_plausibility", item_name="Performance Claim Plausibility", item_name_ja="パフォーマンス主張妥当性", score=60, confidence="medium", rationale="Benchmarks not reproducible."),
-                SiteVerificationItem(item_key="scale_claim_consistency", item_name="Scale Claim Consistency", item_name_ja="規模主張一貫性", score=55, confidence="low", rationale="User counts inconsistent."),
-                SiteVerificationItem(item_key="launch_date_verification", item_name="Launch Date Verification", item_name_ja="ローンチ日検証", score=95, confidence="high", rationale="Wayback Machine confirms."),
-                SiteVerificationItem(item_key="pricing_feasibility", item_name="Pricing Model Feasibility", item_name_ja="料金モデル実現性", score=68, confidence="medium", rationale="Unit economics are tight."),
-                SiteVerificationItem(item_key="compliance_display", item_name="Compliance Display Audit", item_name_ja="コンプライアンス表示監査", score=30, confidence="low", rationale="No GDPR badge found."),
                 SiteVerificationItem(item_key="ai_washing_index", item_name="AI-Washing Index", item_name_ja="AIウォッシュ指数", score=40, confidence="medium", rationale="Excessive AI claims."),
+                # Actual Technical Capability (6) — measured from code only
+                SiteVerificationItem(item_key="crypto_implementation_depth", item_name="Cryptographic Implementation Depth", item_name_ja="暗号実装の深さ", score=88, confidence="high", rationale="libsignal FFI + PQXDH ML-KEM-1024, no self-rolled crypto"),
+                SiteVerificationItem(item_key="concurrency_model", item_name="Concurrency Model", item_name_ja="並行制御モデル", score=70, confidence="medium", rationale="Async/await throughout + mutex for shared state; no lock-free structures"),
+                SiteVerificationItem(item_key="io_pattern", item_name="I/O Pattern", item_name_ja="I/O パターン", score=78, confidence="high", rationale="Fully async, streaming for large payloads, request batching in hot paths"),
+                SiteVerificationItem(item_key="caching_strategy_actual", item_name="Caching Strategy Depth", item_name_ja="キャッシュ戦略の深さ", score=65, confidence="medium", rationale="L1 in-memory + L2 Redis; no L3 edge caching"),
+                SiteVerificationItem(item_key="scalability_mechanism", item_name="Scalability Mechanism", item_name_ja="スケーラビリティ機構", score=72, confidence="medium", rationale="Firestore sharding + Phoenix stateless; no CQRS/event-sourcing"),
+                SiteVerificationItem(item_key="ml_model_depth", item_name="ML/AI Implementation Depth", item_name_ja="ML/AI 実装の深さ", score=50, confidence="medium", rationale="Mostly Gemini API wrappers; no proprietary model training"),
             ],
             overall_credibility=64.0,
             summary="The site mostly reflects the codebase but overstates security and AI capabilities.",

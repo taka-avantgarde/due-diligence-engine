@@ -1065,22 +1065,36 @@ _SITE_VERIFICATION_INSTRUCTIONS_EN = """## Site Verification Task
 The user provided the following product/service URLs for cross-validation:
 {url_list}
 
-**Visit each URL** (using WebFetch or browser tool), read the content, and evaluate the following 9 credibility items by comparing site claims against the codebase:
+**Visit each URL** (using WebFetch or browser tool), read the content, and evaluate the following **10 code-verifiable technical capability items**. Score each based on **what the source code actually shows**, not on marketing claims or certifications.
+
+### Claim-vs-Code Verification (4 items)
 
 | # | Key | Item Name | What to Check |
 |---|-----|-----------|---------------|
 | 1 | feature_claim_match | Feature Claim Match | Do features listed on the site exist in the code? |
 | 2 | tech_stack_consistency | Tech Stack Consistency | Does the tech stack described match actual dependencies? |
 | 3 | security_claim_verification | Security Claim Verification | Are security claims (E2EE, encryption, etc.) implemented? |
-| 4 | performance_claim_plausibility | Performance Claim Plausibility | Are performance numbers (speed, uptime) plausible from the code? |
-| 5 | scale_claim_consistency | Scale Claim Consistency | Do scale claims (users, data volume) match infrastructure? |
-| 6 | launch_date_verification | Launch Date Verification | Does the claimed launch timeline match git history? |
-| 7 | pricing_feasibility | Pricing Model Feasibility | Is the pricing model sustainable given the tech stack costs? |
-| 8 | compliance_display | Compliance Display Audit | Are required legal/compliance notices properly displayed? |
-| 9 | ai_washing_index | AI-Washing Index | Are AI claims genuine or just buzzword decoration? |
+| 4 | ai_washing_index | AI-Washing Index | Are AI claims genuine, or just buzzword decoration? |
 
-**NOTE**: Team size / headcount evaluation is intentionally excluded. In the AI era,
-lean teams + AI leverage is the winning pattern — headcount is not a quality signal.
+### Actual Technical Capability (6 items — measured from code only)
+
+| # | Key | Item Name | What to Check |
+|---|-----|-----------|---------------|
+| 5 | crypto_implementation_depth | Cryptographic Implementation Depth | Which actual library (libsignal / BoringSSL / OpenSSL / self-rolled), which protocol (Signal / PQXDH / TLS-only), which cipher suites are present in code |
+| 6 | concurrency_model | Concurrency Model | Actual concurrency mechanism in code: lock-free / mutex-based / actor-model / CRDT / naive synchronous. Score higher for sophisticated non-blocking patterns |
+| 7 | io_pattern | I/O Pattern | Actual I/O paradigm: async/await throughout / streaming / request batching / naive blocking. Higher score for non-blocking + streaming |
+| 8 | caching_strategy_actual | Caching Strategy Depth | Actual caching layers present in code: L1 (in-memory) + L2 (Redis-class) + L3 (CDN/edge) / partial / none. Higher score for multi-layer with invalidation logic |
+| 9 | scalability_mechanism | Scalability Mechanism | Actual horizontal scaling primitives in code: sharding keys / partition logic / read replicas / event-sourcing / CQRS. "Monolith only" scores LOW regardless of marketing |
+| 10 | ml_model_depth | ML/AI Implementation Depth | If AI is claimed: actual model training code vs. external API wrappers. Higher score for proprietary model architecture, inference pipeline, fine-tuning code |
+
+**Intentionally excluded** (these measure efforts/certifications/business signals, NOT actual capability):
+- Team size / headcount — AIDD era: lean teams + AI is the winning pattern
+- Launch date — history timing doesn't reflect code quality
+- Pricing feasibility — business model, not a technical fact
+- Compliance display — legal UI, not code-level capability
+- Performance claim plausibility — subjective estimation, not a hard fact
+- Scale claim consistency — subjective projection, not measurable from code
+- Certifications (SOC2/ISO/HIPAA) — reference-only across all DDE scoring
 
 For each item, assign:
 - **score**: 0-100 (100 = perfectly consistent, 0 = completely fabricated)
@@ -1099,22 +1113,36 @@ _SITE_VERIFICATION_INSTRUCTIONS_JA = """## サイト検証タスク
 以下のプロダクト/サービスURLが検証用に提供されました:
 {url_list}
 
-**各URLにアクセス**（WebFetchまたはブラウザツール使用）し、サイトの内容を読み取り、コードベースと照合して以下の9項目の信頼性を評価してください:
+**各URLにアクセス**（WebFetchまたはブラウザツール使用）し、サイトの内容を読み取り、以下の **10 項目（すべてソースコードから読み取れる技術事実のみ）** を評価してください。評価基準は常に **「コードが実際に何を実装しているか」** であり、マーケ文言や認証取得の有無ではありません。
+
+### 主張 vs コード検証（4 項目）
 
 | # | キー | 項目名 | チェック内容 |
 |---|------|--------|-------------|
 | 1 | feature_claim_match | 機能主張一致度 | サイトに記載された機能がコードに存在するか |
 | 2 | tech_stack_consistency | 技術スタック整合性 | 記載された技術スタックが実際の依存関係と一致するか |
-| 3 | security_claim_verification | セキュリティ主張検証 | セキュリティに関する主張（E2EE、暗号化等）が実装されているか |
-| 4 | performance_claim_plausibility | パフォーマンス主張妥当性 | パフォーマンス数値（速度、稼働率）がコードから見て妥当か |
-| 5 | scale_claim_consistency | 規模主張一貫性 | 規模に関する主張（ユーザー数、データ量）がインフラと整合するか |
-| 6 | launch_date_verification | ローンチ日検証 | 主張するローンチ日がgit履歴と一致するか |
-| 7 | pricing_feasibility | 料金モデル実現性 | 料金モデルが技術スタックのコストに対して持続可能か |
-| 8 | compliance_display | コンプライアンス表示監査 | 法的・コンプライアンス表示が適切に行われているか |
-| 9 | ai_washing_index | AIウォッシュ指数 | AI関連の主張が本物か、バズワード装飾に過ぎないか |
+| 3 | security_claim_verification | セキュリティ主張検証 | セキュリティ主張（E2EE、暗号化等）が実装されているか |
+| 4 | ai_washing_index | AIウォッシュ指数 | AI 関連の主張が本物か、バズワード装飾に過ぎないか |
 
-**注**: チーム規模・人数評価は意図的に除外。AI 時代は「少数精鋭 + AI レバレッジ」が勝ちパターンであり、
-人数は品質シグナルにならない。
+### 実際の技術力ファクト（6 項目・コード実測のみ）
+
+| # | キー | 項目名 | チェック内容 |
+|---|------|--------|-------------|
+| 5 | crypto_implementation_depth | 暗号実装の深さ | 実際に使用されているライブラリ（libsignal / BoringSSL / OpenSSL / 自前）、プロトコル（Signal / PQXDH / TLS のみ）、cipher suite をコードから特定。libsignal + PQXDH は最高評価、自前実装は減点 |
+| 6 | concurrency_model | 並行制御モデル | コードに存在する並行制御方式: lock-free / mutex / actor / CRDT / 素朴同期。高度な非ブロッキング実装ほど高評価 |
+| 7 | io_pattern | I/O パターン | 実装の I/O パラダイム: async/await 徹底 / streaming / バッチ集約 / 素朴ブロッキング。非ブロッキング + streaming ほど高評価 |
+| 8 | caching_strategy_actual | キャッシュ戦略の深さ | 実装されているキャッシュ階層: L1 (メモリ) + L2 (Redis 級) + L3 (CDN/エッジ) の多層 / 部分的 / なし。多層 + 無効化ロジックの洗練度 |
+| 9 | scalability_mechanism | スケーラビリティ機構 | 実装レベルの水平スケーリング要素: sharding key / partition ロジック / read replica / event-sourcing / CQRS。モノリスのみは謳い文句に関係なく低評価 |
+| 10 | ml_model_depth | ML/AI 実装の深さ | AI を謳う場合: 自前モデル訓練コードの有無 vs 外部 API ラッパー。独自モデルアーキテクチャ、推論パイプライン、fine-tuning コードの存在で高評価 |
+
+**意図的に除外する項目**（取り組み・認証・ビジネス指標のため、技術力そのものではない）:
+- チーム規模・人数評価 — AIDD 時代は少数精鋭 + AI が勝ちパターン
+- ローンチ日検証 — 履歴タイミングはコード品質を反映しない
+- 料金モデル実現性 — ビジネスモデルであり技術事実ではない
+- コンプライアンス表示 — 法務 UI でありコードレベル技術力ではない
+- パフォーマンス主張妥当性 — 主観的推定であり実測事実ではない
+- 規模主張一貫性 — 主観的推定であり実測事実ではない
+- 認証（SOC2 / ISO / HIPAA）— DDE 全スコアで参考情報のみ
 
 各項目について以下を付与:
 - **score**: 0-100（100 = 完全に整合、0 = 完全に虚偽）
@@ -1987,7 +2015,7 @@ Do not add markdown formatting around it — output raw JSON only.
 - The `implementation_matrix` section is **always required** (v2.0) — 5-10 competitors + target, ~30 items across 8 categories. Prefer `"unknown"` over guessing
 - The `competitor_rationales` array is **always required** (v0.3.1) — MUST contain one entry per company in `implementation_matrix.competitors` (exact 1:1 match by name). Target company is NOT in rationales. NO mismatches allowed.
 - For each chart, `x_axis_rationale` / `y_axis_rationale` (and their `_ja` variants) are **required** — explain why this axis was chosen and what the composite score captures. This helps cross-functional readers (non-engineers, legal, finance) understand the chart
-- For `site_verification.items`, include all 9 items (feature_claim_match, tech_stack_consistency, security_claim_verification, performance_claim_plausibility, scale_claim_consistency, launch_date_verification, pricing_feasibility, compliance_display, ai_washing_index). **Team size estimation is INTENTIONALLY excluded — AI era = lean teams + AI leverage, headcount is not a quality signal**
+- For `site_verification.items`, include all **10 items** — 4 claim-vs-code + 6 actual-capability-from-code: (feature_claim_match, tech_stack_consistency, security_claim_verification, ai_washing_index, crypto_implementation_depth, concurrency_model, io_pattern, caching_strategy_actual, scalability_mechanism, ml_model_depth). **Intentionally excluded (not actual technical capability)**: team size, launch date, pricing feasibility, compliance display, performance_claim_plausibility, scale_claim_consistency, certifications — DDE scores only measurable capability from source code
 - For `competitive_analysis.markets`, include all 6 markets (Global, Home Country, US, EMEA, SEA, LATAM) with all 7 chart types specified in the Competitive Analysis Task section
 """
 

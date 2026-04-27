@@ -2548,13 +2548,53 @@ class PDFReportGenerator:
         return elements
 
     def _build_consulting_red_flags(self, cr) -> list:
-        """Red flags from consulting report."""
+        """Red flags from consulting report.
+
+        Note: Red flags are NOT factored into the numeric score. They are
+        included in the report as actionable items for the development team
+        to consider — useful for source code improvement and remediation.
+        """
+        from reportlab.platypus import Table as RLTable, TableStyle as RLTableStyle
+
         t = self._t
         s = self._styles
         elements: list = []
 
         elements.append(Paragraph(t["red_flags"], s["heading1"]))
-        elements.append(Spacer(1, 6 * mm))
+        elements.append(
+            HRFlowable(width="100%", thickness=1, color=COLOR_BORDER, spaceAfter=3 * mm)
+        )
+
+        # Note callout: red flags are informational, not scored
+        if self._lang == "ja":
+            note_text = (
+                "<b>ℹ レッドフラグについて</b><br/>"
+                "本セクションのレッドフラグは <b>スコアリングには反映されていません</b>。"
+                "本レポートを読んだ開発チームが <b>ソースコードの改善に活用できる可能性</b> がある"
+                "事項として参考情報として記載しています。優先順位付けや改修計画の立案にご活用ください。"
+            )
+        else:
+            note_text = (
+                "<b>ℹ About Red Flags</b><br/>"
+                "Red flags in this section are <b>NOT factored into the numeric score</b>. "
+                "They are listed as reference information that the development team can "
+                "<b>potentially use to improve the source code</b>. Useful for prioritization "
+                "and remediation planning."
+            )
+        callout = RLTable(
+            [[Paragraph(note_text, s["body_small"])]],
+            colWidths=[160 * mm],
+        )
+        callout.setStyle(RLTableStyle([
+            ("BACKGROUND", (0, 0), (-1, -1), COLOR_ACCENT_LIGHT),
+            ("LEFTPADDING", (0, 0), (-1, -1), 8),
+            ("RIGHTPADDING", (0, 0), (-1, -1), 8),
+            ("TOPPADDING", (0, 0), (-1, -1), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, -1), 6),
+            ("LINEABOVE", (0, 0), (-1, 0), 2, COLOR_ACCENT),
+        ]))
+        elements.append(callout)
+        elements.append(Spacer(1, 5 * mm))
 
         severity_colors = {
             "critical": COLOR_RED,

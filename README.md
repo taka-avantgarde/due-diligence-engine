@@ -48,25 +48,31 @@
 
 ## ⚡ Quick Start
 
-**1. Install** (works on every platform incl. macOS Homebrew)
+**Install once:**
 
 ```bash
 python3 -m pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
 ```
 
-<sub>Alternative short form for Linux / venv / older macOS: `pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git`</sub>
-
-**2. Run** (in any AI-powered IDE terminal — Claude Code / Cursor / Copilot)
+**Run from your project directory:**
 
 ```bash
 dde prompt --pdf
 ```
 
-Your AI reads the codebase, evaluates it as a world-class technology consultant,
-and writes a 24-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
+Use any AI-powered IDE terminal (Claude Code / Cursor / Copilot). Your AI reads the codebase, evaluates it as a world-class technology consultant, and writes a 24-page PDF to `~/Downloads/`. **No API keys. No cloud. No extra cost.**
 
-> **macOS Homebrew users**: use `python3 -m pip` — the bare `pip` command is no
-> longer installed by Homebrew Python 3.12+.
+<details>
+<summary><sub>Other install options · macOS Homebrew note</sub></summary>
+
+Linux / venv / older macOS short form:
+```bash
+pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+```
+
+macOS Homebrew users: use `python3 -m pip` — the bare `pip` command is no longer installed by Homebrew Python 3.12+.
+
+</details>
 
 ---
 

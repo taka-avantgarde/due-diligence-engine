@@ -48,25 +48,31 @@
 
 ## ⚡ クイックスタート
 
-**1. インストール**（全環境で確実 — macOS Homebrew を含む）
+**最初に 1 回だけインストール:**
 
 ```bash
 python3 -m pip install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
 ```
 
-<sub>Linux / venv / 古い macOS なら短い形式も可: `pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git`</sub>
-
-**2. 実行**（AI 搭載 IDE のターミナル — Claude Code / Cursor / Copilot 等）
+**プロジェクトのディレクトリで実行:**
 
 ```bash
 dde prompt --pdf --lang ja
 ```
 
-AI がコードベースを読み、世界トップクラスのテクノロジーコンサルタントとして評価し、
-24ページの PDF を `~/Downloads/` に書き出します。**APIキー不要・クラウド経由なし・追加コスト¥0。**
+AI 搭載 IDE のターミナル（Claude Code / Cursor / Copilot 等）で実行してください。AI がコードベースを読み、世界トップクラスのテクノロジーコンサルタントとして評価し、24ページの PDF を `~/Downloads/` に書き出します。**APIキー不要・クラウド経由なし・追加コスト¥0。**
 
-> **macOS Homebrew ユーザーへ**: 必ず `python3 -m pip` を使ってください。
-> Homebrew Python 3.12+ では `pip` 単体コマンドはインストールされなくなりました。
+<details>
+<summary><sub>その他のインストール方法 · macOS Homebrew 注意点</sub></summary>
+
+Linux / venv / 古い macOS の短い形式:
+```bash
+pip3 install --no-cache-dir git+https://github.com/taka-avantgarde/Due-diligence-engine.git
+```
+
+macOS Homebrew ユーザーは必ず `python3 -m pip` を使用してください。Homebrew Python 3.12+ では `pip` 単体コマンドが同梱されません。
+
+</details>
 
 ---
 

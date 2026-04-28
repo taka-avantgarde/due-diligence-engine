@@ -67,9 +67,9 @@ runs:
           GRADE="?"
           FLAGS="0"
         else
-          SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1)
-          GRADE=$(grep -oP 'Grade:\s*\K[A-F]' "$REPORT" 2>/dev/null | head -1)
-          FLAGS=$(grep -c 'RED FLAG\|red_flag' "$REPORT" 2>/dev/null | head -1)
+          SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1) || SCORE=""
+          GRADE=$(grep -oP 'Grade:\s*\K[A-F]' "$REPORT" 2>/dev/null | head -1) || GRADE=""
+          FLAGS=$(grep -cE '^\- \*\*[^:*]+\*\*' "$REPORT" 2>/dev/null) || FLAGS="0"
           # Defaults if grep returned empty
           SCORE="${SCORE:-0}"
           GRADE="${GRADE:-?}"
@@ -96,7 +96,7 @@ runs:
       if: ${{ inputs.fail_below != '0' }}
       run: |
         REPORT=$(ls dde_output/dde_report_*.md 2>/dev/null | head -1)
-        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1)
+        SCORE=$(grep -oP 'Overall Score:\*\*\s*\K[0-9]+' "$REPORT" 2>/dev/null | head -1) || SCORE=""
         SCORE="${SCORE:-0}"
         THRESHOLD=${{ inputs.fail_below }}
         if [ "$SCORE" -lt "$THRESHOLD" ]; then

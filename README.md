@@ -182,6 +182,8 @@ A parallel evaluation system added alongside the standard 5-dimension scoring.
 | Architecture Quality (incl. Security Posture) | 20% | Structure quality + security maturity |
 | Claim Consistency | 20% | Pitch vs. reality |
 
+> **Final Score** = Heuristic Analysis (30%) + AI Average Score (70%)
+
 > **v0.3 change**: Security Posture was merged into Architecture Quality. Security is now evaluated as an integral part of production-grade architecture, not a separate silo.
 
 ```
